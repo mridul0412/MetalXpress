@@ -1,0 +1,175 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id          String      @id @default(cuid())
+  phone       String      @unique
+  name        String?
+  city        String?
+  traderType  TraderType  @default(CHECKING_RATES)
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+  alerts      Alert[]
+  listings    Listing[]
+}
+
+enum TraderType {
+  BUYER
+  SELLER
+  BOTH
+  CHECKING_RATES
+}
+
+model City {
+  id           String        @id @default(cuid())
+  name         String
+  slug         String        @unique
+  hubs         Hub[]
+  contributors Contributor[]
+}
+
+model Hub {
+  id          String        @id @default(cuid())
+  name        String
+  slug        String        @unique
+  city        City          @relation(fields: [cityId], references: [id])
+  cityId      String
+  rateUpdates RateUpdate[]
+  rates       Rate[]
+  alerts      Alert[]
+}
+
+model Metal {
+  id        String   @id @default(cuid())
+  name      String
+  emoji     String
+  colorHex  String
+  sortOrder Int      @default(0)
+  grades    Grade[]
+  listings  Listing[]
+}
+
+model Grade {
+  id           String    @id @default(cuid())
+  metal        Metal     @relation(fields: [metalId], references: [id])
+  metalId      String
+  name         String
+  hasVariants  Boolean   @default(false)
+  variantLabel String?
+  rates        Rate[]
+  alerts       Alert[]
+  listings     Listing[]
+}
+
+model Contributor {
+  id          String       @id @default(cuid())
+  name        String
+  phone       String?
+  city        City         @relation(fields: [cityId], references: [id])
+  cityId      String
+  isVerified  Boolean      @default(false)
+  createdAt   DateTime     @default(now())
+  rateUpdates RateUpdate[]
+}
+
+model RateUpdate {
+  id            String      @id @default(cuid())
+  hub           Hub         @relation(fields: [hubId], references: [id])
+  hubId         String
+  contributor   Contributor? @relation(fields: [contributorId], references: [id])
+  contributorId String?
+  rawMessage    String      @db.Text
+  parsedAt      DateTime    @default(now())
+  createdAt     DateTime    @default(now())
+  rates         Rate[]
+}
+
+model Rate {
+  id             String     @id @default(cuid())
+  grade          Grade      @relation(fields: [gradeId], references: [id])
+  gradeId        String
+  hub            Hub        @relation(fields: [hubId], references: [id])
+  hubId          String
+  buyPrice       Float?
+  sellPrice      Float?
+  variantPrice   Float?
+  variantLabel   String?
+  rateUpdate     RateUpdate @relation(fields: [rateUpdateId], references: [id])
+  rateUpdateId   String
+  createdAt      DateTime   @default(now())
+}
+
+model LMERate {
+  id        String   @id @default(cuid())
+  metal     String
+  price     Float
+  change    Float    @default(0)
+  unit      String   @default("$/MT")
+  createdAt DateTime @default(now())
+}
+
+model MCXRate {
+  id        String   @id @default(cuid())
+  metal     String
+  price     Float
+  change    Float    @default(0)
+  unit      String   @default("₹/Kg")
+  createdAt DateTime @default(now())
+}
+
+model ForexRate {
+  id        String   @id @default(cuid())
+  pair      String
+  price     Float
+  change    Float    @default(0)
+  createdAt DateTime @default(now())
+}
+
+model Alert {
+  id          String     @id @default(cuid())
+  user        User       @relation(fields: [userId], references: [id])
+  userId      String
+  grade       Grade      @relation(fields: [gradeId], references: [id])
+  gradeId     String
+  hub         Hub        @relation(fields: [hubId], references: [id])
+  hubId       String
+  threshold   Float
+  direction   String     // "above" | "below"
+  isActive    Boolean    @default(true)
+  triggeredAt DateTime?
+  createdAt   DateTime   @default(now())
+}
+
+model Listing {
+  id          String   @id @default(cuid())
+  user        User     @relation(fields: [userId], references: [id])
+  userId      String
+  metal       Metal    @relation(fields: [metalId], references: [id])
+  metalId     String
+  grade       Grade?   @relation(fields: [gradeId], references: [id])
+  gradeId     String?
+  qty         Float
+  unit        String   @default("kg")
+  location    String
+  price       Float?
+  description String?  @db.Text
+  contact     String
+  expiresAt   DateTime
+  createdAt   DateTime @default(now())
+  isActive    Boolean  @default(true)
+}
+
+model OTPSession {
+  id        String   @id @default(cuid())
+  phone     String
+  otp       String
+  expiresAt DateTime
+  used      Boolean  @default(false)
+  createdAt DateTime @default(now())
+}

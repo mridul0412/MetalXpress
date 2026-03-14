@@ -1,0 +1,89 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  * {
+    box-sizing: border-box;
+  }
+
+  html {
+    background-color: #0D0D0D;
+    color: #E5E5E5;
+    font-family: 'JetBrains Mono', 'Fira Code', 'Courier New', monospace;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  body {
+    margin: 0;
+    padding: 0;
+    min-height: 100vh;
+    background-color: #0D0D0D;
+  }
+
+  ::-webkit-scrollbar {
+    width: 4px;
+    height: 4px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: #1A1A1A;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background: #333;
+    border-radius: 2px;
+  }
+}
+
+@layer components {
+  .price-up {
+    @apply text-up;
+  }
+
+  .price-down {
+    @apply text-down;
+  }
+
+  .metal-card {
+    @apply bg-surface rounded-lg border border-border overflow-hidden;
+  }
+
+  .btn-primary {
+    @apply bg-zinc text-white px-4 py-2 rounded font-semibold text-sm hover:bg-blue-500 transition-colors disabled:opacity-50;
+  }
+
+  .btn-secondary {
+    @apply bg-surface2 text-gray-300 px-4 py-2 rounded font-semibold text-sm hover:bg-border transition-colors;
+  }
+
+  .input-field {
+    @apply bg-surface2 border border-border text-white px-3 py-2 rounded text-sm w-full focus:outline-none focus:border-zinc;
+  }
+
+  .skeleton {
+    @apply animate-pulse bg-surface2 rounded;
+  }
+}
+
+/* Marquee animation for LME strip */
+@keyframes marquee {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+
+.marquee-track {
+  animation: marquee 40s linear infinite;
+  white-space: nowrap;
+  display: inline-flex;
+}
+
+.marquee-track:hover {
+  animation-play-state: paused;
+}
+
+/* Number display */
+.rate-number {
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum";
+}

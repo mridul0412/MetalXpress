@@ -1,0 +1,19 @@
+{
+  "name": "metalxpress",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Indian Scrap Metal Rate Platform",
+  "scripts": {
+    "install:all": "npm install && cd backend && npm install && cd ../frontend && npm install",
+    "dev": "concurrently \"cd backend && npm run dev\" \"cd frontend && npm run dev\"",
+    "dev:backend": "cd backend && npm run dev",
+    "dev:frontend": "cd frontend && npm run dev",
+    "build": "cd frontend && npm run build",
+    "db:migrate": "cd backend && npx prisma migrate dev",
+    "db:seed": "cd backend && npm run seed",
+    "db:studio": "cd backend && npx prisma studio"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  }
+}
