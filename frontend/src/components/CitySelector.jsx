@@ -52,10 +52,11 @@ export default function CitySelector({ selectedHub, onSelectHub }) {
                   className={`
                     px-3 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap transition-all
                     ${isSelected
-                      ? 'bg-[#4A90D9] text-white shadow-lg shadow-blue-900/30'
-                      : 'bg-[#1A1A1A] text-gray-400 border border-[#2A2A2A] hover:border-[#4A90D9] hover:text-white'
+                      ? 'text-black shadow-gold-sm'
+                      : 'bg-surface2 text-gray-500 border border-border hover:border-gold-dark hover:text-gray-200'
                     }
                   `}
+                  style={isSelected ? { background: '#CFB53B' } : {}}
                 >
                   <span className="hidden sm:inline">{city.name} · </span>
                   {hub.name}

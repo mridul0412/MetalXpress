@@ -15,52 +15,64 @@ function ChangeIndicator({ change }) {
 
 export default function RateTable({ grades, accentColor }) {
   return (
-    <div className="divide-y divide-[#1E1E1E]">
-      {grades.map(({ grade, rate }) => {
-        if (!rate) return null;
+    <div>
+      {/* Header row */}
+      <div className="flex items-center px-4 py-1.5 bg-surface3">
+        <div className="flex-1 text-[9px] text-gray-600 uppercase tracking-widest">Grade</div>
+        <div className="flex items-center gap-5 shrink-0 text-[9px] text-gray-600 uppercase tracking-widest">
+          <span className="w-16 text-right">Buy ₹</span>
+          <span className="w-16 text-right">Sell ₹</span>
+        </div>
+      </div>
 
-        return (
-          <div key={grade.id} className="flex items-center px-3 py-2 hover:bg-[#1E1E1E] transition-colors">
-            {/* Grade name */}
-            <div className="flex-1 min-w-0">
-              <span className="text-gray-300 text-xs">{grade.name}</span>
-              {rate.variantLabel && rate.variantPrice && (
-                <span
-                  className="ml-2 text-[10px] px-1.5 py-0.5 rounded font-mono"
-                  style={{ backgroundColor: `${accentColor}22`, color: accentColor }}
-                >
-                  {rate.variantLabel}: {rate.variantPrice.toLocaleString('en-IN')}
-                </span>
-              )}
-            </div>
+      <div>
+        {grades.map(({ grade, rate }) => {
+          if (!rate) return null;
 
-            {/* Prices */}
-            <div className="flex items-center gap-3 shrink-0">
-              {rate.buyPrice && (
-                <div className="text-right">
-                  <div className="text-xs text-gray-500">Buy</div>
-                  <div className="text-sm font-bold text-green-400 rate-number">
-                    {rate.buyPrice.toLocaleString('en-IN')}
-                    <ChangeIndicator change={rate.change} />
-                  </div>
+          return (
+            <div key={grade.id}
+              className="flex items-center px-4 py-2.5 border-t border-border hover:bg-surface2 transition-colors">
+              {/* Grade name */}
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <span className="text-gray-200 text-xs font-medium">{grade.name}</span>
+                  {rate.variantLabel && rate.variantPrice && (
+                    <span
+                      className="text-[10px] px-1.5 py-0.5 rounded font-mono"
+                      style={{ backgroundColor: `${accentColor}18`, color: accentColor }}
+                    >
+                      {rate.variantLabel}: {rate.variantPrice.toLocaleString('en-IN')}
+                    </span>
+                  )}
                 </div>
-              )}
+              </div>
 
-              {rate.sellPrice && (
-                <>
-                  <span className="text-gray-700 text-xs">/</span>
-                  <div className="text-right">
-                    <div className="text-xs text-gray-500">Sell</div>
-                    <div className="text-sm font-bold text-white rate-number">
+              {/* Prices */}
+              <div className="flex items-center gap-5 shrink-0">
+                <div className="w-16 text-right">
+                  {rate.buyPrice ? (
+                    <span className="text-sm font-bold text-up rate-number">
+                      {rate.buyPrice.toLocaleString('en-IN')}
+                    </span>
+                  ) : (
+                    <span className="text-gray-700 text-xs">—</span>
+                  )}
+                  <ChangeIndicator change={rate.change} />
+                </div>
+                <div className="w-16 text-right">
+                  {rate.sellPrice ? (
+                    <span className="text-sm font-bold text-white rate-number">
                       {rate.sellPrice.toLocaleString('en-IN')}
-                    </div>
-                  </div>
-                </>
-              )}
+                    </span>
+                  ) : (
+                    <span className="text-gray-700 text-xs">—</span>
+                  )}
+                </div>
+              </div>
             </div>
-          </div>
-        );
-      })}
+          );
+        })}
+      </div>
     </div>
   );
 }

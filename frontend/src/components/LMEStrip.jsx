@@ -7,17 +7,18 @@ function formatChange(change) {
   return `${sign}${change}`;
 }
 
-function RateItem({ label, price, change, unit }) {
+function RateItem({ label, price, change }) {
   const isUp = change >= 0;
   return (
-    <span className="inline-flex items-center gap-1.5 px-3 py-0.5 border-r border-[#2A2A2A] shrink-0">
-      <span className="text-gray-400 text-xs">{label}</span>
-      <span className="text-white text-sm font-semibold rate-number">
+    <span className="inline-flex items-center gap-1 px-3 py-0.5 border-r shrink-0"
+      style={{ borderColor: '#1E1E1E' }}>
+      <span className="text-gray-500 text-[10px]">{label}</span>
+      <span className="text-gray-100 text-xs font-bold rate-number">
         {price?.toLocaleString('en-IN', { maximumFractionDigits: 2 })}
       </span>
       {change !== null && change !== undefined && (
-        <span className={`text-xs rate-number ${isUp ? 'text-up' : 'text-down'}`}>
-          {isUp ? '▲' : '▼'} {Math.abs(change)}
+        <span className={`text-[10px] rate-number ${isUp ? 'text-up' : 'text-down'}`}>
+          {isUp ? '▲' : '▼'}{Math.abs(change)}
         </span>
       )}
     </span>
@@ -60,50 +61,29 @@ export default function LMEStrip() {
 
   if (allItems.length === 0) {
     return (
-      <div className="bg-[#111111] border-b border-[#2A2A2A] h-9 flex items-center px-4">
-        <div className="skeleton h-4 w-full" />
+      <div className="border-b h-8 flex items-center px-4 overflow-hidden"
+        style={{ background: '#0A0A0A', borderColor: '#1A1A1A' }}>
+        <div className="skeleton h-3 w-full max-w-2xl" />
       </div>
     );
   }
 
   return (
-    <div className="bg-[#111111] border-b border-[#2A2A2A] overflow-hidden relative">
-      {/* Desktop: two rows */}
-      <div className="hidden md:block">
-        <div className="flex items-center overflow-x-auto scrollbar-hide border-b border-[#1E1E1E] py-1">
-          <span className="text-xs text-[#B87333] font-bold px-3 py-0.5 border-r border-[#2A2A2A] shrink-0">
-            LME $/MT
+    <div className="border-b overflow-hidden relative"
+      style={{ background: '#0A0A0A', borderColor: '#CFB53B15' }}>
+      {/* All screens: marquee ticker */}
+      <div className="overflow-hidden py-1">
+        <div className="flex items-center gap-0">
+          <span className="text-[9px] font-bold px-2 shrink-0 text-gold border-r mr-1"
+            style={{ borderColor: '#1E1E1E' }}>
+            LIVE
           </span>
-          {lme.map(r => (
-            <RateItem key={r.metal} label={r.metal} price={r.price} change={r.change} unit={r.unit} />
-          ))}
-        </div>
-        <div className="flex items-center overflow-x-auto scrollbar-hide py-1">
-          <span className="text-xs text-[#CFB53B] font-bold px-3 py-0.5 border-r border-[#2A2A2A] shrink-0">
-            MCX ₹/Kg
-          </span>
-          {mcx.map(r => (
-            <RateItem key={r.metal} label={r.metal} price={r.price} change={r.change} unit={r.unit} />
-          ))}
-          <span className="text-xs text-[#4A90D9] font-bold px-3 py-0.5 border-l border-[#2A2A2A] shrink-0 ml-2">
-            FOREX
-          </span>
-          {forex.map(r => (
-            <RateItem key={r.pair} label={r.pair} price={r.price} change={r.change} unit="" />
-          ))}
-          {lastUpdated && (
-            <span className="text-[10px] text-gray-600 px-3 ml-auto shrink-0">
-              Updated {lastUpdated.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })}
-            </span>
-          )}
         </div>
       </div>
-
-      {/* Mobile: marquee */}
-      <div className="md:hidden overflow-hidden py-1.5">
+      <div className="overflow-hidden pb-1 -mt-1">
         <div className="marquee-track">
           {[...allItems, ...allItems].map((item, i) => (
-            <RateItem key={i} label={item.label} price={item.price} change={item.change} unit={item.unit} />
+            <RateItem key={i} label={item.label} price={item.price} change={item.change} />
           ))}
         </div>
       </div>

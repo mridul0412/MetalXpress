@@ -5,9 +5,14 @@ export default {
     extend: {
       colors: {
         bg: '#0D0D0D',
-        surface: '#1A1A1A',
-        surface2: '#222222',
+        surface: '#141414',
+        surface2: '#1E1E1E',
+        surface3: '#252525',
         border: '#2A2A2A',
+        'border-light': '#333333',
+        gold: '#CFB53B',
+        'gold-light': '#E8CC5A',
+        'gold-dark': '#A89028',
         copper: '#B87333',
         brass: '#CFB53B',
         aluminium: '#A8C0C0',
@@ -20,6 +25,10 @@ export default {
       },
       fontFamily: {
         mono: ['JetBrains Mono', 'Fira Code', 'Courier New', 'monospace'],
+      },
+      boxShadow: {
+        gold: '0 0 20px rgba(207,181,59,0.15)',
+        'gold-sm': '0 0 8px rgba(207,181,59,0.1)',
       },
     },
   },

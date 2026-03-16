@@ -80,21 +80,37 @@ export default function Marketplace() {
   };
 
   return (
-    <div className="min-h-screen bg-bg pb-16 sm:pb-0">
+    <div className="min-h-screen bg-bg pb-20 sm:pb-4">
       <Navbar />
       <main className="max-w-2xl mx-auto px-3 pt-4">
         <div className="flex items-center justify-between mb-4">
           <div>
-            <h1 className="text-lg font-bold text-white">Scrap Marketplace</h1>
-            <p className="text-xs text-gray-500">Buy & sell scrap metal directly</p>
+            <h1 className="text-base font-bold text-white flex items-center gap-2">
+              <span className="text-gold">🏪</span> Scrap Marketplace
+            </h1>
+            <p className="text-[11px] text-gray-500 mt-0.5">Buy &amp; sell scrap metal directly</p>
           </div>
           <button
             onClick={() => user ? setShowCreate(!showCreate) : navigate('/login')}
-            className="btn-primary"
+            className={showCreate ? 'btn-secondary text-xs' : 'btn-primary text-xs'}
           >
-            + Post Lot
+            {showCreate ? '✕ Cancel' : '+ Post Lot'}
           </button>
         </div>
+
+        {/* Login prompt */}
+        {!user && (
+          <div className="rounded-xl p-3 mb-4 flex items-center justify-between border"
+            style={{ background: '#1A1500', borderColor: '#CFB53B33' }}>
+            <div>
+              <p className="text-gold text-xs font-semibold">Login to post listings</p>
+              <p className="text-gray-600 text-[10px]">Browse is open to all</p>
+            </div>
+            <button onClick={() => navigate('/login')} className="btn-primary text-xs py-1.5 px-3">
+              Login →
+            </button>
+          </div>
+        )}
 
         {/* Filters */}
         <div className="flex gap-2 mb-4 overflow-x-auto scrollbar-hide">
@@ -116,10 +132,11 @@ export default function Marketplace() {
           </select>
         </div>
 
-        {/* Create listing form */}
-        {showCreate && (
-          <div className="bg-surface border border-border rounded-xl p-4 mb-4">
-            <h3 className="text-white font-bold mb-3">Post a Scrap Lot</h3>
+        {/* Create form — only shown when user logged in and clicked Post Lot */}
+        {showCreate && user && (
+          <div className="rounded-xl p-4 mb-4 border"
+            style={{ background: '#141414', borderColor: '#CFB53B33' }}>
+            <h3 className="text-white font-bold mb-3 text-sm">📦 Post a Scrap Lot</h3>
             <form onSubmit={handleSubmit} className="space-y-3">
               <div className="grid grid-cols-2 gap-2">
                 <div>
@@ -190,12 +207,17 @@ export default function Marketplace() {
                   className="input-field text-xs resize-none" rows={2} />
               </div>
 
-              {error && <p className="text-red-500 text-xs">{error}</p>}
+              {error && (
+                <div className="rounded-lg px-3 py-2 border text-xs text-red-400"
+                  style={{ background: '#1A0505', borderColor: '#7f1d1d' }}>
+                  {error}
+                </div>
+              )}
               <div className="flex gap-2">
-                <button type="submit" disabled={submitting} className="btn-primary flex-1">
-                  {submitting ? 'Posting...' : 'Post Listing'}
+                <button type="submit" disabled={submitting} className="btn-primary flex-1 py-2.5">
+                  {submitting ? 'Posting...' : '📤 Post Listing'}
                 </button>
-                <button type="button" onClick={() => setShowCreate(false)} className="btn-secondary">
+                <button type="button" onClick={() => setShowCreate(false)} className="btn-secondary px-4">
                   Cancel
                 </button>
               </div>
@@ -207,26 +229,29 @@ export default function Marketplace() {
         {loading ? (
           <div className="space-y-3">
             {[1, 2, 3].map(i => (
-              <div key={i} className="bg-surface rounded-lg border border-border p-4">
+              <div key={i} className="bg-surface rounded-xl border border-border p-4">
                 <div className="skeleton h-4 w-2/3 mb-2" />
                 <div className="skeleton h-3 w-1/2 mb-3" />
-                <div className="skeleton h-8 w-24" />
+                <div className="skeleton h-8 w-28" />
               </div>
             ))}
           </div>
         ) : listings.length === 0 ? (
           <div className="text-center py-12">
             <div className="text-4xl mb-3">🏪</div>
-            <p className="text-gray-500 text-sm">No listings yet. Be the first to post!</p>
+            <p className="text-gray-400 text-sm font-semibold">No listings yet</p>
+            <p className="text-gray-600 text-xs mt-1">Be the first to post a scrap lot!</p>
           </div>
         ) : (
-          listings.map(listing => (
-            <MarketplaceListing
-              key={listing.id}
-              listing={listing}
-              onDelete={user && listing.userId === user.id ? handleDelete : null}
-            />
-          ))
+          <div className="space-y-3">
+            {listings.map(listing => (
+              <MarketplaceListing
+                key={listing.id}
+                listing={listing}
+                onDelete={user && listing.userId === user.id ? handleDelete : null}
+              />
+            ))}
+          </div>
         )}
       </main>
     </div>
