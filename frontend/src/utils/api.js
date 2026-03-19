@@ -52,6 +52,18 @@ export const requestOTP = (phone) => api.post('/auth/request-otp', { phone });
 export const verifyOTP = (data) => api.post('/auth/verify-otp', data);
 export const fetchMe = () => api.get('/auth/me');
 
+// Google OAuth (handled via redirect — link to this URL)
+export const googleAuthUrl = () => `${API_BASE}/auth/google`;
+
+// Profile update (after OTP login or standalone)
+export const updateProfile = (data) => api.patch('/auth/profile', data);
+
+// Subscription / paywall
+export const checkSubscription = () => api.get('/auth/subscription');
+
+// Live prices (full shape: {metals, forex, indices, crude, usdInr, fetchedAt})
+export const fetchLivePricesDetailed = () => api.get('/rates/live');
+
 // Marketplace
 export const fetchListings = (params) => api.get('/marketplace/listings', { params });
 export const createListing = (data) => api.post('/marketplace/listings', data);

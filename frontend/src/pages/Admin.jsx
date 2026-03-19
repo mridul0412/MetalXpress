@@ -1,13 +1,15 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Lock, Edit3, Save, ClipboardPaste } from 'lucide-react';
+import { Lock, Edit3, Save, ClipboardPaste, ChevronLeft, LogOut } from 'lucide-react';
 import { adminParsePreview, saveParsedRates } from '../utils/api';
 
 const ADMIN_PASS_KEY = 'mx_admin_pass';
 
+// ── Standalone layout — no consumer Navbar ───────────────────────────────────
+
 export default function Admin() {
-  const [pass, setPass]         = useState('');
-  const [authed, setAuthed]     = useState(!!localStorage.getItem(ADMIN_PASS_KEY));
+  const [pass, setPass]           = useState('');
+  const [authed, setAuthed]       = useState(!!localStorage.getItem(ADMIN_PASS_KEY));
   const [authError, setAuthError] = useState('');
 
   const handleLogin = (e) => {
@@ -18,6 +20,12 @@ export default function Admin() {
     } else {
       setAuthError('Wrong password.');
     }
+  };
+
+  const handleLogout = () => {
+    localStorage.removeItem(ADMIN_PASS_KEY);
+    setAuthed(false);
+    setPass('');
   };
 
   if (!authed) {
@@ -31,8 +39,8 @@ export default function Admin() {
             boxShadow: '0 24px 64px rgba(0,0,0,0.5)' }}>
           <div style={{ textAlign: 'center', marginBottom: 24 }}>
             <div style={{ width: 56, height: 56, borderRadius: 14, margin: '0 auto 16px',
-              background: 'rgba(248,113,113,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <Lock size={24} color="#f87171" />
+              background: 'rgba(207,181,59,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <Lock size={24} color="#CFB53B" />
             </div>
             <h2 style={{ fontSize: 22, fontWeight: 700, color: '#fff', margin: 0 }}>Admin Access</h2>
             <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.35)', margin: '6px 0 0' }}>
@@ -41,15 +49,16 @@ export default function Admin() {
           </div>
           <form onSubmit={handleLogin} style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
             <input type="password" value={pass} onChange={e => setPass(e.target.value)}
-              placeholder="Admin Password" required
-              style={{ width: '100%', padding: '13px 16px', borderRadius: 12, fontSize: 15, fontFamily: 'monospace',
-                textAlign: 'center', letterSpacing: '0.2em', background: 'rgba(255,255,255,0.05)',
-                border: '1px solid rgba(255,255,255,0.1)', color: '#fff', outline: 'none', boxSizing: 'border-box' }} />
+              placeholder="Admin Password" required autoFocus
+              style={{ width: '100%', padding: '13px 16px', borderRadius: 12, fontSize: 15,
+                fontFamily: 'monospace', textAlign: 'center', letterSpacing: '0.2em',
+                background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)',
+                color: '#fff', outline: 'none', boxSizing: 'border-box' }} />
             {authError && (
               <p style={{ fontSize: 13, color: '#f87171', textAlign: 'center', margin: 0 }}>{authError}</p>
             )}
             <button type="submit" style={{ width: '100%', padding: '13px', borderRadius: 12, fontWeight: 700,
-              fontSize: 14, background: '#f87171', color: '#000', border: 'none', cursor: 'pointer' }}>
+              fontSize: 14, background: '#CFB53B', color: '#000', border: 'none', cursor: 'pointer' }}>
               Unlock Terminal
             </button>
             <p style={{ fontSize: 11, textAlign: 'center', color: 'rgba(255,255,255,0.2)', margin: 0 }}>
@@ -62,35 +71,114 @@ export default function Admin() {
   }
 
   return (
-    <div className="max-w-5xl mx-auto px-4 py-6 pb-24 md:pb-8">
-      <div style={{ display: 'flex', alignItems: 'center', gap: 14, borderBottom: '1px solid rgba(255,255,255,0.08)',
-        paddingBottom: 20, marginBottom: 28 }}>
-        <div style={{ width: 44, height: 44, borderRadius: 12, background: 'rgba(207,181,59,0.15)',
-          display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-          <Edit3 size={20} color="#CFB53B" />
-        </div>
-        <div>
-          <h2 style={{ fontSize: 24, fontWeight: 700, color: '#fff', margin: 0 }}>Rate Management</h2>
-          <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.35)', margin: '2px 0 0' }}>
-            Update market prices across the platform
-          </p>
+    <div style={{ minHeight: '100vh', background: '#080E1A' }}>
+
+      {/* ── Admin top bar ── */}
+      <div style={{
+        position: 'sticky', top: 0, zIndex: 50,
+        background: 'rgba(8,14,26,0.95)', backdropFilter: 'blur(16px)',
+        borderBottom: '1px solid rgba(255,255,255,0.06)',
+        padding: '0 16px',
+      }}>
+        <div style={{ maxWidth: 1100, margin: '0 auto', height: 56,
+          display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          {/* Left: logo */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+            <div style={{ width: 32, height: 32, borderRadius: 8, background: '#CFB53B',
+              display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 900,
+              fontSize: 13, color: '#000', letterSpacing: '-0.02em' }}>
+              MX
+            </div>
+            <span style={{ fontSize: 13, fontWeight: 700, color: 'rgba(255,255,255,0.7)',
+              letterSpacing: '0.08em', textTransform: 'uppercase' }}>
+              MetalXpress Admin
+            </span>
+          </div>
+
+          {/* Right: actions */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <a href="/" style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '7px 12px',
+              borderRadius: 8, fontSize: 12, fontWeight: 600, color: 'rgba(255,255,255,0.5)',
+              background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)',
+              textDecoration: 'none', transition: 'all 0.15s' }}>
+              <ChevronLeft size={14} />
+              Exit to App
+            </a>
+            <button onClick={handleLogout}
+              style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '7px 12px',
+                borderRadius: 8, fontSize: 12, fontWeight: 600, color: '#f87171',
+                background: 'rgba(248,113,113,0.08)', border: '1px solid rgba(248,113,113,0.2)',
+                cursor: 'pointer', transition: 'all 0.15s' }}>
+              <LogOut size={14} />
+              Logout
+            </button>
+          </div>
         </div>
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: 20 }}>
-        <LocalRatesPanel />
-        <WhatsAppParserPanel />
+      {/* ── Page body ── */}
+      <div style={{ maxWidth: 1100, margin: '0 auto', padding: '28px 16px 80px' }}>
+        <div style={{ marginBottom: 28 }}>
+          <h1 style={{ fontSize: 26, fontWeight: 700, color: '#fff', margin: '0 0 4px' }}>
+            Rate Management
+          </h1>
+          <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.35)', margin: 0 }}>
+            Update market prices · Changes reflect live on the app
+          </p>
+        </div>
+
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: 20 }}>
+          <LocalRatesPanel />
+          <WhatsAppParserPanel />
+        </div>
       </div>
     </div>
   );
 }
 
+// ── Local Rates Panel ────────────────────────────────────────────────────────
+
 function LocalRatesPanel() {
-  const [message, setMessage]   = useState('');
-  const [preview, setPreview]   = useState(null);
-  const [parsing, setParsing]   = useState(false);
-  const [saving, setSaving]     = useState(false);
-  const [status, setStatus]     = useState('');
+  const [message, setMessage]         = useState('');
+  const [preview, setPreview]         = useState(null);
+  const [parsing, setParsing]         = useState(false);
+  const [saving, setSaving]           = useState(false);
+  const [status, setStatus]           = useState('');
+  const [cities, setCities]           = useState([]);
+  const [selectedHub, setSelectedHub] = useState('');
+  const [selectedHubName, setSelectedHubName] = useState('');
+
+  // Load cities for hub selector
+  useEffect(() => {
+    fetch('/api/cities')
+      .then(r => r.json())
+      .then(d => {
+        const list = Array.isArray(d) ? d : (d.cities || []);
+        setCities(list);
+        // Default to first hub
+        const firstHub = list[0]?.hubs?.[0];
+        if (firstHub) {
+          setSelectedHub(firstHub.slug);
+          setSelectedHubName(firstHub.name);
+        }
+      })
+      .catch(() => {});
+  }, []);
+
+  const handleHubChange = (e) => {
+    const slug = e.target.value;
+    setSelectedHub(slug);
+    // Find hub name
+    for (const city of cities) {
+      for (const hub of (city.hubs || [])) {
+        if (hub.slug === slug) {
+          setSelectedHubName(`${hub.name} — ${city.name}`);
+          return;
+        }
+      }
+    }
+    setSelectedHubName(slug);
+  };
 
   const handleParse = async () => {
     if (!message.trim()) return;
@@ -103,12 +191,14 @@ function LocalRatesPanel() {
   };
 
   const handleSave = async () => {
-    if (!preview) return;
+    if (!preview || !selectedHub) return;
     setSaving(true); setStatus('');
     try {
-      await saveParsedRates({ hubSlug: 'mandoli-delhi', rawMessage: message, parsed: preview });
-      setStatus('✓ Saved successfully');
+      await saveParsedRates({ hubSlug: selectedHub, rawMessage: message, parsed: preview });
+      setStatus(`✓ Rates updated for ${selectedHubName} — reflecting live on the app`);
       setMessage(''); setPreview(null);
+      // Auto-clear success message after 3s
+      setTimeout(() => setStatus(''), 3000);
     } catch { setStatus('Save failed.'); }
     finally { setSaving(false); }
   };
@@ -117,6 +207,28 @@ function LocalRatesPanel() {
 
   return (
     <Panel title="Local Rates Parser" subtitle="Paste WhatsApp message for local hub rates">
+
+      {/* Hub selector */}
+      <div style={{ marginBottom: 12 }}>
+        <label style={{ fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em',
+          color: 'rgba(255,255,255,0.35)', display: 'block', marginBottom: 6 }}>
+          Target Hub
+        </label>
+        <select value={selectedHub} onChange={handleHubChange}
+          style={{ width: '100%', padding: '10px 12px', borderRadius: 10, fontSize: 13,
+            background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.12)',
+            color: '#fff', outline: 'none', cursor: 'pointer', fontFamily: 'inherit' }}>
+          {cities.map(city =>
+            (city.hubs || []).map(hub => (
+              <option key={hub.slug} value={hub.slug}
+                style={{ background: '#0d1420', color: '#fff' }}>
+                {city.name} — {hub.name}
+              </option>
+            ))
+          )}
+        </select>
+      </div>
+
       <textarea value={message} onChange={e => setMessage(e.target.value)}
         placeholder={'COPPER\nArmature: 358 / 370\nMotor: 340 / 355\n\nALUMINIUM\nCast: 155 / 160'}
         rows={7}
@@ -168,6 +280,8 @@ function LocalRatesPanel() {
   );
 }
 
+// ── WhatsApp LME/MCX Parser Panel ────────────────────────────────────────────
+
 function WhatsAppParserPanel() {
   const [message, setMessage] = useState('');
   const [preview, setPreview] = useState(null);
@@ -184,9 +298,9 @@ function WhatsAppParserPanel() {
     finally { setParsing(false); }
   };
 
-  const lmeCount  = preview?.lme?.length  || 0;
-  const mcxCount  = preview?.mcx?.length  || 0;
-  const fxCount   = (preview?.forex?.length || 0) + (preview?.indices?.length || 0);
+  const lmeCount = preview?.lme?.length  || 0;
+  const mcxCount = preview?.mcx?.length  || 0;
+  const fxCount  = (preview?.forex?.length || 0) + (preview?.indices?.length || 0);
 
   return (
     <Panel title="LME / MCX Update" subtitle="Paste full WhatsApp broadcast to extract global rates">
@@ -197,7 +311,8 @@ function WhatsAppParserPanel() {
           background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.1)',
           color: '#fff', outline: 'none', resize: 'vertical', boxSizing: 'border-box', lineHeight: 1.6 }} />
 
-      <button onClick={handleParse} disabled={parsing || !message.trim()} style={{ ...btnStyle('#CFB53B', '#000', parsing), marginTop: 8 }}>
+      <button onClick={handleParse} disabled={parsing || !message.trim()}
+        style={{ ...btnStyle('#CFB53B', '#000', parsing), marginTop: 8 }}>
         <ClipboardPaste size={13} style={{ display: 'inline', marginRight: 4 }} />
         {parsing ? 'Extracting…' : 'Extract Rates'}
       </button>
@@ -205,9 +320,9 @@ function WhatsAppParserPanel() {
       {preview && (lmeCount > 0 || mcxCount > 0 || fxCount > 0) && (
         <div style={{ marginTop: 12, display: 'flex', gap: 8, flexWrap: 'wrap' }}>
           {[
-            { label: 'LME metals', count: lmeCount, color: '#60a5fa' },
-            { label: 'MCX metals', count: mcxCount, color: '#CFB53B' },
-            { label: 'Forex/Index', count: fxCount, color: '#34d399' },
+            { label: 'LME metals',  count: lmeCount, color: '#60a5fa' },
+            { label: 'MCX metals',  count: mcxCount, color: '#CFB53B' },
+            { label: 'Forex/Index', count: fxCount,  color: '#34d399' },
           ].map(({ label, count, color }) => count > 0 && (
             <div key={label} style={{ padding: '6px 12px', borderRadius: 8, fontSize: 12, fontWeight: 600,
               background: `${color}15`, color, border: `1px solid ${color}30` }}>
@@ -224,6 +339,8 @@ function WhatsAppParserPanel() {
     </Panel>
   );
 }
+
+// ── Shared components ────────────────────────────────────────────────────────
 
 function Panel({ title, subtitle, children }) {
   return (

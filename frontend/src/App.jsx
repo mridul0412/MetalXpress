@@ -8,21 +8,30 @@ import Marketplace from './pages/Marketplace';
 import Alerts from './pages/Alerts';
 import Admin from './pages/Admin';
 
+// Layout with Navbar for consumer-facing pages
+function AppShell({ children }) {
+  return (
+    <>
+      <Navbar />
+      <main>{children}</main>
+    </>
+  );
+}
+
 export default function App() {
   return (
     <BrowserRouter>
       <AuthProvider>
-        <Navbar />
-        <main>
-          <Routes>
-            <Route path="/" element={<Home />} />
-            <Route path="/login" element={<Login />} />
-            <Route path="/marketplace" element={<Marketplace />} />
-            <Route path="/alerts" element={<Alerts />} />
-            <Route path="/admin" element={<Admin />} />
-            <Route path="*" element={<Navigate to="/" replace />} />
-          </Routes>
-        </main>
+        <Routes>
+          {/* Admin — standalone, no consumer Navbar */}
+          <Route path="/admin" element={<Admin />} />
+          {/* Consumer app — all wrapped with Navbar */}
+          <Route path="/" element={<AppShell><Home /></AppShell>} />
+          <Route path="/login" element={<AppShell><Login /></AppShell>} />
+          <Route path="/marketplace" element={<AppShell><Marketplace /></AppShell>} />
+          <Route path="/alerts" element={<AppShell><Alerts /></AppShell>} />
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Routes>
       </AuthProvider>
     </BrowserRouter>
   );

@@ -1,68 +1,94 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { TrendingUp, MapPin, Clock, RefreshCw, ArrowUpRight, ArrowDownRight, Minus, ChevronRight, Zap } from 'lucide-react';
+import {
+  TrendingUp, MapPin, Clock, RefreshCw, ArrowUpRight, ArrowDownRight,
+  Minus, ChevronRight, Zap, Globe,
+} from 'lucide-react';
 import { format } from 'date-fns';
 
 const METAL_META = {
-  Copper:        { color: '#f59e0b', dot: '#f59e0b', emoji: '🥇' },
-  Brass:         { color: '#eab308', dot: '#eab308', emoji: '🟡' },
-  Aluminium:     { color: '#94a3b8', dot: '#94a3b8', emoji: '🥈' },
-  Lead:          { color: '#6b7280', dot: '#6b7280', emoji: '⚫' },
-  Zinc:          { color: '#60a5fa', dot: '#60a5fa', emoji: '🔵' },
-  Nickel:        { color: '#a78bfa', dot: '#a78bfa', emoji: '⚡' },
-  'Other Metals':{ color: '#fb923c', dot: '#fb923c', emoji: '⚙️' },
-  'M.S.':        { color: '#818cf8', dot: '#818cf8', emoji: '🏗️' },
+  Copper:         { color: '#f59e0b', dot: '#f59e0b', emoji: '🥇' },
+  Brass:          { color: '#eab308', dot: '#eab308', emoji: '🟡' },
+  Aluminium:      { color: '#94a3b8', dot: '#94a3b8', emoji: '🥈' },
+  Lead:           { color: '#6b7280', dot: '#6b7280', emoji: '⚫' },
+  Zinc:           { color: '#60a5fa', dot: '#60a5fa', emoji: '🔵' },
+  Nickel:         { color: '#a78bfa', dot: '#a78bfa', emoji: '⚡' },
+  Tin:            { color: '#34d399', dot: '#34d399', emoji: '🔩' },
+  'Other Metals': { color: '#fb923c', dot: '#fb923c', emoji: '⚙️' },
+  'M.S.':         { color: '#818cf8', dot: '#818cf8', emoji: '🏗️' },
 };
-const METAL_ORDER = ['Copper','Brass','Aluminium','Lead','Zinc','Nickel','Other Metals','M.S.'];
+const METAL_ORDER = ['Copper', 'Brass', 'Aluminium', 'Lead', 'Zinc', 'Nickel', 'Tin', 'Other Metals', 'M.S.'];
 
 function getMeta(metal) {
   return METAL_META[metal] ?? { color: '#CFB53B', dot: '#CFB53B', emoji: '⚙️' };
 }
 
 function fmt(n) { return Number(n).toLocaleString('en-IN'); }
+function fmtNum(n, decimals = 2) {
+  if (n == null) return '—';
+  return Number(n).toLocaleString('en-IN', { minimumFractionDigits: decimals, maximumFractionDigits: decimals });
+}
+
+function ChangeChip({ value, decimals = 2 }) {
+  if (value == null || value === 0) return <Minus size={12} color="rgba(255,255,255,0.25)" />;
+  const up = value > 0;
+  return (
+    <span style={{
+      display: 'inline-flex', alignItems: 'center', gap: 2,
+      fontSize: 12, fontWeight: 700,
+      color: up ? '#34d399' : '#f87171',
+    }}>
+      {up ? <ArrowUpRight size={12} /> : <ArrowDownRight size={12} />}
+      {Math.abs(value).toFixed(decimals)}%
+    </span>
+  );
+}
+
+// ── LOCAL RATE AUTO-REFRESH INTERVAL (5 minutes) ────────────────────────────
+const LOCAL_REFRESH_MS = 5 * 60 * 1000;
 
 export default function Home() {
-  const [lmeRates, setLmeRates]           = useState([]);
-  const [localRates, setLocalRates]       = useState(null);
-  const [hubs, setHubs]                   = useState([]);
-  const [selectedHub, setSelectedHub]     = useState('');
-  const [openMetal, setOpenMetal]         = useState(null);
-  const [loadingLme, setLoadingLme]       = useState(true);
-  const [loadingLocal, setLoadingLocal]   = useState(false);
-  const [refreshingLme, setRefreshingLme] = useState(false);
+  const [liveData, setLiveData]               = useState(null);   // full /api/rates/live response
+  const [localRates, setLocalRates]           = useState(null);
+  const [cities, setCities]                   = useState([]);
+  const [selectedCity, setSelectedCity]       = useState(null);   // full city object
+  const [openMetal, setOpenMetal]             = useState(null);
+  const [loadingLme, setLoadingLme]           = useState(true);
+  const [loadingLocal, setLoadingLocal]       = useState(false);
+  const [refreshingLme, setRefreshingLme]     = useState(false);
   const [refreshingLocal, setRefreshingLocal] = useState(false);
-  const [lmeUpdatedAt, setLmeUpdatedAt]   = useState(null);
-  const [localUpdatedAt, setLocalUpdatedAt] = useState(null);
+  const [lmeUpdatedAt, setLmeUpdatedAt]       = useState(null);
+  const [localUpdatedAt, setLocalUpdatedAt]   = useState(null);
+  const localRefreshTimer = useRef(null);
 
-  // Fetch live LME rates
+  // Fetch live LME + forex + indices
   const loadLme = useCallback(async (force = false) => {
     if (force) setRefreshingLme(true); else setLoadingLme(true);
     try {
       const r = await fetch('/api/rates/live');
       const d = await r.json();
-      if (d.rates?.length) {
-        setLmeRates(d.rates);
+      if (d.metals?.length || d.forex || d.indices) {
+        setLiveData(d);
         setLmeUpdatedAt(new Date());
       }
     } catch {}
     finally { setLoadingLme(false); setRefreshingLme(false); }
   }, []);
 
-  // Fetch hubs list
+  // Fetch cities list
   useEffect(() => {
     fetch('/api/cities')
       .then(r => r.json())
       .then(d => {
-        const cities = Array.isArray(d) ? d : (d.cities || []);
-        const allHubs = cities.flatMap(c => c.hubs || []);
-        setHubs(allHubs);
-        if (allHubs.length) setSelectedHub(allHubs[0].slug);
+        const list = Array.isArray(d) ? d : (d.cities || []);
+        setCities(list);
+        if (list.length) setSelectedCity(list[0]);
       })
       .catch(() => {});
     loadLme();
   }, [loadLme]);
 
-  // Fetch local rates when hub changes
+  // Fetch local rates when city changes
   const loadLocal = useCallback(async (hubSlug, isRefresh = false) => {
     if (!hubSlug) return;
     if (isRefresh) setRefreshingLocal(true); else setLoadingLocal(true);
@@ -76,10 +102,20 @@ export default function Home() {
   }, []);
 
   useEffect(() => {
-    if (selectedHub) loadLocal(selectedHub);
-  }, [selectedHub, loadLocal]);
+    const hubSlug = selectedCity?.hubs?.[0]?.slug;
+    if (hubSlug) {
+      loadLocal(hubSlug);
 
-  // Group local rates by metal
+      // Auto-refresh every 5 minutes
+      clearInterval(localRefreshTimer.current);
+      localRefreshTimer.current = setInterval(() => {
+        loadLocal(hubSlug, true);
+      }, LOCAL_REFRESH_MS);
+    }
+    return () => clearInterval(localRefreshTimer.current);
+  }, [selectedCity, loadLocal]);
+
+  // Derived: group local rates by metal
   const metalGroups = {};
   if (localRates?.rates) {
     for (const { metal, grades } of localRates.rates) {
@@ -92,15 +128,26 @@ export default function Home() {
     return (ai === -1 ? 99 : ai) - (bi === -1 ? 99 : bi);
   });
 
+  const lmeRates = liveData?.metals ?? [];
+  const forex    = liveData?.forex  ?? {};
+  const indices  = liveData?.indices ?? {};
+  const crude    = liveData?.crude  ?? {};
+  const hasForex = forex.usdInr != null || forex.eurUsd != null || indices.nifty != null;
+
+  const currentHubSlug = selectedCity?.hubs?.[0]?.slug;
+
   return (
     <div className="max-w-5xl mx-auto px-4 py-5 pb-24 md:pb-8 flex flex-col gap-6">
 
-      {/* ── LME / MCX Table ─────────────────────────────── */}
+      {/* ── LME / MCX Table ────────────────────────────────── */}
       <section>
         <div className="flex items-center justify-between mb-3">
           <div className="flex items-center gap-2">
             <TrendingUp size={15} color="#CFB53B" />
-            <span className="section-label" style={{ color: 'rgba(255,255,255,0.5)', fontSize: 11 }}>LME / MCX Rates</span>
+            <span style={{ color: 'rgba(255,255,255,0.5)', fontSize: 11, fontWeight: 700,
+              textTransform: 'uppercase', letterSpacing: '0.08em' }}>
+              LME / MCX Rates
+            </span>
           </div>
           <div className="flex items-center gap-2">
             {lmeUpdatedAt && (
@@ -122,7 +169,7 @@ export default function Home() {
           {/* Header row */}
           <div style={{ display: 'grid', gridTemplateColumns: '2fr 2fr 2fr 1.2fr',
             padding: '10px 16px', background: 'rgba(255,255,255,0.025)', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
-            {['Metal','LME ($/MT)','MCX (₹/kg)','Chg%'].map((h, i) => (
+            {['Metal', 'LME ($/MT)', 'MCX (₹/kg)', 'Chg%'].map((h, i) => (
               <span key={h} style={{ fontSize: 10, fontWeight: 700, textTransform: 'uppercase',
                 letterSpacing: '0.08em', color: 'rgba(255,255,255,0.3)', textAlign: i > 0 ? 'right' : 'left' }}>
                 {h}
@@ -131,8 +178,8 @@ export default function Home() {
           </div>
 
           {loadingLme ? (
-            <div style={{ padding: '0' }}>
-              {[1,2,3,4,5].map(i => (
+            <div>
+              {[1, 2, 3, 4, 5].map(i => (
                 <div key={i} style={{ height: 48, borderBottom: '1px solid rgba(255,255,255,0.04)',
                   background: 'rgba(255,255,255,0.01)', animation: 'pulse 1.5s ease-in-out infinite' }} />
               ))}
@@ -169,17 +216,61 @@ export default function Home() {
                   </div>
                 );
               })}
+              {lmeRates.length === 0 && (
+                <div style={{ padding: '24px', textAlign: 'center', color: 'rgba(255,255,255,0.25)', fontSize: 13 }}>
+                  Live prices unavailable — backend may be offline
+                </div>
+              )}
             </div>
           )}
         </div>
       </section>
 
-      {/* ── Local Spot Rates ────────────────────────────── */}
+      {/* ── Forex & Indices ─────────────────────────────────── */}
+      {!loadingLme && hasForex && (
+        <section>
+          <div className="flex items-center gap-2 mb-3">
+            <Globe size={15} color="#CFB53B" />
+            <span style={{ color: 'rgba(255,255,255,0.5)', fontSize: 11, fontWeight: 700,
+              textTransform: 'uppercase', letterSpacing: '0.08em' }}>
+              Forex &amp; Indices
+            </span>
+          </div>
+
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: 8 }}>
+            {/* USD/INR */}
+            {forex.usdInr != null && (
+              <ForexCard label="USD/INR" value={fmtNum(forex.usdInr, 3)} change={forex.usdInrChange} highlight />
+            )}
+            {/* EUR/USD */}
+            {forex.eurUsd != null && (
+              <ForexCard label="EUR/USD" value={fmtNum(forex.eurUsd, 4)} change={forex.eurUsdChange} />
+            )}
+            {/* Nifty 50 */}
+            {indices.nifty != null && (
+              <ForexCard label="Nifty 50" value={fmtNum(indices.nifty, 2)} change={indices.niftyChange} />
+            )}
+            {/* Sensex */}
+            {indices.sensex != null && (
+              <ForexCard label="Sensex" value={fmtNum(indices.sensex, 2)} change={indices.sensexChange} />
+            )}
+            {/* Crude WTI */}
+            {crude.price != null && (
+              <ForexCard label="Crude WTI" value={`$${fmtNum(crude.price, 2)}`} change={crude.change} />
+            )}
+          </div>
+        </section>
+      )}
+
+      {/* ── Local Spot Rates ────────────────────────────────── */}
       <section>
         <div className="flex items-center justify-between mb-3">
           <div className="flex items-center gap-2">
             <MapPin size={15} color="#CFB53B" />
-            <span className="section-label" style={{ color: 'rgba(255,255,255,0.5)', fontSize: 11 }}>Local Spot Rates</span>
+            <span style={{ color: 'rgba(255,255,255,0.5)', fontSize: 11, fontWeight: 700,
+              textTransform: 'uppercase', letterSpacing: '0.08em' }}>
+              Local Spot Rates
+            </span>
             {localUpdatedAt && (
               <span className="flex items-center gap-1" style={{ fontSize: 10, color: 'rgba(255,255,255,0.25)' }}>
                 <Clock size={10} />
@@ -187,7 +278,7 @@ export default function Home() {
               </span>
             )}
           </div>
-          <button onClick={() => loadLocal(selectedHub, true)} disabled={refreshingLocal}
+          <button onClick={() => loadLocal(currentHubSlug, true)} disabled={refreshingLocal}
             style={{ padding: '5px', borderRadius: 8, background: 'rgba(255,255,255,0.05)',
               border: '1px solid rgba(255,255,255,0.08)', cursor: 'pointer', display: 'flex',
               color: 'rgba(255,255,255,0.4)' }}>
@@ -195,12 +286,12 @@ export default function Home() {
           </button>
         </div>
 
-        {/* Hub selector */}
+        {/* City selector pills */}
         <div className="flex items-center gap-2 overflow-x-auto pb-2 mb-4" style={{ scrollbarWidth: 'none' }}>
-          {hubs.map(hub => {
-            const active = selectedHub === hub.slug;
+          {cities.map(city => {
+            const active = selectedCity?.id === city.id;
             return (
-              <button key={hub.slug} onClick={() => setSelectedHub(hub.slug)}
+              <button key={city.id} onClick={() => setSelectedCity(city)}
                 style={{
                   flexShrink: 0, padding: '6px 14px', borderRadius: 8, fontSize: 12, fontWeight: 700,
                   whiteSpace: 'nowrap', transition: 'all 0.15s', cursor: 'pointer',
@@ -208,16 +299,23 @@ export default function Home() {
                   color: active ? '#000' : 'rgba(255,255,255,0.45)',
                   border: `1px solid ${active ? '#CFB53B' : 'rgba(255,255,255,0.1)'}`,
                 }}>
-                {hub.name}
+                {city.name}
               </button>
             );
           })}
         </div>
 
+        {/* Hub sub-label */}
+        {selectedCity?.hubs?.[0] && (
+          <p style={{ fontSize: 11, color: 'rgba(255,255,255,0.25)', marginBottom: 12, marginTop: -8 }}>
+            Hub: {selectedCity.hubs[0].name}
+          </p>
+        )}
+
         {/* Metal accordion cards */}
         {loadingLocal ? (
           <div className="flex flex-col gap-3">
-            {[1,2,3,4].map(i => (
+            {[1, 2, 3, 4].map(i => (
               <div key={i} style={{ height: 144, borderRadius: 12,
                 background: 'rgba(255,255,255,0.025)', border: '1px solid rgba(255,255,255,0.05)',
                 animation: 'pulse 1.5s ease-in-out infinite' }} />
@@ -339,14 +437,43 @@ export default function Home() {
         <p style={{ textAlign: 'center', fontSize: 10, color: 'rgba(255,255,255,0.18)',
           marginTop: 16, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4 }}>
           <Zap size={10} />
-          Rates from local traders · Updated daily
+          Rates from local traders · Auto-refreshes every 5 min
         </p>
       </section>
 
       <style>{`
-        @keyframes spin { to { transform: rotate(360deg); } }
+        @keyframes spin  { to { transform: rotate(360deg); } }
         @keyframes pulse { 0%,100% { opacity:1; } 50% { opacity:0.5; } }
       `}</style>
+    </div>
+  );
+}
+
+// ── Small forex/index card ───────────────────────────────────────────────────
+function ForexCard({ label, value, change, highlight }) {
+  const up = change > 0, dn = change < 0;
+  return (
+    <div style={{
+      borderRadius: 10, padding: '10px 14px',
+      background: '#0d1420', border: `1px solid ${highlight ? 'rgba(207,181,59,0.2)' : 'rgba(255,255,255,0.07)'}`,
+    }}>
+      <p style={{ fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em',
+        color: 'rgba(255,255,255,0.3)', margin: '0 0 4px' }}>
+        {label}
+      </p>
+      <p style={{ fontSize: 15, fontWeight: 700, fontFamily: 'monospace', margin: '0 0 2px',
+        color: highlight ? '#CFB53B' : '#fff' }}>
+        {value}
+      </p>
+      {change != null && change !== 0 ? (
+        <span style={{ fontSize: 11, fontWeight: 700, color: up ? '#34d399' : '#f87171',
+          display: 'flex', alignItems: 'center', gap: 2 }}>
+          {up ? <ArrowUpRight size={11} /> : <ArrowDownRight size={11} />}
+          {Math.abs(change).toFixed(2)}%
+        </span>
+      ) : (
+        <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.2)' }}>—</span>
+      )}
     </div>
   );
 }

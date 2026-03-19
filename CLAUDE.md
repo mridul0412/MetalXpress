@@ -1,7 +1,7 @@
 # MetalXpress — Project Context & Requirements
 
 ## What This App Is
-MetalXpress is a real-time scrap metal rate platform for Indian traders. Replaces WhatsApp broadcast messages with a clean, organized mobile-first web app. End consumers see live rates; admin pastes WhatsApp messages to update them.
+MetalXpress is a real-time scrap metal rate platform for Indian traders. It replaces WhatsApp broadcast messages with a clean, organized mobile-first web app. End consumers see live rates; admin pastes WhatsApp messages to update them.
 
 ## Owner Preferences (MUST FOLLOW)
 - **Accent**: Gold (`#CFB53B`) + Black (`#0D0D0D`). Blue only for secondary actions.
@@ -15,7 +15,7 @@ MetalXpress is a real-time scrap metal rate platform for Indian traders. Replace
 - **Auth**: Phone OTP (dev OTP: 1234), JWT tokens in localStorage as `mx_token`
 - **Admin auth**: Password in localStorage as `mx_admin_pass`, sent as `x-admin-password` header
 
-## Design System (current — dark navy glass)
+## Design System (dark navy glass)
 - Background: `#080E1A` with subtle gold radial gradient at top
 - Surface cards: `#0D1420` with `border: 1px solid rgba(255,255,255,0.07)`
 - Glass panels: `backdrop-filter: blur(20px)`, `background: rgba(8,14,26,0.9)`
@@ -36,77 +36,194 @@ MetalXpress is a real-time scrap metal rate platform for Indian traders. Replace
 .animate-marquee { animation: marquee 28s linear infinite; display: flex; white-space: nowrap; }
 ```
 
-## Live Data Source (free, no API key)
-- **Yahoo Finance v8**: `https://query1.finance.yahoo.com/v8/finance/chart/{symbol}?interval=1d&range=5d`
-  - Copper: `HG=F` (USD/lb → ×2204.62 → USD/MT)
-  - Aluminium: `ALI=F` (USD/MT direct)
-  - Zinc: `ZNC=F` (USD/MT direct)
-  - Lead: `PB-USD` (USD/lb → ×2204.62 → USD/MT)
-  - USD/INR: `USDINR=X`
-- **Stooq CSV**: `https://stooq.com/q/d/l/?s=ni.f&i=d` for Nickel (¢/lb → ×22.0462 → USD/MT)
-- **MCX (₹/kg)** = `LME_USD_per_MT × USD_INR / 1000`
-- Gold/Silver excluded (not scrap metals, unit conversions produce absurd values)
-- Service: `backend/src/services/livePriceFetcher.js`
-- Endpoint: `GET /api/rates/live` — fetches live every call, no DB write
+## Current Date
+2026-03-19
+
+## Current Status (as of 2026-03-19)
+- Live data: Yahoo Finance (Copper HG=F, Aluminium ALI=F, Zinc ZNC=F) + Stooq (Nickel ni.f, Lead pb.f, Tin sn.f)
+- Forex/Indices: Yahoo (USDINR=X, EURUSD=X, ^NSEI, ^BSESN, CL=F)
+- metals-api.com: plug-and-play (set METALS_API_KEY in .env to activate real LME spot)
+- Google OAuth: plug-and-play stub (set GOOGLE_CLIENT_ID + GOOGLE_CLIENT_SECRET to activate)
+- Admin page: standalone layout (no consumer Navbar), hub selector dropdown, 3s success toast
+- Login: 3-step flow (Welcome → Phone → OTP+Profile), Google button shown/grayed based on env
+- Home: city selector pills (not hub names), Forex & Indices grid below LME table, 5-min auto-refresh local
+- PaywallModal: Free/Pro/Business plan cards, Razorpay stub
+- App.jsx: Admin gets no consumer Navbar (AppShell pattern)
+
+## Live Data Sources
+### Metals (backend/src/services/livePriceFetcher.js)
+| Metal     | Source  | Symbol  | Unit → conversion     |
+|-----------|---------|---------|----------------------|
+| Copper    | Yahoo   | HG=F    | USD/lb × 2204.62     |
+| Aluminium | Yahoo   | ALI=F   | USD/MT direct        |
+| Zinc      | Yahoo   | ZNC=F   | USD/MT direct        |
+| Nickel    | Stooq   | ni.f    | ¢/lb × 22.0462       |
+| Lead      | Stooq   | pb.f    | ¢/lb × 22.0462 (NOT PB-USD — that's Petrobras stock) |
+| Tin       | Stooq   | sn.f    | ¢/lb × 22.0462       |
+
+### metals-api.com (optional upgrade)
+Set `METALS_API_KEY` in `backend/.env`. Symbols: XCU, ALU, XNI, XPB, XZN, XSN
+Returns price per troy oz in USD. 1 MT = 32150.75 troy oz.
+API cost: Free (50 req/month), $15/month Starter (500 req), $99/month Business.
+
+### Forex & Indices (Yahoo Finance)
+USD/INR: USDINR=X | EUR/USD: EURUSD=X | Nifty: ^NSEI | Sensex: ^BSESN | Crude WTI: CL=F
+
+## Return Shape of /api/rates/live
+```js
+{
+  metals:  [{ metal, priceUsd, priceMcx, change, source }],
+  forex:   { usdInr, eurUsd, usdInrChange, eurUsdChange },
+  indices: { nifty, sensex, niftyChange, sensexChange },
+  crude:   { price, change },
+  usdInr,        // root-level alias for MCX conversion convenience
+  fetchedAt,     // ISO timestamp
+}
+```
+
+**Breaking change from previous shape**: `d.rates` is now `d.metals` in frontend code.
+
+## MCX Conversion
+MCX (₹/kg) = LME_USD_per_MT × usdInr / 1000
 
 ## File Structure
 ```
 frontend/src/
-  App.jsx                          ← Router + AuthProvider + Navbar wrapper
+  App.jsx                          ← AppShell pattern — Admin gets no consumer Navbar
   pages/
-    Home.jsx                       ← LME/MCX table + hub selector + metal accordion cards
-    Login.jsx                      ← Glass card OTP flow, gold branding
+    Home.jsx                       ← LME/MCX table + Forex grid + city pills + metal accordion + 5-min auto-refresh
+    Login.jsx                      ← 3-step: Welcome (Google+Phone) → Phone → OTP+Profile
     Marketplace.jsx                ← Browse/Post tabs, listing cards
     Alerts.jsx                     ← Price alerts (basic)
-    Admin.jsx                      ← LocalRatesPanel + WhatsAppParserPanel (red-accented)
+    Admin.jsx                      ← Standalone layout, own top bar, hub selector dropdown, 3s success toast
   components/
     Navbar.jsx                     ← Sticky glass header + LMEStrip + mobile bottom nav
     LMEStrip.jsx                   ← Marquee ticker fetching /api/rates/live
-    CitySelector.jsx               ← (legacy, hub select now inline in Home.jsx)
-    MetalCard.jsx                  ← (legacy, accordion now inline in Home.jsx)
+    PaywallModal.jsx               ← (NEW) Free/Pro/Business plan gate, Razorpay stub
+    CitySelector.jsx               ← (legacy)
+    MetalCard.jsx                  ← (legacy)
     RateTable.jsx                  ← (legacy)
-    LMERatesPanel.jsx              ← (legacy, replaced by inline section in Home.jsx)
+    LMERatesPanel.jsx              ← (legacy)
   utils/
-    api.js                         ← Axios instance, baseURL = VITE_API_URL || '/api', JWT interceptor
+    api.js                         ← Axios instance + all endpoints including googleAuthUrl, updateProfile, checkSubscription, fetchLivePricesDetailed
   context/
     AuthContext.jsx                ← phone/OTP auth, JWT in localStorage
 
 backend/src/
   index.js                         ← Express app, CORS, rate limit, cron alerts
   routes/
-    rates.js                       ← GET /api/rates/live, /local, /lme, POST /lme (admin)
+    rates.js                       ← GET /api/rates/live (new shape), /local, /lme, POST manual/save-parsed
+    auth.js                        ← OTP + /me + PATCH /profile + GET /subscription + Google OAuth routes
     cities.js                      ← GET /api/cities (returns plain array [{id,name,hubs:[]}])
-    metals.js, auth.js, marketplace.js, alerts.js, admin.js
+    metals.js, marketplace.js, alerts.js, admin.js
   services/
-    livePriceFetcher.js            ← Yahoo Finance + Stooq fetcher (CommonJS)
+    livePriceFetcher.js            ← Yahoo+Stooq+metals-api, returns {metals,forex,indices,crude,usdInr}
     lmeService.js, rateParser.js, alertService.js
   middleware/
     auth.js
   prisma/
     seed.js                        ← Seeds cities, hubs, metals, grades, sample listings
+  .env.example                     ← Full documented env var reference
 ```
 
 ## Key Code Patterns
 
-### Cities API parsing (MUST use this pattern)
+### Cities API parsing
 ```js
 // GET /api/cities returns a plain array, not {cities:[]}
-const cities = Array.isArray(d) ? d : (d.cities || []);
-const allHubs = cities.flatMap(c => c.hubs || []);
+const list = Array.isArray(d) ? d : (d.cities || []);
 ```
 
-### OTP verification (MUST use this pattern)
+### Home.jsx — live data access
 ```js
-// verifyOTP takes a single object, returns axios response
-const res = await verifyOTP({ phone, otp });
-const token = res.data.token;
+// /api/rates/live now returns {metals, forex, indices, crude, usdInr}
+// Use d.metals, NOT d.rates
+const d = await (await fetch('/api/rates/live')).json();
+setLiveData(d);
+// Access: liveData.metals, liveData.forex.usdInr, liveData.indices.nifty, etc.
 ```
 
-### API base URL
+### City selection in Home.jsx
 ```js
-// api.js uses VITE_API_URL env var or falls back to '/api' (for same-origin prod deploys)
-const baseURL = import.meta.env.VITE_API_URL || '/api';
+// selectedCity is the full city object {id, name, hubs:[{id,slug,name}]}
+// Hub slug for local rates fetch:
+const hubSlug = selectedCity?.hubs?.[0]?.slug;
 ```
+
+### Admin hub selector
+```js
+// Admin fetches cities to populate hub dropdown
+// grouped as: <option>Delhi — Mandoli</option>
+```
+
+### Google OAuth flow
+1. User clicks "Continue with Google" → `<a href="/api/auth/google">`
+2. Backend redirects to Google consent
+3. Google redirects to `/api/auth/google/callback`
+4. Backend exchanges code, upserts user, issues JWT
+5. Redirects to `${FRONTEND_URL}/?token=<jwt>`
+6. Login.jsx detects `?token=` param on mount → calls `login(token, {})` → navigate('/')
+
+### OTP verification
+```js
+const res = await verifyOTP({ phone, otp, name, traderType, city });
+const { token, user } = res.data;
+login(token, user);
+```
+
+## Monetization Model
+- **Free tier**: LME/MCX live rates, Forex & Indices, Marketplace browsing
+- **Pro ₹299/month**: Local spot rates for all cities, 10 contact reveals/month, unlimited alerts
+- **Business ₹999/month**: Everything Pro + unlimited contacts + bulk listing + priority support
+- **Commission**: Future — fee on verified deals closed via platform
+- **PaywallModal**: Currently a stub — Razorpay integration pending
+
+## API Roadmap (with costs)
+| API | Purpose | Cost | Sign-up |
+|-----|---------|------|---------|
+| metals-api.com | Real LME spot prices | Free 50/mo, $15 Starter | https://metals-api.com |
+| Yahoo Finance | Forex, Indices, fallback metals | Free (no key) | — |
+| Stooq | Nickel, Lead, Tin futures | Free (no key) | — |
+| MSG91 | Production SMS OTP | Pay per SMS | https://msg91.com |
+| Twilio | Production SMS OTP (alt) | Pay per SMS | https://twilio.com |
+| Razorpay | Payments | 2% per transaction | https://razorpay.com |
+| Google Cloud | OAuth login | Free tier sufficient | https://console.cloud.google.com |
+
+## Deployment Plan
+**Option A (Recommended): Railway**
+- Railway project: 1 service for backend (Node + Prisma) + PostgreSQL plugin
+- Frontend: Vercel (free) with `VITE_API_URL=https://your-backend.railway.app/api`
+- Or serve frontend as static from Express `app.use(express.static('dist'))`
+
+**Option B: Single Railway service**
+- Backend serves frontend build from `frontend/dist/`
+- Add to `backend/src/index.js`: `app.use(express.static(path.join(__dirname, '../../frontend/dist')))`
+
+## Feature Roadmap
+### Phase 1 — Live (current)
+- LME/MCX/Forex live rates (Yahoo + Stooq)
+- Admin WhatsApp parser (local city hub rates)
+- Login with phone OTP
+- Marketplace listing (post/browse)
+- Price alerts (basic)
+
+### Phase 2 — Deployment
+- Railway backend + Vercel frontend
+- PostgreSQL production DB seeded
+- Admin pastes real WhatsApp rates to populate hub data
+- MSG91 / Twilio for real SMS OTP
+
+### Phase 3 — Monetization Live
+- Razorpay subscription (Pro + Business tiers)
+- PaywallModal fully wired (not just stub)
+- Contact reveal gated behind Pro
+- Local rates gated behind Pro
+
+### Phase 4 — Automation
+- metals-api.com key set → auto-update LME rates hourly
+- Cron job: auto-refresh rates, send price alert SMS/push
+- Listing verification / admin approval
+- Separate admin app from consumer app
 
 ## WhatsApp Message Format (standard admin input)
 ```
@@ -114,12 +231,20 @@ const baseURL = import.meta.env.VITE_API_URL || '/api';
 16-03-26 03:29:51 PM
 ━━━━━━━━━━━━━━━━━━
 🌐 𝐋𝐌𝐄 𝐑𝐀𝐓𝐄𝐒 ($/𝐌𝐓)
+━━━━━━━━━━━━━━━━━━
 🥇 Copper: 12746.5 (−100)
-...
+🥈 Aluminium: 3414.5 (+41)
+⚡ Nickel: 17245 (−196)
+⚫ Lead: 1886.5 (−46)
+🔵 Zinc: 3270 (−33)
+⚡ Tin: 47770 (+30)
+━━━━━━━━━━━━━━━━━━
 🇮🇳 𝐌𝐂𝐗 𝐑𝐀𝐓𝐄𝐒 (₹/𝐊𝐠)
+━━━━━━━━━━━━━━━━━━
 🥇 Copper: 1172.65 (−14.75)
 ...
 💱 𝐅𝐎𝐑𝐄𝐗 & 📊 𝐈𝐍𝐃𝐈𝐂𝐄𝐒
+━━━━━━━━━━━━━━━━━━
 💱 USD/INR: 92.409 (−0.101)
 ...
 ```
@@ -139,31 +264,15 @@ cd backend && npm run seed          # seed cities/hubs/metals/grades
 - Repo: `https://github.com/mridul0412/MetalXpress`
 - Working branch: `claude/great-goldwasser`
 - Push to main: `git push origin claude/great-goldwasser:main`
-- Auth: PAT stored in Windows Credential Manager (set up via git credential approve)
-
-## Current Status (as of 2026-03-19)
-- ✅ Navbar working (top bar + LME ticker strip + mobile bottom nav)
-- ✅ LME/MCX table with live Yahoo Finance data (Copper, Aluminium, Zinc, Lead, Nickel)
-- ✅ Hub selector (Naroda, Ambattur, Mandoli, etc.) — data from seeded DB
-- ✅ Metal accordion cards with framer-motion animation (show when DB has rates)
-- ✅ Login page — OTP flow, glass card, gold branding
-- ✅ Marketplace — Browse/Post tabs, listing cards, filter by metal/city
-- ✅ Admin — red-accented login, WhatsApp parser panel, local rates panel
-- ⚠️  Local rates show "No rates available" — seeded DB lacks rates per hub; admin needs to paste WhatsApp message to populate
-- ⚠️  OTP is hardcoded `1234` in dev (no real SMS)
-- ❌ Not yet deployed (next step)
-
-## Pending / Next Steps
-1. **Deployment** — Railway (backend + PostgreSQL) + Vercel or serve frontend from Express
-2. **Seed real rate data** — Admin to paste WhatsApp message for each hub
-3. **SMS OTP** — Twilio/MSG91 integration
-4. **Alerts page** — Not updated in latest overhaul
-5. **Admin parser end-to-end** — Parse + save flow needs full test with live DB
-6. **Redis** — Listed as dependency in package.json but not used; remove or stub
 
 ## Known Issues / Gotchas
 - `@apply bg-gold` in CSS fails → use direct CSS property values
 - `spawn npm ENOENT` on Windows → use `cmd /c npm run dev` in launch.json
 - `GET /api/cities` returns plain `[]`, not `{ cities: [] }` — always use `Array.isArray(d)` check
-- Redis in backend/package.json but never required in code — harmless but worth cleaning
-- `ioredis` installed but unused — can be removed before production
+- `PB-USD` on Yahoo Finance is Petrobras stock (Brazil oil), NOT Lead metal → use Stooq `pb.f`
+- Stooq returns CSV with header row starting with "Symbol" — skip those lines in parser
+- metals-api.com returns rates as `1 USD = N units of metal (troy oz)` → invert to get USD/troy oz
+- `ioredis` / Redis installed but unused — can remove before production
+- Admin page is standalone: never render inside AppShell (no consumer Navbar)
+- Home.jsx uses `d.metals` (not `d.rates`) from `/api/rates/live` — breaking change from old shape
+- LMEStrip in Navbar also calls `/api/rates/live` — it uses `d.rates` fallback, update if needed

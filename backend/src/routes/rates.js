@@ -117,7 +117,8 @@ router.get('/local', async (req, res) => {
 router.get('/lme', async (req, res) => {
   try {
     if (req.query.force === 'true') {
-      const live = await fetchLivePrices();
+      const data = await fetchLivePrices();
+      const live = data.metals || [];
       if (live.length > 0) {
         // Upsert each metal into LMERate table
         for (const r of live) {
@@ -141,12 +142,39 @@ router.get('/lme', async (req, res) => {
   }
 });
 
-// GET /api/rates/live — always fetch from Yahoo Finance (no DB write)
+// GET /api/rates/live — always fetch from live sources (no DB write)
+// Returns: { metals, forex, indices, crude, usdInr, fetchedAt }
+// For metals not available from Yahoo/Stooq (Lead, Tin), falls back to last admin-pasted LME data.
 router.get('/live', async (req, res) => {
   try {
-    const rates = await fetchLivePrices();
-    res.json({ rates, fetchedAt: new Date().toISOString() });
+    const data = await fetchLivePrices(); // returns {metals, forex, indices, crude, usdInr}
+    const usdInr = data.usdInr || 84;
+
+    // Metals covered by Yahoo/Stooq
+    const liveCovered = new Set(data.metals.map(m => m.metal));
+
+    // For Lead and Tin (no free live source), try DB — last admin-pasted LME value within 7 days
+    const DB_METALS = ['Lead', 'Tin'];
+    const missing = DB_METALS.filter(m => !liveCovered.has(m));
+    if (missing.length > 0) {
+      const cutoff = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+      for (const metalName of missing) {
+        const dbRate = await prisma.lMERate.findFirst({
+          where: { metal: { contains: metalName }, createdAt: { gte: cutoff } },
+          orderBy: { createdAt: 'desc' },
+        }).catch(() => null);
+        if (dbRate) {
+          const priceUsd = dbRate.price;
+          const priceMcx = parseFloat(((priceUsd * usdInr) / 1000).toFixed(2));
+          const change = dbRate.change || 0;
+          data.metals.push({ metal: metalName, priceUsd, priceMcx, change, source: 'admin-update' });
+        }
+      }
+    }
+
+    res.json({ ...data, fetchedAt: new Date().toISOString() });
   } catch (err) {
+    console.error('/api/rates/live error:', err);
     res.status(500).json({ error: 'Failed to fetch live prices' });
   }
 });
