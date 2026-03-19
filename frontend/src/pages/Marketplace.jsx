@@ -1,259 +1,301 @@
-import React, { useState, useEffect } from 'react';
-import Navbar from '../components/Navbar';
-import MarketplaceListing from '../components/MarketplaceListing';
-import { fetchListings, createListing, deleteListing, fetchMetals, fetchCities } from '../utils/api';
+import { useState, useEffect } from 'react';
+import { motion } from 'framer-motion';
+import { MapPin, Phone, Weight, Plus, Search, Filter } from 'lucide-react';
+import { fetchListings, createListing } from '../utils/api';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 
+const METALS = ['Copper','Aluminium','Brass','Lead','Zinc','Nickel'];
+
 export default function Marketplace() {
-  const { user } = useAuth();
-  const navigate = useNavigate();
-
-  const [listings, setListings] = useState([]);
-  const [metals, setMetals] = useState([]);
-  const [cities, setCities] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [showCreate, setShowCreate] = useState(false);
+  const [tab, setTab]               = useState('browse');
+  const [listings, setListings]     = useState([]);
+  const [loading, setLoading]       = useState(true);
   const [filterMetal, setFilterMetal] = useState('');
-  const [filterCity, setFilterCity] = useState('');
+  const [filterCity, setFilterCity]   = useState('');
+  const { user } = useAuth();
 
-  // Create form state
-  const [form, setForm] = useState({
-    metalId: '', gradeId: '', qty: '', unit: 'kg',
-    location: '', price: '', description: '', contact: ''
-  });
-  const [submitting, setSubmitting] = useState(false);
-  const [error, setError] = useState('');
-
-  useEffect(() => {
-    loadData();
-    fetchMetals().then(r => setMetals(r.data || [])).catch(console.error);
-    fetchCities().then(r => setCities(r.data || [])).catch(console.error);
-  }, [filterMetal, filterCity]);
-
-  const loadData = async () => {
+  const load = async () => {
     setLoading(true);
     try {
-      const params = {};
-      if (filterMetal) params.metalId = filterMetal;
-      if (filterCity) params.city = filterCity;
-      const res = await fetchListings(params);
-      setListings(res.data.listings || []);
-    } catch (err) {
-      console.error(err);
-    } finally {
-      setLoading(false);
-    }
+      const res = await fetchListings({ metal: filterMetal || undefined, city: filterCity || undefined });
+      setListings(res.data?.listings || res.data || []);
+    } catch { setListings([]); }
+    finally { setLoading(false); }
   };
 
-  const selectedMetal = metals.find(m => m.id === form.metalId);
+  useEffect(() => { load(); }, [filterMetal, filterCity]);
+
+  return (
+    <div className="max-w-5xl mx-auto px-4 py-5 pb-24 md:pb-8">
+      {/* Header */}
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 4, marginBottom: 20 }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12 }}>
+          <div>
+            <h2 style={{ fontSize: 24, fontWeight: 700, color: '#fff', margin: 0, letterSpacing: '-0.02em' }}>
+              Scrap <span style={{ color: '#CFB53B' }}>Marketplace</span>
+            </h2>
+            <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.35)', margin: '2px 0 0' }}>
+              Direct buyer/seller matching
+            </p>
+          </div>
+
+          {/* Tab toggle */}
+          <div style={{ display: 'flex', padding: 4, borderRadius: 12, background: 'rgba(255,255,255,0.05)',
+            border: '1px solid rgba(255,255,255,0.08)' }}>
+            {[['browse','Browse'],['post','Post Listing']].map(([val, label]) => (
+              <button key={val} onClick={() => setTab(val)} style={{
+                padding: '7px 18px', borderRadius: 8, fontSize: 13, fontWeight: 700,
+                transition: 'all 0.15s', border: 'none', cursor: 'pointer',
+                background: tab === val ? '#CFB53B' : 'transparent',
+                color: tab === val ? '#000' : 'rgba(255,255,255,0.4)',
+              }}>{label}</button>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {tab === 'browse' ? (
+        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
+          {/* Filters */}
+          <div style={{ display: 'flex', gap: 12, marginBottom: 20, flexWrap: 'wrap',
+            padding: 16, borderRadius: 14, background: 'rgba(13,20,32,0.8)',
+            border: '1px solid rgba(255,255,255,0.08)' }}>
+            <div style={{ flex: 1, minWidth: 140, position: 'relative' }}>
+              <Filter size={14} color="rgba(255,255,255,0.3)" style={{
+                position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }} />
+              <select value={filterMetal} onChange={e => setFilterMetal(e.target.value)} style={{
+                width: '100%', padding: '9px 12px 9px 34px', borderRadius: 10, fontSize: 13,
+                background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)',
+                color: filterMetal ? '#fff' : 'rgba(255,255,255,0.4)', outline: 'none', appearance: 'none' }}>
+                <option value="">All Metals</option>
+                {METALS.map(m => <option key={m} value={m}>{m}</option>)}
+              </select>
+            </div>
+            <div style={{ flex: 1, minWidth: 140, position: 'relative' }}>
+              <MapPin size={14} color="rgba(255,255,255,0.3)" style={{
+                position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }} />
+              <input type="text" placeholder="Filter by city…" value={filterCity}
+                onChange={e => setFilterCity(e.target.value)} style={{
+                  width: '100%', padding: '9px 12px 9px 34px', borderRadius: 10, fontSize: 13,
+                  background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)',
+                  color: '#fff', outline: 'none', boxSizing: 'border-box' }} />
+            </div>
+          </div>
+
+          {loading ? (
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: 14 }}>
+              {[1,2,3,4].map(i => (
+                <div key={i} style={{ height: 160, borderRadius: 14, background: 'rgba(255,255,255,0.03)',
+                  border: '1px solid rgba(255,255,255,0.05)', animation: 'pulse 1.5s ease-in-out infinite' }} />
+              ))}
+            </div>
+          ) : listings.length === 0 ? (
+            <div style={{ textAlign: 'center', padding: '64px 0', borderRadius: 16,
+              background: 'rgba(13,20,32,0.6)', border: '1px dashed rgba(255,255,255,0.1)' }}>
+              <Search size={40} color="rgba(255,255,255,0.15)" style={{ margin: '0 auto 14px', display: 'block' }} />
+              <h3 style={{ fontSize: 18, fontWeight: 700, color: '#fff', margin: '0 0 6px' }}>No listings found</h3>
+              <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.35)', margin: 0 }}>
+                Try adjusting your filters or be the first to post.
+              </p>
+            </div>
+          ) : (
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: 14 }}>
+              {listings.map((item, idx) => (
+                <ListingCard key={item.id} item={item} delay={idx * 0.04} />
+              ))}
+            </div>
+          )}
+        </motion.div>
+      ) : (
+        <PostForm onSuccess={() => { setTab('browse'); load(); }} />
+      )}
+
+      <style>{`@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.5} }`}</style>
+    </div>
+  );
+}
+
+function ListingCard({ item, delay }) {
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}
+      transition={{ delay, duration: 0.2 }}
+      style={{ borderRadius: 14, padding: 18, display: 'flex', flexDirection: 'column', justifyContent: 'space-between',
+        background: 'rgba(13,20,32,0.8)', backdropFilter: 'blur(20px)',
+        border: '1px solid rgba(255,255,255,0.08)', transition: 'border-color 0.15s' }}
+    >
+      <div>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 10 }}>
+          <div>
+            <span style={{ fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em',
+              color: '#CFB53B', display: 'block', marginBottom: 3 }}>
+              {item.metal?.name || item.metalType}
+            </span>
+            <h3 style={{ fontSize: 16, fontWeight: 700, color: '#fff', margin: 0 }}>
+              {item.grade?.name || item.grade}
+            </h3>
+          </div>
+          <div style={{ textAlign: 'right' }}>
+            <span style={{ fontSize: 10, color: 'rgba(255,255,255,0.3)', display: 'block' }}>Expectation</span>
+            <span style={{ fontSize: 20, fontWeight: 700, color: '#fff', fontFamily: 'monospace' }}>
+              ₹{(item.price || item.priceExpectation || 0).toLocaleString('en-IN')}
+            </span>
+          </div>
+        </div>
+        {item.description && (
+          <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.45)', margin: '0 0 12px',
+            display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
+            {item.description}
+          </p>
+        )}
+      </div>
+
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+        paddingTop: 12, borderTop: '1px solid rgba(255,255,255,0.06)' }}>
+        <div style={{ display: 'flex', gap: 12, fontSize: 12, color: 'rgba(255,255,255,0.4)' }}>
+          <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+            <Weight size={12} />
+            {(item.qty || item.quantity || 0).toLocaleString('en-IN')} kg
+          </span>
+          <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+            <MapPin size={12} />
+            {item.location || item.city}
+          </span>
+        </div>
+        <a href={`tel:${item.contact || item.contactNumber}`} style={{
+          display: 'flex', alignItems: 'center', gap: 5, fontSize: 13, fontWeight: 700,
+          color: '#CFB53B', background: 'rgba(207,181,59,0.1)', padding: '6px 12px',
+          borderRadius: 8, textDecoration: 'none', border: '1px solid rgba(207,181,59,0.2)',
+        }}>
+          <Phone size={13} /> Call
+        </a>
+      </div>
+    </motion.div>
+  );
+}
+
+function PostForm({ onSuccess }) {
+  const { user } = useAuth();
+  const navigate = useNavigate();
+  const [form, setForm] = useState({
+    metalType: 'Copper', grade: '', quantity: '', city: '', hub: '',
+    priceExpectation: '', contactNumber: '', description: '',
+  });
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError]           = useState('');
+
+  if (!user) {
+    return (
+      <div style={{ textAlign: 'center', padding: '64px 16px', borderRadius: 16,
+        background: 'rgba(13,20,32,0.8)', border: '1px solid rgba(255,255,255,0.08)' }}>
+        <h3 style={{ fontSize: 20, fontWeight: 700, color: '#fff', margin: '0 0 8px' }}>Sign in required</h3>
+        <p style={{ fontSize: 14, color: 'rgba(255,255,255,0.4)', margin: '0 0 20px' }}>
+          You must be logged in to post a listing.
+        </p>
+        <button onClick={() => navigate('/login')} style={{
+          padding: '12px 28px', borderRadius: 12, fontWeight: 700, fontSize: 14,
+          background: '#CFB53B', color: '#000', border: 'none', cursor: 'pointer' }}>
+          Go to Login
+        </button>
+      </div>
+    );
+  }
+
+  const set = (k) => (e) => setForm(f => ({ ...f, [k]: e.target.value }));
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!user) { navigate('/login'); return; }
-    setSubmitting(true);
-    setError('');
+    setSubmitting(true); setError('');
     try {
       await createListing({
         ...form,
-        qty: parseFloat(form.qty),
-        price: form.price ? parseFloat(form.price) : null,
-        gradeId: form.gradeId || null,
+        quantity: Number(form.quantity),
+        priceExpectation: Number(form.priceExpectation),
       });
-      setShowCreate(false);
-      setForm({ metalId: '', gradeId: '', qty: '', unit: 'kg', location: '', price: '', description: '', contact: '' });
-      loadData();
-    } catch (err) {
-      setError(err.response?.data?.error || 'Failed to post listing');
-    } finally {
-      setSubmitting(false);
-    }
+      onSuccess();
+    } catch { setError('Failed to post listing. Try again.'); }
+    finally { setSubmitting(false); }
   };
 
-  const handleDelete = async (id) => {
-    try {
-      await deleteListing(id);
-      setListings(listings.filter(l => l.id !== id));
-    } catch (err) {
-      console.error(err);
-    }
+  const inputStyle = {
+    width: '100%', padding: '12px 14px', borderRadius: 10, fontSize: 13,
+    background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)',
+    color: '#fff', outline: 'none', boxSizing: 'border-box', transition: 'border 0.15s',
+  };
+  const labelStyle = {
+    fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.07em',
+    color: 'rgba(255,255,255,0.35)', display: 'block', marginBottom: 6,
   };
 
   return (
-    <div className="min-h-screen bg-bg pb-20 sm:pb-4">
-      <Navbar />
-      <main className="max-w-2xl mx-auto px-3 pt-4">
-        <div className="flex items-center justify-between mb-4">
-          <div>
-            <h1 className="text-base font-bold text-white flex items-center gap-2">
-              <span className="text-gold">🏪</span> Scrap Marketplace
-            </h1>
-            <p className="text-[11px] text-gray-500 mt-0.5">Buy &amp; sell scrap metal directly</p>
-          </div>
-          <button
-            onClick={() => user ? setShowCreate(!showCreate) : navigate('/login')}
-            className={showCreate ? 'btn-secondary text-xs' : 'btn-primary text-xs'}
-          >
-            {showCreate ? '✕ Cancel' : '+ Post Lot'}
-          </button>
-        </div>
+    <motion.form initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}
+      onSubmit={handleSubmit}
+      style={{ maxWidth: 640, margin: '0 auto', padding: 24, borderRadius: 18,
+        background: 'rgba(13,20,32,0.9)', border: '1px solid rgba(255,255,255,0.08)',
+        borderTop: '2px solid rgba(207,181,59,0.3)', boxShadow: '0 16px 48px rgba(0,0,0,0.4)' }}>
+      <h3 style={{ fontSize: 18, fontWeight: 700, color: '#fff', margin: '0 0 20px',
+        paddingBottom: 16, borderBottom: '1px solid rgba(255,255,255,0.07)' }}>
+        New Market Listing
+      </h3>
 
-        {/* Login prompt */}
-        {!user && (
-          <div className="rounded-xl p-3 mb-4 flex items-center justify-between border"
-            style={{ background: '#1A1500', borderColor: '#CFB53B33' }}>
-            <div>
-              <p className="text-gold text-xs font-semibold">Login to post listings</p>
-              <p className="text-gray-600 text-[10px]">Browse is open to all</p>
-            </div>
-            <button onClick={() => navigate('/login')} className="btn-primary text-xs py-1.5 px-3">
-              Login →
-            </button>
-          </div>
-        )}
-
-        {/* Filters */}
-        <div className="flex gap-2 mb-4 overflow-x-auto scrollbar-hide">
-          <select
-            value={filterMetal}
-            onChange={e => setFilterMetal(e.target.value)}
-            className="input-field w-auto text-xs"
-          >
-            <option value="">All Metals</option>
-            {metals.map(m => <option key={m.id} value={m.id}>{m.emoji} {m.name}</option>)}
-          </select>
-          <select
-            value={filterCity}
-            onChange={e => setFilterCity(e.target.value)}
-            className="input-field w-auto text-xs"
-          >
-            <option value="">All Cities</option>
-            {cities.map(c => <option key={c.id} value={c.name}>{c.name}</option>)}
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+        <div>
+          <label style={labelStyle}>Metal Type *</label>
+          <select value={form.metalType} onChange={set('metalType')} required style={{ ...inputStyle, appearance: 'none' }}>
+            {METALS.map(m => <option key={m} value={m}>{m}</option>)}
           </select>
         </div>
+        <div>
+          <label style={labelStyle}>Grade *</label>
+          <input type="text" value={form.grade} onChange={set('grade')}
+            placeholder="e.g. Armature, Super D" required style={inputStyle} />
+        </div>
+        <div>
+          <label style={labelStyle}>Quantity (kg) *</label>
+          <input type="number" value={form.quantity} onChange={set('quantity')}
+            placeholder="1000" min="1" required style={inputStyle} />
+        </div>
+        <div>
+          <label style={labelStyle}>Price (₹/kg) *</label>
+          <input type="number" value={form.priceExpectation} onChange={set('priceExpectation')}
+            placeholder="850" min="1" required style={inputStyle} />
+        </div>
+        <div>
+          <label style={labelStyle}>City *</label>
+          <input type="text" value={form.city} onChange={set('city')}
+            placeholder="New Delhi" required style={inputStyle} />
+        </div>
+        <div>
+          <label style={labelStyle}>Hub/Area *</label>
+          <input type="text" value={form.hub} onChange={set('hub')}
+            placeholder="Mandoli" required style={inputStyle} />
+        </div>
+        <div style={{ gridColumn: '1 / -1' }}>
+          <label style={labelStyle}>Contact Number *</label>
+          <input type="tel" value={form.contactNumber} onChange={set('contactNumber')}
+            placeholder="9876543210" required style={inputStyle} />
+        </div>
+        <div style={{ gridColumn: '1 / -1' }}>
+          <label style={labelStyle}>Details</label>
+          <textarea value={form.description} onChange={set('description')} rows={3}
+            placeholder="Condition, origin, availability…"
+            style={{ ...inputStyle, resize: 'none', lineHeight: 1.5 }} />
+        </div>
+      </div>
 
-        {/* Create form — only shown when user logged in and clicked Post Lot */}
-        {showCreate && user && (
-          <div className="rounded-xl p-4 mb-4 border"
-            style={{ background: '#141414', borderColor: '#CFB53B33' }}>
-            <h3 className="text-white font-bold mb-3 text-sm">📦 Post a Scrap Lot</h3>
-            <form onSubmit={handleSubmit} className="space-y-3">
-              <div className="grid grid-cols-2 gap-2">
-                <div>
-                  <label className="text-xs text-gray-500 mb-1 block">Metal *</label>
-                  <select
-                    value={form.metalId}
-                    onChange={e => setForm({...form, metalId: e.target.value, gradeId: ''})}
-                    className="input-field text-xs"
-                    required
-                  >
-                    <option value="">Select metal</option>
-                    {metals.map(m => <option key={m.id} value={m.id}>{m.emoji} {m.name}</option>)}
-                  </select>
-                </div>
-                <div>
-                  <label className="text-xs text-gray-500 mb-1 block">Grade</label>
-                  <select
-                    value={form.gradeId}
-                    onChange={e => setForm({...form, gradeId: e.target.value})}
-                    className="input-field text-xs"
-                    disabled={!selectedMetal}
-                  >
-                    <option value="">Any grade</option>
-                    {selectedMetal?.grades?.map(g => <option key={g.id} value={g.id}>{g.name}</option>)}
-                  </select>
-                </div>
-              </div>
+      {error && (
+        <p style={{ fontSize: 13, color: '#f87171', marginTop: 12, fontWeight: 600 }}>{error}</p>
+      )}
 
-              <div className="grid grid-cols-2 gap-2">
-                <div>
-                  <label className="text-xs text-gray-500 mb-1 block">Quantity *</label>
-                  <input type="number" value={form.qty} onChange={e => setForm({...form, qty: e.target.value})}
-                    placeholder="500" className="input-field text-xs" required min="1" />
-                </div>
-                <div>
-                  <label className="text-xs text-gray-500 mb-1 block">Unit</label>
-                  <select value={form.unit} onChange={e => setForm({...form, unit: e.target.value})} className="input-field text-xs">
-                    <option value="kg">kg</option>
-                    <option value="MT">MT</option>
-                    <option value="pieces">pieces</option>
-                  </select>
-                </div>
-              </div>
-
-              <div>
-                <label className="text-xs text-gray-500 mb-1 block">Location (City, Area) *</label>
-                <input type="text" value={form.location} onChange={e => setForm({...form, location: e.target.value})}
-                  placeholder="Mandoli, Delhi" className="input-field text-xs" required />
-              </div>
-
-              <div className="grid grid-cols-2 gap-2">
-                <div>
-                  <label className="text-xs text-gray-500 mb-1 block">Price/kg (₹)</label>
-                  <input type="number" value={form.price} onChange={e => setForm({...form, price: e.target.value})}
-                    placeholder="Optional" className="input-field text-xs" />
-                </div>
-                <div>
-                  <label className="text-xs text-gray-500 mb-1 block">Contact * </label>
-                  <input type="tel" value={form.contact} onChange={e => setForm({...form, contact: e.target.value})}
-                    placeholder="9876543210" className="input-field text-xs" required />
-                </div>
-              </div>
-
-              <div>
-                <label className="text-xs text-gray-500 mb-1 block">Description</label>
-                <textarea value={form.description} onChange={e => setForm({...form, description: e.target.value})}
-                  placeholder="Quality details, availability, etc."
-                  className="input-field text-xs resize-none" rows={2} />
-              </div>
-
-              {error && (
-                <div className="rounded-lg px-3 py-2 border text-xs text-red-400"
-                  style={{ background: '#1A0505', borderColor: '#7f1d1d' }}>
-                  {error}
-                </div>
-              )}
-              <div className="flex gap-2">
-                <button type="submit" disabled={submitting} className="btn-primary flex-1 py-2.5">
-                  {submitting ? 'Posting...' : '📤 Post Listing'}
-                </button>
-                <button type="button" onClick={() => setShowCreate(false)} className="btn-secondary px-4">
-                  Cancel
-                </button>
-              </div>
-            </form>
-          </div>
-        )}
-
-        {/* Listings */}
-        {loading ? (
-          <div className="space-y-3">
-            {[1, 2, 3].map(i => (
-              <div key={i} className="bg-surface rounded-xl border border-border p-4">
-                <div className="skeleton h-4 w-2/3 mb-2" />
-                <div className="skeleton h-3 w-1/2 mb-3" />
-                <div className="skeleton h-8 w-28" />
-              </div>
-            ))}
-          </div>
-        ) : listings.length === 0 ? (
-          <div className="text-center py-12">
-            <div className="text-4xl mb-3">🏪</div>
-            <p className="text-gray-400 text-sm font-semibold">No listings yet</p>
-            <p className="text-gray-600 text-xs mt-1">Be the first to post a scrap lot!</p>
-          </div>
-        ) : (
-          <div className="space-y-3">
-            {listings.map(listing => (
-              <MarketplaceListing
-                key={listing.id}
-                listing={listing}
-                onDelete={user && listing.userId === user.id ? handleDelete : null}
-              />
-            ))}
-          </div>
-        )}
-      </main>
-    </div>
+      <button type="submit" disabled={submitting} style={{
+        width: '100%', marginTop: 20, padding: '14px', borderRadius: 12, fontWeight: 700, fontSize: 15,
+        background: '#CFB53B', color: '#000', border: 'none', cursor: submitting ? 'not-allowed' : 'pointer',
+        display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+        boxShadow: '0 4px 16px rgba(207,181,59,0.25)', opacity: submitting ? 0.6 : 1,
+      }}>
+        {submitting ? 'Posting…' : <><Plus size={18} /> Publish Listing</>}
+      </button>
+    </motion.form>
   );
 }

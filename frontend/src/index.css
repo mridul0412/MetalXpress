@@ -1,14 +1,25 @@
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700;800&display=swap');
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
+:root {
+  --gold: #CFB53B;
+  --gold-light: #E8CC5A;
+  --gold-dark: #A89028;
+  --bg: #080E1A;
+  --surface: #0D1420;
+  --surface2: #111927;
+  --surface3: #172030;
+  --border: rgba(255,255,255,0.07);
+  --border-light: rgba(255,255,255,0.12);
+}
+
 @layer base {
-  * {
-    box-sizing: border-box;
-  }
+  * { box-sizing: border-box; }
 
   html {
-    background-color: #0D0D0D;
+    background-color: var(--bg);
     color: #E5E5E5;
     font-family: 'JetBrains Mono', 'Fira Code', 'Courier New', monospace;
     -webkit-tap-highlight-color: transparent;
@@ -18,101 +29,94 @@
     margin: 0;
     padding: 0;
     min-height: 100vh;
-    background-color: #0D0D0D;
+    background-color: var(--bg);
+    background-image:
+      radial-gradient(ellipse at 50% 0%, rgba(207,181,59,0.06) 0%, transparent 60%),
+      linear-gradient(to bottom, var(--bg), var(--bg));
+    background-attachment: fixed;
   }
 
-  ::-webkit-scrollbar {
-    width: 4px;
-    height: 4px;
-  }
-
-  ::-webkit-scrollbar-track {
-    background: #141414;
-  }
-
-  ::-webkit-scrollbar-thumb {
-    background: #333;
-    border-radius: 2px;
-  }
+  ::-webkit-scrollbar { width: 4px; height: 4px; }
+  ::-webkit-scrollbar-track { background: var(--bg); }
+  ::-webkit-scrollbar-thumb { background: #2A3A50; border-radius: 2px; }
 }
 
 @layer components {
-  .price-up {
-    @apply text-up;
-  }
-
-  .price-down {
-    @apply text-down;
+  /* Glass panel — core Replit-inspired card style */
+  .glass-panel {
+    background: rgba(13, 20, 32, 0.7);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(255,255,255,0.07);
+    box-shadow: 0 4px 24px rgba(0,0,0,0.4);
   }
 
   .metal-card {
-    @apply bg-surface rounded-xl border border-border overflow-hidden;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 0.75rem;
+    overflow: hidden;
     transition: border-color 0.15s;
   }
-
-  .metal-card:hover {
-    border-color: #333333;
-  }
+  .metal-card:hover { border-color: var(--border-light); }
 
   .btn-primary {
-    @apply px-4 py-2 rounded-lg font-bold text-sm transition-colors disabled:opacity-40 disabled:cursor-not-allowed;
+    @apply px-4 py-2 rounded-xl font-bold text-sm transition-all disabled:opacity-40 disabled:cursor-not-allowed;
     background-color: #CFB53B;
     color: #000;
+    box-shadow: 0 4px 12px rgba(207,181,59,0.2);
   }
-
-  .btn-primary:hover:not(:disabled) {
-    background-color: #E8CC5A;
-  }
+  .btn-primary:hover:not(:disabled) { background-color: #E8CC5A; }
 
   .btn-gold {
-    @apply px-4 py-2 rounded-lg font-bold text-sm transition-colors disabled:opacity-40 disabled:cursor-not-allowed;
+    @apply px-4 py-2 rounded-xl font-bold text-sm transition-all disabled:opacity-40 disabled:cursor-not-allowed;
     background-color: #CFB53B;
     color: #000;
+    box-shadow: 0 4px 12px rgba(207,181,59,0.2);
   }
-
-  .btn-gold:hover:not(:disabled) {
-    background-color: #E8CC5A;
-  }
+  .btn-gold:hover:not(:disabled) { background-color: #E8CC5A; }
 
   .btn-secondary {
-    @apply bg-surface2 text-gray-300 px-4 py-2 rounded-lg font-semibold text-sm border border-border hover:text-white transition-colors;
-    border-color: #2A2A2A;
+    @apply px-4 py-2 rounded-xl font-semibold text-sm transition-all;
+    background: rgba(255,255,255,0.05);
+    color: rgba(255,255,255,0.5);
+    border: 1px solid rgba(255,255,255,0.1);
   }
-
-  .btn-secondary:hover {
-    border-color: #333333;
-  }
+  .btn-secondary:hover { background: rgba(255,255,255,0.08); color: #fff; }
 
   .btn-outline-gold {
-    @apply px-4 py-2 rounded-lg font-semibold text-sm transition-colors;
+    @apply px-4 py-2 rounded-xl font-semibold text-sm transition-all;
     border: 1px solid #CFB53B;
     color: #CFB53B;
   }
-
-  .btn-outline-gold:hover {
-    background-color: #CFB53B;
-    color: #000;
-  }
+  .btn-outline-gold:hover { background-color: #CFB53B; color: #000; }
 
   .input-field {
-    @apply bg-surface2 border border-border text-white px-3 py-2.5 rounded-lg text-sm w-full focus:outline-none transition-colors;
+    @apply px-3 py-2.5 rounded-xl text-sm w-full transition-all;
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(255,255,255,0.1);
+    color: #fff;
+    outline: none;
   }
+  .input-field::placeholder { color: rgba(255,255,255,0.3); }
+  .input-field:focus { border-color: #CFB53B; box-shadow: 0 0 0 2px rgba(207,181,59,0.15); }
 
-  .input-field:focus {
-    border-color: #CFB53B;
-  }
-
-  .skeleton {
-    @apply animate-pulse bg-surface2 rounded;
-  }
+  .skeleton { @apply animate-pulse rounded; background: rgba(255,255,255,0.04); }
 
   .section-label {
     @apply text-[10px] font-bold uppercase tracking-widest;
-    color: #CFB53B;
+    color: rgba(255,255,255,0.4);
   }
 }
 
-/* Gold gradient text */
+/* Utility classes */
+.text-gold { color: #CFB53B; }
+.text-gold-light { color: #E8CC5A; }
+.bg-gold { background-color: #CFB53B; }
+
+.text-up { color: #34d399; }
+.text-down { color: #f87171; }
+
 .text-gold-gradient {
   background: linear-gradient(135deg, #E8CC5A, #CFB53B, #A89028);
   -webkit-background-clip: text;
@@ -120,30 +124,35 @@
   background-clip: text;
 }
 
-/* Glow line separator */
-.gold-divider {
-  height: 1px;
-  background: linear-gradient(90deg, transparent, #CFB53B40, transparent);
+.metallic-text {
+  background: linear-gradient(135deg, #f5e07a, #CFB53B, #E8CC5A);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
 }
 
-/* Marquee animation for LME strip */
+.gold-divider {
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(207,181,59,0.3), transparent);
+}
+
+/* Marquee */
 @keyframes marquee {
   0% { transform: translateX(0); }
   100% { transform: translateX(-50%); }
 }
-
-.marquee-track {
-  animation: marquee 50s linear infinite;
+.animate-marquee {
+  animation: marquee 35s linear infinite;
   white-space: nowrap;
   display: inline-flex;
 }
+.animate-marquee:hover { animation-play-state: paused; }
 
-.marquee-track:hover {
-  animation-play-state: paused;
-}
-
-/* Number display */
+/* Tabular numbers */
 .rate-number {
   font-variant-numeric: tabular-nums;
   font-feature-settings: "tnum";
 }
+
+/* Safe area bottom for mobile */
+.pb-safe { padding-bottom: env(safe-area-inset-bottom, 0px); }

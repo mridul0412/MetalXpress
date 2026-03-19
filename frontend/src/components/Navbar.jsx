@@ -1,100 +1,128 @@
-import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
+import { Activity, Bell, Briefcase, Settings, TrendingUp } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+import LMEStrip from './LMEStrip';
+
+const NAV_ITEMS = [
+  { href: '/',            label: 'Rates',  icon: Activity  },
+  { href: '/marketplace', label: 'Market', icon: Briefcase },
+  { href: '/alerts',      label: 'Alerts', icon: Bell      },
+  { href: '/admin',       label: 'Admin',  icon: Settings  },
+];
 
 export default function Navbar() {
   const location = useLocation();
   const { user, logout } = useAuth();
 
-  const navItems = [
-    { path: '/', label: 'Rates', icon: '📊' },
-    { path: '/marketplace', label: 'Market', icon: '🏪' },
-    { path: '/alerts', label: 'Alerts', icon: '🔔' },
-  ];
-
   return (
     <>
-      {/* Top header */}
-      <header className="bg-[#0D0D0D] border-b border-border px-4 py-0 flex items-center justify-between sticky top-0 z-40"
-        style={{ borderBottomColor: '#CFB53B22' }}>
-        <Link to="/" className="flex items-center gap-2.5 no-underline py-3">
-          <span className="text-xl leading-none">⚡</span>
-          <div>
-            <span className="text-base font-bold text-gold-light tracking-tight leading-none">
-              MetalXpress
-            </span>
-            <span className="hidden sm:block text-[9px] text-gray-600 leading-none mt-0.5 tracking-widest uppercase">
-              India Scrap Rates
-            </span>
-          </div>
-        </Link>
-
-        <div className="flex items-center gap-3">
-          {user ? (
-            <div className="flex items-center gap-3">
-              <div className="hidden sm:block text-right">
-                <div className="text-xs text-white font-semibold leading-none">
-                  {user.name || 'Trader'}
-                </div>
-                <div className="text-[10px] text-gray-500 leading-none mt-0.5">
-                  {user.phone}
-                </div>
-              </div>
-              <button
-                onClick={logout}
-                className="text-xs text-gray-500 hover:text-red-400 transition-colors px-2 py-1 rounded border border-transparent hover:border-red-900"
-              >
-                Logout
-              </button>
+      <header className="sticky top-0 z-50 w-full" style={{
+        background: 'rgba(8,14,26,0.9)',
+        backdropFilter: 'blur(20px)',
+        WebkitBackdropFilter: 'blur(20px)',
+        borderBottom: '1px solid rgba(255,255,255,0.07)',
+        boxShadow: '0 4px 24px rgba(0,0,0,0.4)',
+      }}>
+        {/* Top bar */}
+        <div className="max-w-5xl mx-auto px-4 h-14 flex items-center justify-between">
+          {/* Brand */}
+          <Link to="/" className="flex items-center gap-2.5" style={{ textDecoration: 'none' }}>
+            <div className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0" style={{
+              background: 'linear-gradient(135deg, #CFB53B, #A89028)',
+              boxShadow: '0 0 12px rgba(207,181,59,0.3)',
+            }}>
+              <TrendingUp size={16} color="#000" strokeWidth={3} />
             </div>
-          ) : (
-            <Link
-              to="/login"
-              className="text-xs font-bold px-4 py-2 rounded-lg transition-colors"
-              style={{ background: '#CFB53B', color: '#000' }}
-            >
-              Login
-            </Link>
-          )}
-          <Link
-            to="/admin"
-            className="text-xs text-gray-600 hover:text-gray-400 transition-colors hidden sm:block"
-          >
-            Admin
+            <span className="hidden sm:block text-base font-bold tracking-widest metallic-text">METALXPRESS</span>
+            <span className="sm:hidden text-base font-bold tracking-widest metallic-text">MX⚡</span>
           </Link>
+
+          {/* Desktop nav */}
+          <nav className="hidden md:flex items-center gap-1">
+            {NAV_ITEMS.map(({ href, label, icon: Icon }) => {
+              const active = location.pathname === href;
+              return (
+                <Link key={href} to={href} style={{
+                  padding: '6px 14px',
+                  borderRadius: '8px',
+                  fontSize: '12px',
+                  fontWeight: 600,
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                  textDecoration: 'none',
+                  transition: 'all 0.15s',
+                  background: active ? 'rgba(207,181,59,0.1)' : 'transparent',
+                  color: active ? '#CFB53B' : 'rgba(255,255,255,0.45)',
+                  border: `1px solid ${active ? 'rgba(207,181,59,0.25)' : 'transparent'}`,
+                }}>
+                  <Icon size={13} />
+                  {label}
+                </Link>
+              );
+            })}
+          </nav>
+
+          {/* Auth */}
+          <div className="flex items-center gap-2">
+            {user ? (
+              <>
+                <span className="hidden sm:block text-xs" style={{ color: 'rgba(255,255,255,0.35)' }}>
+                  {user.phone}
+                </span>
+                <button onClick={logout} style={{
+                  fontSize: '12px',
+                  padding: '5px 12px',
+                  borderRadius: '8px',
+                  fontWeight: 600,
+                  background: 'rgba(255,255,255,0.05)',
+                  border: '1px solid rgba(255,255,255,0.1)',
+                  color: 'rgba(255,255,255,0.45)',
+                  cursor: 'pointer',
+                  transition: 'all 0.15s',
+                }}>
+                  Logout
+                </button>
+              </>
+            ) : (
+              <Link to="/login" style={{
+                fontSize: '12px',
+                padding: '6px 14px',
+                borderRadius: '8px',
+                fontWeight: 700,
+                background: '#CFB53B',
+                color: '#000',
+                textDecoration: 'none',
+                boxShadow: '0 2px 8px rgba(207,181,59,0.25)',
+                transition: 'background 0.15s',
+              }}>
+                Login
+              </Link>
+            )}
+          </div>
         </div>
+
+        {/* LME Ticker strip */}
+        <LMEStrip />
       </header>
 
-      {/* Bottom mobile nav */}
-      <nav className="fixed bottom-0 left-0 right-0 z-40 border-t sm:hidden"
-        style={{ background: '#0D0D0D', borderColor: '#CFB53B22' }}>
-        <div className="flex">
-          {navItems.map(item => {
-            const isActive = location.pathname === item.path;
+      {/* Mobile bottom nav — outside header so it doesn't affect sticky */}
+      <nav className="md:hidden fixed bottom-0 left-0 right-0 z-50 pb-safe" style={{
+        background: 'rgba(8,14,26,0.97)',
+        backdropFilter: 'blur(20px)',
+        borderTop: '1px solid rgba(255,255,255,0.08)',
+      }}>
+        <div className="flex justify-around items-center h-16 px-2">
+          {NAV_ITEMS.map(({ href, label, icon: Icon }) => {
+            const active = location.pathname === href;
             return (
-              <Link
-                key={item.path}
-                to={item.path}
-                className={`flex-1 flex flex-col items-center py-2 text-center transition-colors ${
-                  isActive ? 'text-gold' : 'text-gray-600'
-                }`}
-              >
-                <span className="text-lg leading-none">{item.icon}</span>
-                <span className={`text-[10px] mt-0.5 font-semibold ${isActive ? 'text-gold' : ''}`}>
-                  {item.label}
-                </span>
+              <Link key={href} to={href} className="flex flex-col items-center justify-center w-full h-full gap-1"
+                style={{ color: active ? '#CFB53B' : 'rgba(255,255,255,0.35)', textDecoration: 'none', transition: 'color 0.15s' }}>
+                <Icon size={19} />
+                <span style={{ fontSize: '10px', fontWeight: 600, letterSpacing: '0.04em' }}>{label}</span>
               </Link>
             );
           })}
-          <Link
-            to="/admin"
-            className={`flex-1 flex flex-col items-center py-2 text-center transition-colors ${
-              location.pathname === '/admin' ? 'text-gold' : 'text-gray-600'
-            }`}
-          >
-            <span className="text-lg leading-none">⚙️</span>
-            <span className="text-[10px] mt-0.5 font-semibold">Admin</span>
-          </Link>
         </div>
       </nav>
     </>

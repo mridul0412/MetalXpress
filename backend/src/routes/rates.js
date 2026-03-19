@@ -2,6 +2,7 @@ const express = require('express');
 const { PrismaClient } = require('@prisma/client');
 const { parseRateMessage } = require('../services/rateParser');
 const { getLatestLMERates, getLatestMCXRates, getLatestForexRates } = require('../services/lmeService');
+const { fetchLivePrices } = require('../services/livePriceFetcher');
 const { adminMiddleware } = require('../middleware/auth');
 
 const router = express.Router();
@@ -111,13 +112,42 @@ router.get('/local', async (req, res) => {
   }
 });
 
-// GET /api/rates/lme
+// GET /api/rates/lme?force=true  — fetch live from Yahoo Finance + save to DB
+// GET /api/rates/lme             — return latest from DB
 router.get('/lme', async (req, res) => {
   try {
+    if (req.query.force === 'true') {
+      const live = await fetchLivePrices();
+      if (live.length > 0) {
+        // Upsert each metal into LMERate table
+        for (const r of live) {
+          await prisma.lMERate.create({
+            data: {
+              metal: r.metal,
+              price: r.priceUsd,
+              change: r.change,
+              unit: '$/MT',
+            },
+          }).catch(() => {}); // silently skip if model differs
+        }
+        return res.json({ rates: live, fetchedAt: new Date().toISOString(), source: 'live' });
+      }
+    }
     const rates = await getLatestLMERates();
+    res.json({ rates, fetchedAt: new Date().toISOString(), source: 'db' });
+  } catch (err) {
+    console.error('/api/rates/lme error:', err);
+    res.status(500).json({ error: 'Failed to fetch LME rates' });
+  }
+});
+
+// GET /api/rates/live — always fetch from Yahoo Finance (no DB write)
+router.get('/live', async (req, res) => {
+  try {
+    const rates = await fetchLivePrices();
     res.json({ rates, fetchedAt: new Date().toISOString() });
   } catch (err) {
-    res.status(500).json({ error: 'Failed to fetch LME rates' });
+    res.status(500).json({ error: 'Failed to fetch live prices' });
   }
 });
 
