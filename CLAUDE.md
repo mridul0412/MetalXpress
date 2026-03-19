@@ -1,12 +1,12 @@
 # MetalXpress — Project Context & Requirements
 
 ## What This App Is
-MetalXpress is a real-time scrap metal rate platform for Indian traders. It replaces WhatsApp broadcast messages with a clean, organized mobile-first web app. End consumers see live rates; admin pastes WhatsApp messages to update them.
+MetalXpress is a real-time scrap metal rate platform for Indian traders. Replaces WhatsApp broadcast messages with a clean, organized mobile-first web app. End consumers see live rates; admin pastes WhatsApp messages to update them.
 
 ## Owner Preferences (MUST FOLLOW)
 - **Accent**: Gold (`#CFB53B`) + Black (`#0D0D0D`). Blue only for secondary actions.
 - **Font**: JetBrains Mono / monospace throughout.
-- **Style**: Clean, minimal, no clutter. Large readable rate numbers. Neat cards.
+- **Style**: Dark navy glass-panel aesthetic. Large readable rate numbers. Minimal clutter.
 - **Mobile-first**: Most users are on mobile (traders on the go).
 
 ## Architecture
@@ -15,116 +15,155 @@ MetalXpress is a real-time scrap metal rate platform for Indian traders. It repl
 - **Auth**: Phone OTP (dev OTP: 1234), JWT tokens in localStorage as `mx_token`
 - **Admin auth**: Password in localStorage as `mx_admin_pass`, sent as `x-admin-password` header
 
-## Key Requirements (from owner, 2026-03-17)
+## Design System (current — dark navy glass)
+- Background: `#080E1A` with subtle gold radial gradient at top
+- Surface cards: `#0D1420` with `border: 1px solid rgba(255,255,255,0.07)`
+- Glass panels: `backdrop-filter: blur(20px)`, `background: rgba(8,14,26,0.9)`
+- Gold accent: `#CFB53B` (primary), `#A89028` (dark), `#E8CC5A` (light)
+- Up color: `#34d399` (green), Down color: `#f87171` (red)
+- Font: JetBrains Mono / monospace
+- **IMPORTANT**: Do NOT use `@apply bg-gold` etc. in CSS — Tailwind custom colors fail with @apply.
+  Always use direct CSS values: `background-color: #CFB53B`, `color: #CFB53B`
 
-### UI
-- Proper banner/header on home page with MetalXpress branding
-- Top section: prominent LME/MCX/Forex rates grid (like WhatsApp format)
-- Below: city/hub filter, then local scrap metal rate cards
-- Neat, clean — Replit-quality or better
+## CSS Class Reference
+```css
+.glass-panel    { background: rgba(13,20,32,0.7); backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,0.07); }
+.metallic-text  { background: linear-gradient(135deg, #CFB53B, #E8CC5A, #A89028); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+.text-gold      { color: #CFB53B; }
+.text-up        { color: #34d399; }
+.text-down      { color: #f87171; }
+.btn-primary    { background-color: #CFB53B; color: #000; font-weight: 700; }
+.animate-marquee { animation: marquee 28s linear infinite; display: flex; white-space: nowrap; }
+```
 
-### LME/MCX Rates
-- Top panel on home: show LME ($/MT) + MCX (₹/Kg) + Forex side by side
-- Format mirrors WhatsApp: Metal name, price, change (colored green/red)
-- Real-time where possible; admin can also paste WhatsApp message to update
-- Refresh button with "last updated" timestamp
+## Live Data Source (free, no API key)
+- **Yahoo Finance v8**: `https://query1.finance.yahoo.com/v8/finance/chart/{symbol}?interval=1d&range=5d`
+  - Copper: `HG=F` (USD/lb → ×2204.62 → USD/MT)
+  - Aluminium: `ALI=F` (USD/MT direct)
+  - Zinc: `ZNC=F` (USD/MT direct)
+  - Lead: `PB-USD` (USD/lb → ×2204.62 → USD/MT)
+  - USD/INR: `USDINR=X`
+- **Stooq CSV**: `https://stooq.com/q/d/l/?s=ni.f&i=d` for Nickel (¢/lb → ×22.0462 → USD/MT)
+- **MCX (₹/kg)** = `LME_USD_per_MT × USD_INR / 1000`
+- Gold/Silver excluded (not scrap metals, unit conversions produce absurd values)
+- Service: `backend/src/services/livePriceFetcher.js`
+- Endpoint: `GET /api/rates/live` — fetches live every call, no DB write
 
-### Admin (separate from end consumer app eventually)
-- WhatsApp message parser: ONLY for local city hub rates (not LME/MCX - separate tab)
-- Separate LME/MCX update from local rate update (two tabs or sections)
-- Parser must work reliably with the standard WhatsApp format shown below
+## File Structure
+```
+frontend/src/
+  App.jsx                          ← Router + AuthProvider + Navbar wrapper
+  pages/
+    Home.jsx                       ← LME/MCX table + hub selector + metal accordion cards
+    Login.jsx                      ← Glass card OTP flow, gold branding
+    Marketplace.jsx                ← Browse/Post tabs, listing cards
+    Alerts.jsx                     ← Price alerts (basic)
+    Admin.jsx                      ← LocalRatesPanel + WhatsAppParserPanel (red-accented)
+  components/
+    Navbar.jsx                     ← Sticky glass header + LMEStrip + mobile bottom nav
+    LMEStrip.jsx                   ← Marquee ticker fetching /api/rates/live
+    CitySelector.jsx               ← (legacy, hub select now inline in Home.jsx)
+    MetalCard.jsx                  ← (legacy, accordion now inline in Home.jsx)
+    RateTable.jsx                  ← (legacy)
+    LMERatesPanel.jsx              ← (legacy, replaced by inline section in Home.jsx)
+  utils/
+    api.js                         ← Axios instance, baseURL = VITE_API_URL || '/api', JWT interceptor
+  context/
+    AuthContext.jsx                ← phone/OTP auth, JWT in localStorage
 
-### WhatsApp Message Format (standard input)
+backend/src/
+  index.js                         ← Express app, CORS, rate limit, cron alerts
+  routes/
+    rates.js                       ← GET /api/rates/live, /local, /lme, POST /lme (admin)
+    cities.js                      ← GET /api/cities (returns plain array [{id,name,hubs:[]}])
+    metals.js, auth.js, marketplace.js, alerts.js, admin.js
+  services/
+    livePriceFetcher.js            ← Yahoo Finance + Stooq fetcher (CommonJS)
+    lmeService.js, rateParser.js, alertService.js
+  middleware/
+    auth.js
+  prisma/
+    seed.js                        ← Seeds cities, hubs, metals, grades, sample listings
+```
+
+## Key Code Patterns
+
+### Cities API parsing (MUST use this pattern)
+```js
+// GET /api/cities returns a plain array, not {cities:[]}
+const cities = Array.isArray(d) ? d : (d.cities || []);
+const allHubs = cities.flatMap(c => c.hubs || []);
+```
+
+### OTP verification (MUST use this pattern)
+```js
+// verifyOTP takes a single object, returns axios response
+const res = await verifyOTP({ phone, otp });
+const token = res.data.token;
+```
+
+### API base URL
+```js
+// api.js uses VITE_API_URL env var or falls back to '/api' (for same-origin prod deploys)
+const baseURL = import.meta.env.VITE_API_URL || '/api';
+```
+
+## WhatsApp Message Format (standard admin input)
 ```
 𝗠𝗘𝗧𝗔𝗟 𝗦𝗧𝗘𝗘𝗟 𝗫𝗣𝗥𝗘𝗦𝗦 𝟮.𝟬🔥
 16-03-26 03:29:51 PM
 ━━━━━━━━━━━━━━━━━━
 🌐 𝐋𝐌𝐄 𝐑𝐀𝐓𝐄𝐒 ($/𝐌𝐓)
-━━━━━━━━━━━━━━━━━━
 🥇 Copper: 12746.5 (−100)
-🥈 Aluminium: 3414.5 (+41)
-⚡ Nickel: 17245 (−196)
-⚫ Lead: 1886.5 (−46)
-🔵 Zinc: 3270 (−33)
-⚡ Tin: 47770 (+30)
-🛢️ Crude: 99.18 (−0.12)
-💎 Gold Oz: 4975.14 (−43.2877)
-💎 Silver Oz: 77.81 (−2.7414)
-━━━━━━━━━━━━━━━━━━
+...
 🇮🇳 𝐌𝐂𝐗 𝐑𝐀𝐓𝐄𝐒 (₹/𝐊𝐠)
-━━━━━━━━━━━━━━━━━━
 🥇 Copper: 1172.65 (−14.75)
-🥈 Aluminium: 343.35 (−2.75)
-⚡ Nickel: 1561 (−12.9)
-⚫ Lead: 186.05 (−2.55)
-🔵 Zinc: 321.8 (−2.65)
-🛢️ Crude: 9181 (+131)
-💎 Gold: 155246 (−3220)
-💎 Silver: 249058 (−10377)
-⚡ Natural Gas: 288.7 (−3.2)
-━━━━━━━━━━━━━━━━━━
+...
 💱 𝐅𝐎𝐑𝐄𝐗 & 📊 𝐈𝐍𝐃𝐈𝐂𝐄𝐒
-━━━━━━━━━━━━━━━━━━
 💱 USD/INR: 92.409 (−0.101)
-💱 EUR/USD: 1.1449 (+0.0033)
-📊 Nifty: 23434.85 (+283.75)
-📊 Sensex: 75610.43 (+1046.51)
-━━━━━━━━━━━━━━━━━━
-📞 7007789160
-```
-
-### Login
-- Clean professional OTP login page
-- Proper branding (gold + black)
-- Trader type selection after OTP verification
-
-### Marketplace
-- Buy/sell scrap metal lots
-- Requires login to post
-- Show metal, grade, quantity, price/kg or "Best Offer"
-- Contact via call or WhatsApp
-- Listing verification / admin approval (future)
-
-### Authentication & Verification
-- Users verified via phone OTP
-- Listings should eventually require verification
-- Admin has separate auth (password-based)
-- JWT tokens expire, handled via 401 interceptor in api.js
-
-## File Structure
-```
-frontend/src/
-  pages/       Home, Login, Marketplace, Alerts, Admin
-  components/  Navbar, LMEStrip, LMERatesPanel, CitySelector, MetalCard, RateTable, MarketplaceListing
-  utils/       api.js (axios instance with auth interceptors)
-  context/     AuthContext.jsx
-
-backend/src/
-  routes/      rates, cities, metals, auth, marketplace, alerts, admin
-  services/    lmeService, rateParser, alertService
-  middleware/  auth
-  prisma/      seed.js
+...
 ```
 
 ## Dev Commands
 ```bash
 # From repo root:
-npm run dev:frontend   # starts Vite on port 5173
-npm run dev:backend    # starts Nodemon on port 3001
+npm run dev:frontend   # Vite on port 5173
+npm run dev:backend    # Nodemon on port 3001
 
 # Database:
 cd backend && npx prisma db push    # sync schema
-cd backend && npm run seed          # seed data
+cd backend && npm run seed          # seed cities/hubs/metals/grades
 ```
 
-## API Key Notes
-- LME_API_KEY in backend/.env — currently "demo" (no real-time metal prices)
-- LME/MCX rates updated via admin WhatsApp message paste
-- Forex (USD/INR) can optionally be fetched from free APIs
+## GitHub
+- Repo: `https://github.com/mridul0412/MetalXpress`
+- Working branch: `claude/great-goldwasser`
+- Push to main: `git push origin claude/great-goldwasser:main`
+- Auth: PAT stored in Windows Credential Manager (set up via git credential approve)
 
-## Future Plans
-- Separate admin app from consumer app
-- Real LME/MCX API integration (metals-api.com or twelvedata.com)
-- SMS OTP via Twilio/MSG91
-- Push notifications for price alerts
-- User listing verification system
+## Current Status (as of 2026-03-19)
+- ✅ Navbar working (top bar + LME ticker strip + mobile bottom nav)
+- ✅ LME/MCX table with live Yahoo Finance data (Copper, Aluminium, Zinc, Lead, Nickel)
+- ✅ Hub selector (Naroda, Ambattur, Mandoli, etc.) — data from seeded DB
+- ✅ Metal accordion cards with framer-motion animation (show when DB has rates)
+- ✅ Login page — OTP flow, glass card, gold branding
+- ✅ Marketplace — Browse/Post tabs, listing cards, filter by metal/city
+- ✅ Admin — red-accented login, WhatsApp parser panel, local rates panel
+- ⚠️  Local rates show "No rates available" — seeded DB lacks rates per hub; admin needs to paste WhatsApp message to populate
+- ⚠️  OTP is hardcoded `1234` in dev (no real SMS)
+- ❌ Not yet deployed (next step)
+
+## Pending / Next Steps
+1. **Deployment** — Railway (backend + PostgreSQL) + Vercel or serve frontend from Express
+2. **Seed real rate data** — Admin to paste WhatsApp message for each hub
+3. **SMS OTP** — Twilio/MSG91 integration
+4. **Alerts page** — Not updated in latest overhaul
+5. **Admin parser end-to-end** — Parse + save flow needs full test with live DB
+6. **Redis** — Listed as dependency in package.json but not used; remove or stub
+
+## Known Issues / Gotchas
+- `@apply bg-gold` in CSS fails → use direct CSS property values
+- `spawn npm ENOENT` on Windows → use `cmd /c npm run dev` in launch.json
+- `GET /api/cities` returns plain `[]`, not `{ cities: [] }` — always use `Array.isArray(d)` check
+- Redis in backend/package.json but never required in code — harmless but worth cleaning
+- `ioredis` installed but unused — can be removed before production
