@@ -37,9 +37,22 @@ MetalXpress is a real-time scrap metal rate platform for Indian traders. It repl
 ```
 
 ## Current Date
-2026-03-19
+2026-03-20
 
-## Current Status (as of 2026-03-19)
+## Session Log
+- **2026-03-19**: Initial UI overhaul (Replit-quality design, LME/MCX panel, hub selector, Login, Admin, Marketplace)
+- **2026-03-20**: Fixed Navbar not rendering (missing from App.jsx), rewrote CLAUDE.md, fixed Lead symbol (PB-USD→Stooq), added Forex+Indices+Crude display, city pills selector, standalone Admin layout, Login redesign (Google OAuth stub + phone OTP + profile), PaywallModal, plug-and-play API stubs for metals-api/Google/Razorpay/MSG91
+
+## Known Remaining Issues (to address next session)
+- Lead/Tin change% shows absolute value (e.g. −46 USD) not percentage — parser stores absolute change from WhatsApp message, UI displays it as %
+- Login page routing: navigating via `window.location.href = '/login'` while logged-in redirects to home — expected behavior but worth adding explicit "logged-in" guard
+- Local rates still show "No rates available" for most hubs — admin needs to paste WhatsApp messages per city to populate; seeded data only has some hubs
+- WhatsApp parser end-to-end not tested live — needs real message paste in admin panel to verify grades save correctly
+- PaywallModal not wired to actual paywalls yet — just a component stub (connect when Razorpay key is ready)
+- Alerts page not updated in latest overhaul — uses old style
+- Nifty/Sensex symbols: ^NSEI and ^BSESN may occasionally return null (Yahoo rate limits); currently shows "—" gracefully
+
+## Current Status (as of 2026-03-20)
 - Live data: Yahoo Finance (Copper HG=F, Aluminium ALI=F, Zinc ZNC=F) + Stooq (Nickel ni.f, Lead pb.f, Tin sn.f)
 - Forex/Indices: Yahoo (USDINR=X, EURUSD=X, ^NSEI, ^BSESN, CL=F)
 - metals-api.com: plug-and-play (set METALS_API_KEY in .env to activate real LME spot)
