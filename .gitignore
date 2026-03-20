@@ -9,3 +9,9 @@ npm-debug.log*
 .prisma/
 prisma/migrations/*.sql
 .claude/
+
+# Debug/temp files
+ali.json
+hg.json
+znc.json
+backend-log.txt

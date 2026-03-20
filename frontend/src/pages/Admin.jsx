@@ -1,11 +1,12 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Lock, Edit3, Save, ClipboardPaste, ChevronLeft, LogOut } from 'lucide-react';
+import {
+  Lock, Save, ClipboardPaste, ChevronLeft, LogOut,
+  CheckCircle, AlertCircle, MapPin, Zap,
+} from 'lucide-react';
 import { adminParsePreview, saveParsedRates } from '../utils/api';
 
 const ADMIN_PASS_KEY = 'mx_admin_pass';
-
-// ── Standalone layout — no consumer Navbar ───────────────────────────────────
 
 export default function Admin() {
   const [pass, setPass]           = useState('');
@@ -30,8 +31,8 @@ export default function Admin() {
 
   if (!authed) {
     return (
-      <div style={{ minHeight: '100vh', background: '#080E1A', display: 'flex', alignItems: 'center',
-        justifyContent: 'center', padding: 16 }}>
+      <div style={{ minHeight: '100vh', background: '#080E1A', display: 'flex',
+        alignItems: 'center', justifyContent: 'center', padding: 16 }}>
         <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }}
           style={{ width: '100%', maxWidth: 400, borderRadius: 24, padding: 32,
             background: 'rgba(13,20,32,0.9)', backdropFilter: 'blur(20px)',
@@ -57,8 +58,9 @@ export default function Admin() {
             {authError && (
               <p style={{ fontSize: 13, color: '#f87171', textAlign: 'center', margin: 0 }}>{authError}</p>
             )}
-            <button type="submit" style={{ width: '100%', padding: '13px', borderRadius: 12, fontWeight: 700,
-              fontSize: 14, background: '#CFB53B', color: '#000', border: 'none', cursor: 'pointer' }}>
+            <button type="submit" style={{ width: '100%', padding: '13px', borderRadius: 12,
+              fontWeight: 700, fontSize: 14, background: '#CFB53B', color: '#000',
+              border: 'none', cursor: 'pointer' }}>
               Unlock Terminal
             </button>
             <p style={{ fontSize: 11, textAlign: 'center', color: 'rgba(255,255,255,0.2)', margin: 0 }}>
@@ -77,16 +79,14 @@ export default function Admin() {
       <div style={{
         position: 'sticky', top: 0, zIndex: 50,
         background: 'rgba(8,14,26,0.95)', backdropFilter: 'blur(16px)',
-        borderBottom: '1px solid rgba(255,255,255,0.06)',
-        padding: '0 16px',
+        borderBottom: '1px solid rgba(255,255,255,0.06)', padding: '0 16px',
       }}>
-        <div style={{ maxWidth: 1100, margin: '0 auto', height: 56,
+        <div style={{ maxWidth: 760, margin: '0 auto', height: 56,
           display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-          {/* Left: logo */}
           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
             <div style={{ width: 32, height: 32, borderRadius: 8, background: '#CFB53B',
-              display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 900,
-              fontSize: 13, color: '#000', letterSpacing: '-0.02em' }}>
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              fontWeight: 900, fontSize: 13, color: '#000', letterSpacing: '-0.02em' }}>
               MX
             </div>
             <span style={{ fontSize: 13, fontWeight: 700, color: 'rgba(255,255,255,0.7)',
@@ -94,176 +94,306 @@ export default function Admin() {
               MetalXpress Admin
             </span>
           </div>
-
-          {/* Right: actions */}
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
             <a href="/" style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '7px 12px',
               borderRadius: 8, fontSize: 12, fontWeight: 600, color: 'rgba(255,255,255,0.5)',
               background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)',
-              textDecoration: 'none', transition: 'all 0.15s' }}>
-              <ChevronLeft size={14} />
-              Exit to App
+              textDecoration: 'none' }}>
+              <ChevronLeft size={14} /> Exit to App
             </a>
             <button onClick={handleLogout}
               style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '7px 12px',
                 borderRadius: 8, fontSize: 12, fontWeight: 600, color: '#f87171',
                 background: 'rgba(248,113,113,0.08)', border: '1px solid rgba(248,113,113,0.2)',
-                cursor: 'pointer', transition: 'all 0.15s' }}>
-              <LogOut size={14} />
-              Logout
+                cursor: 'pointer' }}>
+              <LogOut size={14} /> Logout
             </button>
           </div>
         </div>
       </div>
 
       {/* ── Page body ── */}
-      <div style={{ maxWidth: 1100, margin: '0 auto', padding: '28px 16px 80px' }}>
+      <div style={{ maxWidth: 760, margin: '0 auto', padding: '28px 16px 80px' }}>
         <div style={{ marginBottom: 28 }}>
           <h1 style={{ fontSize: 26, fontWeight: 700, color: '#fff', margin: '0 0 4px' }}>
             Rate Management
           </h1>
           <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.35)', margin: 0 }}>
-            Update market prices · Changes reflect live on the app
+            Paste any WhatsApp broadcast · The parser auto-detects the type and routes it correctly
           </p>
         </div>
 
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: 20 }}>
-          <LocalRatesPanel />
-          <WhatsAppParserPanel />
-        </div>
+        <UnifiedParserPanel />
       </div>
     </div>
   );
 }
 
-// ── Local Rates Panel ────────────────────────────────────────────────────────
+// ── Unified Smart Parser ──────────────────────────────────────────────────────
+// Accepts ANY MetalXpress broadcast.
+// After parsing, auto-detects: local spot rates vs LME/MCX global broadcast.
+// Routes save to the right endpoint automatically — no manual selection needed.
 
-function LocalRatesPanel() {
-  const [message, setMessage]         = useState('');
-  const [preview, setPreview]         = useState(null);
-  const [parsing, setParsing]         = useState(false);
-  const [saving, setSaving]           = useState(false);
-  const [status, setStatus]           = useState('');
-  const [cities, setCities]           = useState([]);
-  const [selectedHub, setSelectedHub] = useState('');
-  const [selectedHubName, setSelectedHubName] = useState('');
+function UnifiedParserPanel() {
+  const [message, setMessage]   = useState('');
+  const [preview, setPreview]   = useState(null);
+  const [parsing, setParsing]   = useState(false);
+  const [saving, setSaving]     = useState(false);
+  const [status, setStatus]     = useState(null);
+  const [cities, setCities]     = useState([]);
+  const [resolvedHub, setResolvedHub] = useState(null); // { slug, cityName } — only for local rates
 
-  // Load cities for hub selector
   useEffect(() => {
     fetch('/api/cities')
       .then(r => r.json())
-      .then(d => {
-        const list = Array.isArray(d) ? d : (d.cities || []);
-        setCities(list);
-        // Default to first hub
-        const firstHub = list[0]?.hubs?.[0];
-        if (firstHub) {
-          setSelectedHub(firstHub.slug);
-          setSelectedHubName(firstHub.name);
-        }
-      })
+      .then(d => setCities(Array.isArray(d) ? d : (d.cities || [])))
       .catch(() => {});
   }, []);
 
-  const handleHubChange = (e) => {
-    const slug = e.target.value;
-    setSelectedHub(slug);
-    // Find hub name
+  // Match parsed cityHub to our cities list
+  function resolveHub(cityHub) {
+    if (!cityHub || cityHub.city === 'UNKNOWN') return null;
+    const detectedCity = cityHub.city.toUpperCase();
+    const detectedHub  = cityHub.hub?.toUpperCase();
     for (const city of cities) {
-      for (const hub of (city.hubs || [])) {
-        if (hub.slug === slug) {
-          setSelectedHubName(`${hub.name} — ${city.name}`);
-          return;
+      const cityUp = city.name.toUpperCase();
+      if (cityUp === detectedCity || cityUp.includes(detectedCity) || detectedCity.includes(cityUp)) {
+        if (detectedHub && city.hubs?.length > 1) {
+          const hub = city.hubs.find(h => {
+            const h2 = h.name.toUpperCase();
+            return h2 === detectedHub || h2.includes(detectedHub) || detectedHub.includes(h2);
+          });
+          if (hub) return { slug: hub.slug, cityName: city.name };
         }
+        const hub = city.hubs?.[0];
+        if (hub) return { slug: hub.slug, cityName: city.name };
       }
     }
-    setSelectedHubName(slug);
-  };
+    return null;
+  }
 
   const handleParse = async () => {
     if (!message.trim()) return;
-    setParsing(true); setStatus('');
+    setParsing(true); setStatus(null); setResolvedHub(null); setPreview(null);
     try {
       const res = await adminParsePreview(message);
-      setPreview(res.data?.parsed || res.data);
-    } catch { setStatus('Parse failed.'); }
-    finally { setParsing(false); }
+      const parsed = res.data?.parsed || res.data;
+      setPreview(parsed);
+      if (parsed?.messageType === 'local-rates' || parsed?.messageType === 'mixed') {
+        setResolvedHub(resolveHub(parsed?.cityHub));
+      }
+    } catch {
+      setStatus({ type: 'error', text: 'Parse failed — check backend connection.' });
+    } finally { setParsing(false); }
   };
 
   const handleSave = async () => {
-    if (!preview || !selectedHub) return;
-    setSaving(true); setStatus('');
+    if (!preview) return;
+    setSaving(true); setStatus(null);
     try {
-      await saveParsedRates({ hubSlug: selectedHub, rawMessage: message, parsed: preview });
-      setStatus(`✓ Rates updated for ${selectedHubName} — reflecting live on the app`);
-      setMessage(''); setPreview(null);
-      // Auto-clear success message after 3s
-      setTimeout(() => setStatus(''), 3000);
-    } catch { setStatus('Save failed.'); }
-    finally { setSaving(false); }
+      const type = preview.messageType;
+
+      if (type === 'local-rates') {
+        // Hub required for local rates
+        await saveParsedRates({ hubSlug: resolvedHub.slug, rawMessage: message, parsed: preview });
+        const count = preview.metals?.reduce((s, m) => s + (m.rates?.length || 0), 0) || 0;
+        setStatus({ type: 'success', text: `✓ ${count} local rates saved for ${resolvedHub.cityName} — live on app` });
+
+      } else if (type === 'lme-mcx') {
+        await saveParsedRates({ rawMessage: message, parsed: preview });
+        const lc = preview.lme?.length || 0;
+        const mc = preview.mcx?.length || 0;
+        const fx = (preview.forex?.length || 0) + (preview.indices?.length || 0);
+        setStatus({ type: 'success', text: `✓ Saved: ${lc} LME · ${mc} MCX · ${fx} Forex — live on app` });
+
+      } else if (type === 'mixed') {
+        // Save both global and local
+        await saveParsedRates({
+          hubSlug: resolvedHub?.slug,
+          rawMessage: message,
+          parsed: preview,
+        });
+        const localCount = preview.metals?.reduce((s, m) => s + (m.rates?.length || 0), 0) || 0;
+        const lc = preview.lme?.length || 0;
+        setStatus({ type: 'success', text: `✓ Saved: ${lc} LME + ${localCount} local rates — live on app` });
+      }
+
+      setMessage(''); setPreview(null); setResolvedHub(null);
+      setTimeout(() => setStatus(null), 5000);
+    } catch {
+      setStatus({ type: 'error', text: 'Save failed. Check admin password.' });
+    } finally { setSaving(false); }
   };
 
-  const metalCount = preview?.metals?.reduce((s, m) => s + (m.rates?.length || 0), 0) || 0;
+  // Derive counts
+  const localGrades = preview?.metals?.reduce((s, m) => s + (m.rates?.length || 0), 0) || 0;
+  const lmeCount    = preview?.lme?.length    || 0;
+  const mcxCount    = preview?.mcx?.length    || 0;
+  const fxCount     = (preview?.forex?.length || 0) + (preview?.indices?.length || 0);
+
+  // Can we save?
+  const type = preview?.messageType;
+  const canSave = preview && (
+    (type === 'local-rates' && localGrades > 0 && resolvedHub) ||
+    (type === 'lme-mcx'    && (lmeCount + mcxCount + fxCount) > 0) ||
+    (type === 'mixed'      && (localGrades > 0 || lmeCount > 0))
+  );
+
+  // Type badge config
+  const TYPE_CONFIG = {
+    'local-rates': { label: 'Local Spot Rates',   color: '#34d399', bg: 'rgba(52,211,153,0.1)',  border: 'rgba(52,211,153,0.25)' },
+    'lme-mcx':     { label: 'LME / MCX Broadcast', color: '#60a5fa', bg: 'rgba(96,165,250,0.1)',  border: 'rgba(96,165,250,0.25)' },
+    'mixed':       { label: 'Mixed (LME + Local)',  color: '#fbbf24', bg: 'rgba(251,191,36,0.1)',  border: 'rgba(251,191,36,0.25)' },
+    'unknown':     { label: 'No rates detected',    color: '#f87171', bg: 'rgba(248,113,113,0.1)', border: 'rgba(248,113,113,0.25)' },
+  };
+  const typeCfg = type ? TYPE_CONFIG[type] : null;
 
   return (
-    <Panel title="Local Rates Parser" subtitle="Paste WhatsApp message for local hub rates">
-
-      {/* Hub selector */}
-      <div style={{ marginBottom: 12 }}>
-        <label style={{ fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em',
-          color: 'rgba(255,255,255,0.35)', display: 'block', marginBottom: 6 }}>
-          Target Hub
-        </label>
-        <select value={selectedHub} onChange={handleHubChange}
-          style={{ width: '100%', padding: '10px 12px', borderRadius: 10, fontSize: 13,
-            background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.12)',
-            color: '#fff', outline: 'none', cursor: 'pointer', fontFamily: 'inherit' }}>
-          {cities.map(city =>
-            (city.hubs || []).map(hub => (
-              <option key={hub.slug} value={hub.slug}
-                style={{ background: '#0d1420', color: '#fff' }}>
-                {city.name} — {hub.name}
-              </option>
-            ))
-          )}
-        </select>
+    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} style={{
+      borderRadius: 16, padding: 20,
+      background: 'rgba(13,20,32,0.8)', backdropFilter: 'blur(20px)',
+      border: '1px solid rgba(255,255,255,0.08)',
+      boxShadow: '0 4px 24px rgba(0,0,0,0.3)',
+    }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 4 }}>
+        <Zap size={16} color="#CFB53B" />
+        <h3 style={{ fontSize: 17, fontWeight: 700, color: '#fff', margin: 0 }}>Smart Rate Parser</h3>
       </div>
+      <p style={{ fontSize: 12, color: 'rgba(255,255,255,0.35)', margin: '0 0 16px' }}>
+        Paste any broadcast — LME/MCX global or city local rates. Parser auto-detects and routes.
+      </p>
 
-      <textarea value={message} onChange={e => setMessage(e.target.value)}
-        placeholder={'COPPER\nArmature: 358 / 370\nMotor: 340 / 355\n\nALUMINIUM\nCast: 155 / 160'}
-        rows={7}
-        style={{ width: '100%', padding: '12px', borderRadius: 10, fontSize: 12, fontFamily: 'monospace',
-          background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.1)',
-          color: '#fff', outline: 'none', resize: 'vertical', boxSizing: 'border-box', lineHeight: 1.6 }} />
+      <textarea
+        value={message}
+        onChange={e => { setMessage(e.target.value); setPreview(null); setResolvedHub(null); setStatus(null); }}
+        placeholder={'Paste any MetalXpress WhatsApp broadcast here…\n\nWorks for both:\n• LME/MCX/Forex global broadcast\n• City local spot rates (Delhi, Mumbai, etc.)'}
+        rows={9}
+        style={{ width: '100%', padding: '12px', borderRadius: 10, fontSize: 12,
+          fontFamily: 'monospace', background: 'rgba(255,255,255,0.04)',
+          border: '1px solid rgba(255,255,255,0.1)', color: '#fff', outline: 'none',
+          resize: 'vertical', boxSizing: 'border-box', lineHeight: 1.6 }}
+      />
 
-      <div style={{ display: 'flex', gap: 8, marginTop: 8 }}>
-        <button onClick={handleParse} disabled={parsing || !message.trim()} style={btnStyle('#CFB53B', '#000', parsing)}>
+      <div style={{ display: 'flex', gap: 8, marginTop: 10, flexWrap: 'wrap', alignItems: 'center' }}>
+        <button onClick={handleParse} disabled={parsing || !message.trim()}
+          style={btnStyle('#CFB53B', '#000', parsing || !message.trim())}>
+          <ClipboardPaste size={13} style={{ marginRight: 5 }} />
           {parsing ? 'Parsing…' : 'Parse Message'}
         </button>
-        {preview && (
-          <button onClick={handleSave} disabled={saving} style={btnStyle('rgba(255,255,255,0.1)', '#fff', saving)}>
-            <Save size={13} style={{ display: 'inline', marginRight: 4 }} />
-            {saving ? 'Saving…' : `Save ${metalCount} rates`}
+
+        {canSave && (
+          <button onClick={handleSave} disabled={saving}
+            style={btnStyle('#34d399', '#000', saving)}>
+            <Save size={13} style={{ marginRight: 5 }} />
+            {saving ? 'Saving…' : buildSaveLabel(type, resolvedHub, localGrades, lmeCount, mcxCount, fxCount)}
           </button>
         )}
       </div>
 
+      {/* ── Detected type badge ── */}
+      {preview && typeCfg && (
+        <div style={{ marginTop: 12, padding: '8px 12px', borderRadius: 8,
+          background: typeCfg.bg, border: `1px solid ${typeCfg.border}`,
+          display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
+          <span style={{ fontSize: 12, fontWeight: 700, color: typeCfg.color }}>
+            {type === 'unknown' ? '⚠' : '✓'} Detected: {typeCfg.label}
+          </span>
+
+          {/* Data counts */}
+          {type !== 'unknown' && (
+            <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+              {lmeCount   > 0 && <Chip label={`${lmeCount} LME`}   color="#60a5fa" />}
+              {mcxCount   > 0 && <Chip label={`${mcxCount} MCX`}   color="#CFB53B" />}
+              {fxCount    > 0 && <Chip label={`${fxCount} Forex`}  color="#34d399" />}
+              {localGrades > 0 && <Chip label={`${localGrades} local grades`} color="#f472b6" />}
+            </div>
+          )}
+
+          {type === 'unknown' && (
+            <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.4)' }}>
+              The message doesn't match any known format. Check the paste or message structure.
+            </span>
+          )}
+        </div>
+      )}
+
+      {/* ── City auto-detect (local rates only) ── */}
+      {preview && (type === 'local-rates' || type === 'mixed') && (
+        <div style={{ marginTop: 8, padding: '8px 12px', borderRadius: 8,
+          background: resolvedHub ? 'rgba(52,211,153,0.06)' : 'rgba(251,191,36,0.06)',
+          border: `1px solid ${resolvedHub ? 'rgba(52,211,153,0.18)' : 'rgba(251,191,36,0.18)'}`,
+          display: 'flex', alignItems: 'center', gap: 8, fontSize: 12 }}>
+          <MapPin size={13} color={resolvedHub ? '#34d399' : '#fbbf24'} />
+          {resolvedHub ? (
+            <span style={{ color: '#34d399' }}>
+              City auto-detected: <strong>{resolvedHub.cityName}</strong>
+            </span>
+          ) : (
+            <span style={{ color: '#fbbf24' }}>
+              City "{preview.cityHub?.city || 'unknown'}" not in database —
+              add it first or check the message header
+            </span>
+          )}
+        </div>
+      )}
+
+      {/* ── LME preview ── */}
+      {preview?.lme?.length > 0 && (
+        <PreviewTable
+          title="LME Rates ($/MT)"
+          color="#60a5fa"
+          rows={preview.lme.map(r => ({
+            label: r.metal,
+            value: `$${r.price.toLocaleString()}`,
+            change: r.change,
+          }))}
+        />
+      )}
+
+      {/* ── MCX preview ── */}
+      {preview?.mcx?.length > 0 && (
+        <PreviewTable
+          title="MCX Rates (₹/Kg)"
+          color="#CFB53B"
+          rows={preview.mcx.map(r => ({
+            label: r.metal,
+            value: `₹${r.price}`,
+            change: r.change,
+          }))}
+        />
+      )}
+
+      {/* ── Forex preview ── */}
+      {(preview?.forex?.length > 0 || preview?.indices?.length > 0) && (
+        <PreviewTable
+          title="Forex & Indices"
+          color="#34d399"
+          rows={[...(preview.forex || []), ...(preview.indices || [])].map(r => ({
+            label: r.pair,
+            value: r.price,
+            change: r.change,
+          }))}
+        />
+      )}
+
+      {/* ── Local rates preview ── */}
       {preview?.metals?.length > 0 && (
-        <div style={{ marginTop: 12, borderRadius: 10, overflow: 'hidden',
-          border: '1px solid rgba(255,255,255,0.07)' }}>
+        <div style={{ marginTop: 10, borderRadius: 10, overflow: 'hidden',
+          border: '1px solid rgba(255,255,255,0.07)', maxHeight: 320, overflowY: 'auto' }}>
           {preview.metals.map((section) => (
             <div key={section.metal} style={{ borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
-              <div style={{ padding: '6px 12px', background: 'rgba(207,181,59,0.08)',
-                fontSize: 11, fontWeight: 700, color: '#CFB53B', textTransform: 'uppercase',
+              <div style={{ padding: '6px 12px', background: 'rgba(244,114,182,0.08)',
+                fontSize: 10, fontWeight: 700, color: '#f472b6', textTransform: 'uppercase',
                 letterSpacing: '0.06em' }}>
-                {section.metal}
+                {section.metal} · {section.rates?.length} grades
               </div>
               {section.rates?.map((r, i) => (
-                <div key={i} style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 12px',
-                  fontSize: 12, borderBottom: i < section.rates.length - 1 ? '1px solid rgba(255,255,255,0.04)' : 'none' }}>
+                <div key={i} style={{ display: 'flex', justifyContent: 'space-between',
+                  padding: '5px 12px', fontSize: 12,
+                  borderBottom: i < section.rates.length - 1 ? '1px solid rgba(255,255,255,0.04)' : 'none' }}>
                   <span style={{ color: 'rgba(255,255,255,0.7)' }}>{r.gradeName}</span>
                   <span style={{ color: '#fff', fontFamily: 'monospace', fontWeight: 600 }}>
-                    ₹{r.buyPrice} {r.sellPrice ? `/ ₹${r.sellPrice}` : ''}
+                    ₹{r.buyPrice}{r.sellPrice ? ` / ₹${r.sellPrice}` : ''}
                   </span>
                 </div>
               ))}
@@ -272,88 +402,72 @@ function LocalRatesPanel() {
         </div>
       )}
 
-      {status && (
-        <p style={{ fontSize: 13, color: status.startsWith('✓') ? '#34d399' : '#f87171',
-          marginTop: 8, fontWeight: 600 }}>{status}</p>
-      )}
-    </Panel>
-  );
-}
-
-// ── WhatsApp LME/MCX Parser Panel ────────────────────────────────────────────
-
-function WhatsAppParserPanel() {
-  const [message, setMessage] = useState('');
-  const [preview, setPreview] = useState(null);
-  const [parsing, setParsing] = useState(false);
-  const [status, setStatus]   = useState('');
-
-  const handleParse = async () => {
-    if (!message.trim()) return;
-    setParsing(true); setStatus('');
-    try {
-      const res = await adminParsePreview(message);
-      setPreview(res.data?.parsed || res.data);
-    } catch { setStatus('Parse failed.'); }
-    finally { setParsing(false); }
-  };
-
-  const lmeCount = preview?.lme?.length  || 0;
-  const mcxCount = preview?.mcx?.length  || 0;
-  const fxCount  = (preview?.forex?.length || 0) + (preview?.indices?.length || 0);
-
-  return (
-    <Panel title="LME / MCX Update" subtitle="Paste full WhatsApp broadcast to extract global rates">
-      <textarea value={message} onChange={e => setMessage(e.target.value)}
-        placeholder={'Paste the full Metal Steel Xpress WhatsApp message here…'}
-        rows={7}
-        style={{ width: '100%', padding: '12px', borderRadius: 10, fontSize: 12, fontFamily: 'monospace',
-          background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.1)',
-          color: '#fff', outline: 'none', resize: 'vertical', boxSizing: 'border-box', lineHeight: 1.6 }} />
-
-      <button onClick={handleParse} disabled={parsing || !message.trim()}
-        style={{ ...btnStyle('#CFB53B', '#000', parsing), marginTop: 8 }}>
-        <ClipboardPaste size={13} style={{ display: 'inline', marginRight: 4 }} />
-        {parsing ? 'Extracting…' : 'Extract Rates'}
-      </button>
-
-      {preview && (lmeCount > 0 || mcxCount > 0 || fxCount > 0) && (
-        <div style={{ marginTop: 12, display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-          {[
-            { label: 'LME metals',  count: lmeCount, color: '#60a5fa' },
-            { label: 'MCX metals',  count: mcxCount, color: '#CFB53B' },
-            { label: 'Forex/Index', count: fxCount,  color: '#34d399' },
-          ].map(({ label, count, color }) => count > 0 && (
-            <div key={label} style={{ padding: '6px 12px', borderRadius: 8, fontSize: 12, fontWeight: 600,
-              background: `${color}15`, color, border: `1px solid ${color}30` }}>
-              {count} {label}
-            </div>
-          ))}
-        </div>
-      )}
-
-      {status && (
-        <p style={{ fontSize: 13, color: status.startsWith('✓') ? '#34d399' : '#f87171',
-          marginTop: 8, fontWeight: 600 }}>{status}</p>
-      )}
-    </Panel>
-  );
-}
-
-// ── Shared components ────────────────────────────────────────────────────────
-
-function Panel({ title, subtitle, children }) {
-  return (
-    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} style={{
-      borderRadius: 16, padding: 20,
-      background: 'rgba(13,20,32,0.8)', backdropFilter: 'blur(20px)',
-      border: '1px solid rgba(255,255,255,0.08)',
-      boxShadow: '0 4px 24px rgba(0,0,0,0.3)',
-    }}>
-      <h3 style={{ fontSize: 17, fontWeight: 700, color: '#fff', margin: '0 0 4px' }}>{title}</h3>
-      <p style={{ fontSize: 12, color: 'rgba(255,255,255,0.35)', margin: '0 0 16px' }}>{subtitle}</p>
-      {children}
+      <StatusMsg status={status} />
     </motion.div>
+  );
+}
+
+// ── Helper to build contextual save button label ─────────────────────────────
+function buildSaveLabel(type, resolvedHub, localGrades, lmeCount, mcxCount, fxCount) {
+  if (type === 'local-rates')
+    return `Save ${localGrades} grades → ${resolvedHub?.cityName || '?'} · Go Live`;
+  if (type === 'lme-mcx')
+    return `Save ${lmeCount} LME · ${mcxCount} MCX · ${fxCount} Forex · Go Live`;
+  if (type === 'mixed')
+    return `Save All (LME + ${resolvedHub?.cityName || 'local'}) · Go Live`;
+  return 'Save & Go Live';
+}
+
+// ── Shared UI components ──────────────────────────────────────────────────────
+
+function PreviewTable({ title, color, rows }) {
+  return (
+    <div style={{ marginTop: 10, borderRadius: 10, overflow: 'hidden',
+      border: '1px solid rgba(255,255,255,0.07)' }}>
+      <div style={{ padding: '6px 12px', background: `${color}12`,
+        fontSize: 10, fontWeight: 700, color, textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+        {title}
+      </div>
+      {rows.map((r, i) => (
+        <div key={i} style={{ display: 'flex', justifyContent: 'space-between',
+          padding: '5px 12px', fontSize: 12,
+          borderBottom: i < rows.length - 1 ? '1px solid rgba(255,255,255,0.04)' : 'none' }}>
+          <span style={{ color: 'rgba(255,255,255,0.7)' }}>{r.label}</span>
+          <span style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <span style={{ color: '#fff', fontFamily: 'monospace', fontWeight: 600 }}>{r.value}</span>
+            {r.change != null && r.change !== 0 && (
+              <span style={{ fontSize: 11, color: r.change > 0 ? '#34d399' : '#f87171' }}>
+                {r.change > 0 ? '+' : ''}{r.change}
+              </span>
+            )}
+          </span>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function Chip({ label, color }) {
+  return (
+    <span style={{ padding: '3px 8px', borderRadius: 6, fontSize: 10, fontWeight: 700,
+      background: `${color}18`, color, border: `1px solid ${color}30` }}>
+      {label}
+    </span>
+  );
+}
+
+function StatusMsg({ status }) {
+  if (!status) return null;
+  const ok = status.type === 'success';
+  return (
+    <div style={{ marginTop: 10, display: 'flex', alignItems: 'center', gap: 8,
+      padding: '10px 12px', borderRadius: 10, fontSize: 13, fontWeight: 600,
+      background: ok ? 'rgba(52,211,153,0.08)' : 'rgba(248,113,113,0.08)',
+      border: `1px solid ${ok ? 'rgba(52,211,153,0.2)' : 'rgba(248,113,113,0.2)'}`,
+      color: ok ? '#34d399' : '#f87171' }}>
+      {ok ? <CheckCircle size={15} /> : <AlertCircle size={15} />}
+      {status.text}
+    </div>
   );
 }
 
@@ -361,7 +475,7 @@ function btnStyle(bg, color, disabled) {
   return {
     padding: '9px 16px', borderRadius: 10, fontWeight: 700, fontSize: 13,
     background: bg, color, border: 'none', cursor: disabled ? 'not-allowed' : 'pointer',
-    opacity: disabled ? 0.5 : 1, transition: 'all 0.15s', display: 'inline-flex',
-    alignItems: 'center',
+    opacity: disabled ? 0.5 : 1, transition: 'all 0.15s',
+    display: 'inline-flex', alignItems: 'center',
   };
 }

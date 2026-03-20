@@ -3,20 +3,102 @@
  * Handles the exact format used in Indian scrap metal trading groups
  */
 
-// Strip bold unicode characters and emojis from text for parsing
+// Strip bold unicode characters and emojis from text for parsing.
+// WhatsApp uses several Mathematical Unicode ranges for bold/sans-serif bold text.
 function cleanText(text) {
-  // Remove bold unicode markers (𝗔-𝗭 etc.)
   let cleaned = text.replace(/[\uD800-\uDBFF][\uDC00-\uDFFF]/g, (char) => {
     const cp = char.codePointAt(0);
-    // Convert bold mathematical chars back to ASCII
-    if (cp >= 0x1D400 && cp <= 0x1D7FF) {
-      if (cp >= 0x1D400 && cp <= 0x1D419) return String.fromCharCode(cp - 0x1D400 + 65);
-      if (cp >= 0x1D41A && cp <= 0x1D433) return String.fromCharCode(cp - 0x1D41A + 97);
-      if (cp >= 0x1D7CE && cp <= 0x1D7D7) return String.fromCharCode(cp - 0x1D7CE + 48);
-    }
+
+    // ── Letters ──────────────────────────────────────────────────────────────
+    // Mathematical Bold Serif A-Z (𝐀-𝐙)
+    if (cp >= 0x1D400 && cp <= 0x1D419) return String.fromCharCode(cp - 0x1D400 + 65);
+    // Mathematical Bold Serif a-z (𝐚-𝐳)
+    if (cp >= 0x1D41A && cp <= 0x1D433) return String.fromCharCode(cp - 0x1D41A + 97);
+    // Mathematical Bold Italic A-Z (𝑨-𝒁)
+    if (cp >= 0x1D468 && cp <= 0x1D481) return String.fromCharCode(cp - 0x1D468 + 65);
+    // Mathematical Bold Italic a-z (𝒂-𝒛)
+    if (cp >= 0x1D482 && cp <= 0x1D49B) return String.fromCharCode(cp - 0x1D482 + 97);
+    // Mathematical Sans-Serif Bold A-Z (𝗔-𝗭) — used by WhatsApp bold
+    if (cp >= 0x1D5D4 && cp <= 0x1D5ED) return String.fromCharCode(cp - 0x1D5D4 + 65);
+    // Mathematical Sans-Serif Bold a-z (𝗮-𝘇)
+    if (cp >= 0x1D5EE && cp <= 0x1D607) return String.fromCharCode(cp - 0x1D5EE + 97);
+    // Mathematical Sans-Serif Bold Italic A-Z
+    if (cp >= 0x1D63C && cp <= 0x1D655) return String.fromCharCode(cp - 0x1D63C + 65);
+    // Mathematical Sans-Serif Bold Italic a-z
+    if (cp >= 0x1D656 && cp <= 0x1D66F) return String.fromCharCode(cp - 0x1D656 + 97);
+
+    // ── Digits ───────────────────────────────────────────────────────────────
+    // Mathematical Bold Digits 0-9 (𝟎-𝟗) serif
+    if (cp >= 0x1D7CE && cp <= 0x1D7D7) return String.fromCharCode(cp - 0x1D7CE + 48);
+    // Mathematical Double-Struck Digits 0-9
+    if (cp >= 0x1D7D8 && cp <= 0x1D7E1) return String.fromCharCode(cp - 0x1D7D8 + 48);
+    // Mathematical Sans-Serif Digits 0-9
+    if (cp >= 0x1D7E2 && cp <= 0x1D7EB) return String.fromCharCode(cp - 0x1D7E2 + 48);
+    // Mathematical Sans-Serif Bold Digits 0-9 (𝟬-𝟵) — used by WhatsApp numbers
+    if (cp >= 0x1D7EC && cp <= 0x1D7F5) return String.fromCharCode(cp - 0x1D7EC + 48);
+    // Mathematical Monospace Digits 0-9
+    if (cp >= 0x1D7F6 && cp <= 0x1D7FF) return String.fromCharCode(cp - 0x1D7F6 + 48);
+
+    // Everything else (emoji, decorative) → strip
     return '';
   });
   return cleaned.trim();
+}
+
+const MONTHS_SHORT = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+
+// Extract the timestamp from the message (e.g. "𝟮𝟬-𝟬𝟯-𝟮𝟲 ⏰ 𝟬𝟭:𝟰𝟱:𝟯𝟰 𝗣𝗠")
+// The ⏰ clock emoji is a non-surrogate BMP char (U+23F0) that survives cleanText —
+// so we use [^\d]+ between date and time (matches any non-digit, including emoji).
+// Returns { display: "20 Mar, 01:45 PM", iso: "2026-03-20T08:15:34.000Z" } or null.
+function extractMessageTimestamp(lines) {
+  for (const line of lines.slice(0, 8)) {
+    const clean = cleanText(line).trim();
+    // Allow any non-digit chars between date and time (handles space, ⏰, 'T', etc.)
+    const m = clean.match(
+      /(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{2,4})[^\d]+(\d{1,2}):(\d{2})(?::(\d{2}))?\s*(AM|PM)?/i
+    );
+    if (m) {
+      const [, day, month, year, hours, minutes, seconds, ampm] = m;
+      const fullYear = year.length === 2 ? `20${year}` : year;
+
+      // ── Display string (exact message time, no timezone math) ──────────────
+      const monthName = MONTHS_SHORT[parseInt(month, 10) - 1] || month;
+      const display = `${parseInt(day, 10)} ${monthName}, ${hours.padStart(2, '0')}:${minutes}${ampm ? ' ' + ampm.toUpperCase() : ''}`;
+
+      // ── ISO for DB: treat message time as IST (UTC+5:30), store as UTC ─────
+      let h = parseInt(hours, 10);
+      if (ampm) {
+        if (ampm.toUpperCase() === 'PM' && h !== 12) h += 12;
+        if (ampm.toUpperCase() === 'AM' && h === 12) h = 0;
+      }
+      // Date.UTC gives ms in UTC; subtract IST offset (5h 30m) to convert IST→UTC
+      const IST_OFFSET_MS = (5 * 60 + 30) * 60 * 1000;
+      const istMs = Date.UTC(
+        parseInt(fullYear, 10), parseInt(month, 10) - 1, parseInt(day, 10),
+        h, parseInt(minutes, 10), parseInt(seconds || '0', 10)
+      );
+      const iso = new Date(istMs - IST_OFFSET_MS).toISOString();
+
+      return { display, iso };
+    }
+  }
+  return null;
+}
+
+// Determine the message type from parsed result
+// Returns: 'lme-mcx' | 'local-rates' | 'mixed' | 'unknown'
+function detectMessageType(result) {
+  const localGrades = result.metals?.reduce((s, m) => s + (m.rates?.length || 0), 0) || 0;
+  const hasLME    = (result.lme?.length || 0) >= 2;
+  const hasMCX    = (result.mcx?.length || 0) >= 2;
+  const hasForex  = (result.forex?.length || 0) >= 1;
+  const hasLocal  = localGrades > 0;
+
+  if (hasLocal && !hasLME && !hasMCX) return 'local-rates';
+  if ((hasLME || hasMCX || hasForex) && !hasLocal) return 'lme-mcx';
+  if (hasLocal && (hasLME || hasMCX)) return 'mixed';
+  return 'unknown';
 }
 
 // Detect city and hub from header line
@@ -153,7 +235,7 @@ function parseGradeLine(line) {
   return null;
 }
 
-// Parse LME section
+// Parse LME section — handles "price (change)" and plain "price" formats
 function parseLMESection(lines) {
   const rates = [];
   for (const line of lines) {
@@ -164,14 +246,26 @@ function parseLMESection(lines) {
     const metalName = clean.slice(0, colonIdx).trim();
     const rest = clean.slice(colonIdx + 1).trim();
 
-    // Match: price (change) e.g. "13141.5 (−69)" or "87.15 (+0.21)"
-    const priceMatch = rest.match(/^([\d,]+(?:\.\d+)?)\s*\(([+-−][\d.]+)\)/);
-    if (priceMatch) {
-      const changeStr = priceMatch[2].replace('−', '-').replace('–', '-');
+    // Try with change: "12205 (−100.12)"
+    const withChange = rest.match(/^([\d,]+(?:\.\d+)?)\s*\(([+-−][\d.]+)\)/);
+    if (withChange) {
+      const changeStr = withChange[2].replace('−', '-').replace('–', '-');
       rates.push({
         metal: metalName,
-        price: parseFloat(priceMatch[1].replace(',', '')),
+        price: parseFloat(withChange[1].replace(',', '')),
         change: parseFloat(changeStr),
+        unit: '$/MT',
+      });
+      continue;
+    }
+
+    // Try plain price: "94.56" (e.g. Crude without change)
+    const plainPrice = rest.match(/^([\d,]+(?:\.\d+)?)/);
+    if (plainPrice) {
+      rates.push({
+        metal: metalName,
+        price: parseFloat(plainPrice[1].replace(',', '')),
+        change: 0,
         unit: '$/MT',
       });
     }
@@ -179,7 +273,7 @@ function parseLMESection(lines) {
   return rates;
 }
 
-// Parse MCX section
+// Parse MCX section — handles both "price (change)" and plain "price" formats
 function parseMCXSection(lines) {
   const rates = [];
   for (const line of lines) {
@@ -190,13 +284,26 @@ function parseMCXSection(lines) {
     const metalName = clean.slice(0, colonIdx).trim();
     const rest = clean.slice(colonIdx + 1).trim();
 
-    const priceMatch = rest.match(/^([\d,]+(?:\.\d+)?)\s*\(([+-−][\d.]+)\)/);
-    if (priceMatch) {
-      const changeStr = priceMatch[2].replace('−', '-').replace('–', '-');
+    // Try with change: "1115.35 (+12.5)" or "1115.35 (−12.5)"
+    const withChange = rest.match(/^([\d,]+(?:\.\d+)?)\s*\(([+-−][\d.]+)\)/);
+    if (withChange) {
+      const changeStr = withChange[2].replace('−', '-').replace('–', '-');
       rates.push({
         metal: metalName,
-        price: parseFloat(priceMatch[1].replace(',', '')),
+        price: parseFloat(withChange[1].replace(',', '')),
         change: parseFloat(changeStr),
+        unit: '₹/Kg',
+      });
+      continue;
+    }
+
+    // Try plain price: "1115.35"
+    const plainPrice = rest.match(/^([\d,]+(?:\.\d+)?)/);
+    if (plainPrice) {
+      rates.push({
+        metal: metalName,
+        price: parseFloat(plainPrice[1].replace(',', '')),
+        change: 0,
         unit: '₹/Kg',
       });
     }
@@ -204,7 +311,7 @@ function parseMCXSection(lines) {
   return rates;
 }
 
-// Parse Forex section
+// Parse Forex section — handles both "value (change)" and plain "value" formats
 function parseForexSection(lines) {
   const rates = [];
   for (const line of lines) {
@@ -215,14 +322,25 @@ function parseForexSection(lines) {
     const pair = clean.slice(0, colonIdx).trim();
     const rest = clean.slice(colonIdx + 1).trim();
 
-    // Match: value (change)
-    const priceMatch = rest.match(/^([\d,]+(?:\.\d+)?)\s*\(([+-−][\d.]+)\)/);
-    if (priceMatch) {
-      const changeStr = priceMatch[2].replace('−', '-').replace('–', '-');
+    // Try with change: "93.32 (−0.10)"
+    const withChange = rest.match(/^([\d,]+(?:\.\d+)?)\s*\(([+-−][\d.]+)\)/);
+    if (withChange) {
+      const changeStr = withChange[2].replace('−', '-').replace('–', '-');
       rates.push({
         pair,
-        price: parseFloat(priceMatch[1].replace(',', '')),
+        price: parseFloat(withChange[1].replace(',', '')),
         change: parseFloat(changeStr),
+      });
+      continue;
+    }
+
+    // Try plain value: "93.3225"
+    const plainPrice = rest.match(/^([\d,]+(?:\.\d+)?)/);
+    if (plainPrice) {
+      rates.push({
+        pair,
+        price: parseFloat(plainPrice[1].replace(',', '')),
+        change: 0,
       });
     }
   }
@@ -237,6 +355,8 @@ function parseForexSection(lines) {
 function parseRateMessage(rawMessage) {
   const lines = rawMessage.split('\n').map(l => l.trim()).filter(l => l.length > 0);
 
+  const msgTs = extractMessageTimestamp(lines);
+
   const result = {
     cityHub: detectCityHub(lines),
     metals: [],
@@ -245,7 +365,8 @@ function parseRateMessage(rawMessage) {
     forex: [],
     indices: [],
     unparsedLines: [],
-    parsedAt: new Date().toISOString(),
+    parsedAt:            msgTs?.iso     || new Date().toISOString(),
+    messageTimestampStr: msgTs?.display || null,   // e.g. "20 Mar, 01:45 PM" — no timezone issues
     confidence: 0,
   };
 
@@ -379,8 +500,9 @@ function parseRateMessage(rawMessage) {
   result.forex = parseForexSection(forexLines);
 
   result.confidence = totalLines > 0 ? Math.round((parsedLines / totalLines) * 100) : 0;
+  result.messageType = detectMessageType(result);
 
   return result;
 }
 
-module.exports = { parseRateMessage };
+module.exports = { parseRateMessage, cleanText };

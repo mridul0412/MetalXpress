@@ -1,6 +1,6 @@
 const express = require('express');
 const { PrismaClient } = require('@prisma/client');
-const { parseRateMessage } = require('../services/rateParser');
+const { parseRateMessage, cleanText } = require('../services/rateParser');
 const { getLatestLMERates, getLatestMCXRates, getLatestForexRates } = require('../services/lmeService');
 const { fetchLivePrices } = require('../services/livePriceFetcher');
 const { adminMiddleware } = require('../middleware/auth');
@@ -101,10 +101,30 @@ router.get('/local', async (req, res) => {
       orderBy: { createdAt: 'desc' },
     });
 
+    // Re-extract display timestamp string from rawMessage (no timezone conversion needed)
+    // Returns e.g. "20 Mar, 01:45 PM" — exactly what the message said.
+    function extractDisplayTs(rawMsg) {
+      if (!rawMsg) return null;
+      const MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+      for (const line of rawMsg.split('\n').slice(0, 8)) {
+        const clean = cleanText(line).trim();
+        const m = clean.match(
+          /(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{2,4})[^\d]+(\d{1,2}):(\d{2})(?::\d{2})?\s*(AM|PM)?/i
+        );
+        if (m) {
+          const [, day, month,, hours, minutes,, ampm] = m;
+          const mon = MONTHS[parseInt(month, 10) - 1] || month;
+          return `${parseInt(day, 10)} ${mon}, ${hours.padStart(2,'0')}:${minutes}${ampm ? ' '+ampm.toUpperCase() : ''}`;
+        }
+      }
+      return null;
+    }
+
     res.json({
       hub: { id: hub.id, name: hub.name, slug: hub.slug, city: hub.city.name },
       rates: result,
       lastUpdated: lastUpdate?.createdAt || null,
+      messageTimestampStr: extractDisplayTs(lastUpdate?.rawMessage) || null,
     });
   } catch (err) {
     console.error('/api/rates/local error:', err);
@@ -142,37 +162,157 @@ router.get('/lme', async (req, res) => {
   }
 });
 
-// GET /api/rates/live — always fetch from live sources (no DB write)
-// Returns: { metals, forex, indices, crude, usdInr, fetchedAt }
-// For metals not available from Yahoo/Stooq (Lead, Tin), falls back to last admin-pasted LME data.
+// GET /api/rates/live
+// Priority per data type:
+//   LME metals  : admin paste (12h)  → Yahoo/Stooq → DB fallback Lead/Tin (7d)
+//   MCX prices  : admin paste (10m)  → calculated (LME × usdInr / 1000)
+//   Forex/Indices: admin paste (10m) → Yahoo Finance
+//   usdInr      : admin paste (10m)  → Yahoo (used for MCX calculation)
 router.get('/live', async (req, res) => {
   try {
-    const data = await fetchLivePrices(); // returns {metals, forex, indices, crude, usdInr}
-    const usdInr = data.usdInr || 84;
+    const CUTOFF_10M = new Date(Date.now() - 10 * 60 * 1000);
+    const CUTOFF_12H = new Date(Date.now() - 12 * 60 * 60 * 1000);
+    const CUTOFF_7D  = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+    const ALL_METALS = ['Copper', 'Aluminium', 'Zinc', 'Nickel', 'Lead', 'Tin'];
 
-    // Metals covered by Yahoo/Stooq
-    const liveCovered = new Set(data.metals.map(m => m.metal));
+    // Fetch Yahoo + all DB tables in parallel
+    const [yahooData, lmeRates, mcxRates, forexRates] = await Promise.all([
+      fetchLivePrices(),
+      prisma.lMERate.findMany({ where: { createdAt: { gte: CUTOFF_12H } }, orderBy: { createdAt: 'desc' } }).catch(() => []),
+      prisma.mCXRate.findMany({ where: { createdAt: { gte: CUTOFF_10M } }, orderBy: { createdAt: 'desc' } }).catch(() => []),
+      prisma.forexRate.findMany({ where: { createdAt: { gte: CUTOFF_10M } }, orderBy: { createdAt: 'desc' } }).catch(() => []),
+    ]);
 
-    // For Lead and Tin (no free live source), try DB — last admin-pasted LME value within 7 days
-    const DB_METALS = ['Lead', 'Tin'];
-    const missing = DB_METALS.filter(m => !liveCovered.has(m));
-    if (missing.length > 0) {
-      const cutoff = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
-      for (const metalName of missing) {
+    // ── 1. USD/INR — admin paste takes priority for MCX calculation ──────
+    let usdInr = yahooData.usdInr || 84;
+    let forexSource = 'yahoo';
+    let forexUpdatedAt = null;
+
+    // Build forex map from DB (dedup — take latest per pair)
+    const fxMap = {};
+    for (const f of forexRates) {
+      const key = (f.pair || '').toUpperCase().trim();
+      if (!fxMap[key]) { fxMap[key] = f; if (!forexUpdatedAt || f.createdAt > forexUpdatedAt) forexUpdatedAt = f.createdAt; }
+    }
+    if (fxMap['USD/INR']) { usdInr = fxMap['USD/INR'].price; forexSource = 'admin-update'; }
+
+    // ── 2. Forex & Indices display data ──────────────────────────────────
+    let forex, indices, crude;
+    // Helper: convert a ForexRate row's absolute change → % change
+    function fxChangePct(row, fallbackPct) {
+      if (!row) return fallbackPct ?? 0;
+      const abs = parseFloat(row.change) || 0;
+      if (abs === 0) return fallbackPct ?? 0;
+      const prev = parseFloat(row.price) - abs;
+      if (!prev || prev === 0) return fallbackPct ?? 0;
+      return parseFloat(((abs / prev) * 100).toFixed(4));
+    }
+
+    if (forexSource === 'admin-update') {
+      const eurUsd = fxMap['EUR/USD']?.price ??
+        (fxMap['EUR/INR']?.price ? parseFloat((fxMap['EUR/INR'].price / usdInr).toFixed(4)) : null);
+      forex = {
+        usdInr,
+        eurUsd:       eurUsd ?? yahooData.forex?.eurUsd,
+        usdInrChange: fxChangePct(fxMap['USD/INR'], yahooData.forex?.usdInrChange),
+        eurUsdChange: fxChangePct(fxMap['EUR/USD'], yahooData.forex?.eurUsdChange),
+      };
+      // Indices — WhatsApp broadcast usually doesn't have Nifty/Sensex, fall back to Yahoo
+      indices = {
+        nifty:        fxMap['NIFTY']?.price    ?? yahooData.indices?.nifty,
+        sensex:       fxMap['SENSEX']?.price   ?? yahooData.indices?.sensex,
+        niftyChange:  fxChangePct(fxMap['NIFTY'],  yahooData.indices?.niftyChange),
+        sensexChange: fxChangePct(fxMap['SENSEX'], yahooData.indices?.sensexChange),
+      };
+      // Crude from broadcast if present, else Yahoo
+      const crudeEntry = fxMap['CRUDE'] ?? fxMap['CRUDE WTI'] ?? fxMap['CRUDEOIL'];
+      crude = {
+        price:  crudeEntry?.price  ?? yahooData.crude?.price,
+        change: fxChangePct(crudeEntry, yahooData.crude?.change),
+      };
+    } else {
+      forex = yahooData.forex; indices = yahooData.indices; crude = yahooData.crude;
+    }
+
+    // ── 3. LME metals ─────────────────────────────────────────────────────
+    let metals = [];
+    let lmeSource = 'yahoo';
+    let lmeUpdatedAt = null;
+
+    // Helper: convert absolute price change to % change
+    // e.g. price=12205, absChange=-100  →  prevPrice=12305  →  -0.81%
+    function absToChangePct(price, absChange) {
+      if (!absChange || absChange === 0) return 0;
+      const prev = price - absChange;
+      if (!prev || prev === 0) return 0;
+      return parseFloat(((absChange / prev) * 100).toFixed(2));
+    }
+
+    if (lmeRates.length >= 3) {
+      // Admin-pasted LME (12h window)
+      // LME change stored as absolute USD/MT — convert to % for display
+      const usedMetals = new Set();
+      for (const rate of lmeRates) {
+        const metalName = ALL_METALS.find(m => rate.metal.toLowerCase().includes(m.toLowerCase()));
+        if (metalName && !usedMetals.has(metalName)) {
+          usedMetals.add(metalName);
+          const priceUsd = parseFloat(rate.price);
+          const absChange = parseFloat(rate.change) || 0;
+          metals.push({ metal: metalName, priceUsd, change: absToChangePct(priceUsd, absChange), source: 'admin-update' });
+          if (!lmeUpdatedAt || rate.createdAt > lmeUpdatedAt) lmeUpdatedAt = rate.createdAt;
+        }
+      }
+      // Fill any gaps from Yahoo
+      const covered = new Set(metals.map(m => m.metal));
+      yahooData.metals.filter(m => !covered.has(m.metal)).forEach(m => metals.push({ ...m }));
+      lmeSource = 'admin-update';
+    } else {
+      metals = yahooData.metals.map(m => ({ ...m }));
+      // DB fallback for Lead & Tin — also convert absolute → %
+      const covered = new Set(metals.map(m => m.metal));
+      for (const metalName of ['Lead', 'Tin']) {
+        if (covered.has(metalName)) continue;
         const dbRate = await prisma.lMERate.findFirst({
-          where: { metal: { contains: metalName }, createdAt: { gte: cutoff } },
+          where: { metal: { contains: metalName }, createdAt: { gte: CUTOFF_7D } },
           orderBy: { createdAt: 'desc' },
         }).catch(() => null);
         if (dbRate) {
-          const priceUsd = dbRate.price;
-          const priceMcx = parseFloat(((priceUsd * usdInr) / 1000).toFixed(2));
-          const change = dbRate.change || 0;
-          data.metals.push({ metal: metalName, priceUsd, priceMcx, change, source: 'admin-update' });
+          const priceUsd = parseFloat(dbRate.price);
+          const absChange = parseFloat(dbRate.change) || 0;
+          metals.push({ metal: metalName, priceUsd, change: absToChangePct(priceUsd, absChange), source: 'admin-update' });
         }
       }
     }
 
-    res.json({ ...data, fetchedAt: new Date().toISOString() });
+    // ── 4. MCX prices — admin paste (10m) overrides calculated ───────────
+    const mcxMap = {};
+    for (const r of mcxRates) {
+      const metalName = ALL_METALS.find(m => r.metal.toLowerCase().includes(m.toLowerCase()));
+      if (metalName && !mcxMap[metalName]) mcxMap[metalName] = parseFloat(r.price);
+    }
+
+    for (const m of metals) {
+      if (mcxMap[m.metal] != null) {
+        m.priceMcx  = mcxMap[m.metal];
+        m.mcxSource = 'admin-update';
+      } else {
+        m.priceMcx  = parseFloat(((m.priceUsd * usdInr) / 1000).toFixed(2));
+        m.mcxSource = 'calculated';
+      }
+    }
+
+    // ── 5. Canonical sort ─────────────────────────────────────────────────
+    metals.sort((a, b) => {
+      const ai = ALL_METALS.indexOf(a.metal), bi = ALL_METALS.indexOf(b.metal);
+      return (ai === -1 ? 99 : ai) - (bi === -1 ? 99 : bi);
+    });
+
+    res.json({
+      metals, forex, indices, crude, usdInr,
+      lmeSource,  lmeUpdatedAt:  lmeUpdatedAt?.toISOString()  || null,
+      forexSource, forexUpdatedAt: forexUpdatedAt?.toISOString() || null,
+      fetchedAt: new Date().toISOString(),
+    });
   } catch (err) {
     console.error('/api/rates/live error:', err);
     res.status(500).json({ error: 'Failed to fetch live prices' });
@@ -254,17 +394,35 @@ router.post('/manual', adminMiddleware, async (req, res) => {
 });
 
 // POST /api/rates/save-parsed — admin confirms parsed rates and saves
+// hubSlug is optional — if omitted, only LME/MCX/Forex are saved (no local rates)
 router.post('/save-parsed', adminMiddleware, async (req, res) => {
   try {
     const { hubSlug, contributorId, rawMessage, parsed } = req.body;
 
-    const hub = await prisma.hub.findUnique({ where: { slug: hubSlug } });
-    if (!hub) return res.status(404).json({ error: 'Hub not found' });
+    // Hub is only required if there are local metal rates to save
+    let hub = null;
+    if (hubSlug) {
+      hub = await prisma.hub.findUnique({ where: { slug: hubSlug } });
+      if (!hub) return res.status(404).json({ error: 'Hub not found' });
+    }
 
-    // Save LME rates if present
+    // Save LME rates if present — normalise metal names for reliable matching in /live
     if (parsed.lme && parsed.lme.length > 0) {
+      const CANONICAL = ['Copper', 'Aluminium', 'Aluminum', 'Zinc', 'Nickel', 'Lead', 'Tin'];
       for (const lme of parsed.lme) {
-        await prisma.lMERate.create({ data: lme });
+        // Resolve fuzzy name (e.g. "🥇 Copper") to canonical
+        const canonical = CANONICAL.find(c =>
+          lme.metal.toLowerCase().includes(c.toLowerCase())
+        );
+        const metalName = canonical === 'Aluminum' ? 'Aluminium' : (canonical || lme.metal);
+        await prisma.lMERate.create({
+          data: {
+            metal: metalName,
+            price: lme.price,
+            change: lme.change,
+            unit: lme.unit || '$/MT',
+          },
+        }).catch(() => {});
       }
     }
 
@@ -281,8 +439,8 @@ router.post('/save-parsed', adminMiddleware, async (req, res) => {
       await prisma.forexRate.create({ data: fx });
     }
 
-    // Save local metal rates
-    if (parsed.metals && parsed.metals.length > 0) {
+    // Save local metal rates (only if hub provided)
+    if (hub && parsed.metals && parsed.metals.length > 0) {
       const rateUpdate = await prisma.rateUpdate.create({
         data: {
           hubId: hub.id,
@@ -292,21 +450,36 @@ router.post('/save-parsed', adminMiddleware, async (req, res) => {
         },
       });
 
-      // Build grade name → id map
+      // Normalise grade name for fuzzy matching:
+      // Strip ALL non-alphanumeric chars (dots, spaces, dashes) then lowercase.
+      // "C C Rod" → "ccrod"  "C.C. Rod" → "ccrod"  "C C R" → "ccr"  "CC Rod" → "ccrod"
+      // This handles WhatsApp bold unicode that decodes with spaces: 𝐂𝐂𝐑 → "C C R"
+      function normGrade(s) {
+        return s.replace(/[^a-z0-9]/gi, '').toLowerCase();
+      }
+
       const grades = await prisma.grade.findMany({ include: { metal: true } });
-      const gradeMap = {};
+      const gradeMap = {};      // exact key → id
+      const gradeMapNorm = {};  // normalised key → id
       for (const g of grades) {
         gradeMap[`${g.metal.name}:${g.name}`] = g.id;
         gradeMap[g.name.toLowerCase()] = g.id;
+        gradeMapNorm[`${g.metal.name.toLowerCase()}:${normGrade(g.name)}`] = g.id;
+        gradeMapNorm[normGrade(g.name)] = g.id;
       }
 
       let savedCount = 0;
       for (const metalSection of parsed.metals) {
         for (const rate of metalSection.rates) {
-          // Try to find matching grade
+          const metalKey  = metalSection.metal;
+          const gradeKey  = rate.gradeName;
+          const normKey   = `${metalKey.toLowerCase()}:${normGrade(gradeKey)}`;
+          // Priority: exact → case-insensitive → normalised with metal → normalised name-only
           const gradeId =
-            gradeMap[`${metalSection.metal}:${rate.gradeName}`] ||
-            gradeMap[rate.gradeName.toLowerCase()];
+            gradeMap[`${metalKey}:${gradeKey}`] ||
+            gradeMap[gradeKey.toLowerCase()] ||
+            gradeMapNorm[normKey] ||
+            gradeMapNorm[normGrade(gradeKey)];
 
           if (!gradeId) {
             console.warn(`[PARSE] No grade found for: ${metalSection.metal}:${rate.gradeName}`);

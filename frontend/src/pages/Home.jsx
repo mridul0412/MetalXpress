@@ -58,8 +58,10 @@ export default function Home() {
   const [refreshingLme, setRefreshingLme]     = useState(false);
   const [refreshingLocal, setRefreshingLocal] = useState(false);
   const [lmeUpdatedAt, setLmeUpdatedAt]       = useState(null);
+  // localUpdatedAt = timestamp from the message itself (parsedAt), not the fetch time
   const [localUpdatedAt, setLocalUpdatedAt]   = useState(null);
   const localRefreshTimer = useRef(null);
+  const lmeRefreshTimer   = useRef(null);
 
   // Fetch live LME + forex + indices
   const loadLme = useCallback(async (force = false) => {
@@ -75,7 +77,7 @@ export default function Home() {
     finally { setLoadingLme(false); setRefreshingLme(false); }
   }, []);
 
-  // Fetch cities list
+  // Fetch cities list + start LME auto-refresh every 5 min
   useEffect(() => {
     fetch('/api/cities')
       .then(r => r.json())
@@ -85,7 +87,12 @@ export default function Home() {
         if (list.length) setSelectedCity(list[0]);
       })
       .catch(() => {});
+
     loadLme();
+
+    // Auto-refresh LME every 5 minutes (same as local rates)
+    lmeRefreshTimer.current = setInterval(() => loadLme(true), LOCAL_REFRESH_MS);
+    return () => clearInterval(lmeRefreshTimer.current);
   }, [loadLme]);
 
   // Fetch local rates when city changes
@@ -96,7 +103,10 @@ export default function Home() {
       const r = await fetch(`/api/rates/local?hub=${hubSlug}`);
       const d = await r.json();
       setLocalRates(d);
-      setLocalUpdatedAt(new Date());
+      // messageTimestampStr is a pre-formatted string e.g. "20 Mar, 01:45 PM"
+      // extracted from the raw WhatsApp message — no timezone conversion needed
+      const ts = d.lastUpdated;
+      setLocalUpdatedAt(ts ? new Date(ts) : new Date());
     } catch {}
     finally { setLoadingLocal(false); setRefreshingLocal(false); }
   }, []);
@@ -148,6 +158,19 @@ export default function Home() {
               textTransform: 'uppercase', letterSpacing: '0.08em' }}>
               LME / MCX Rates
             </span>
+            {/* Source badge: green = accurate LME from admin paste, amber = COMEX/Yahoo */}
+            {liveData && (
+              <span style={{
+                fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.07em',
+                padding: '2px 6px', borderRadius: 4,
+                background: liveData.lmeSource === 'admin-update'
+                  ? 'rgba(52,211,153,0.15)' : 'rgba(251,191,36,0.12)',
+                color: liveData.lmeSource === 'admin-update' ? '#34d399' : '#fbbf24',
+                border: `1px solid ${liveData.lmeSource === 'admin-update' ? 'rgba(52,211,153,0.25)' : 'rgba(251,191,36,0.2)'}`,
+              }}>
+                {liveData.lmeSource === 'admin-update' ? '✓ LME' : 'COMEX'}
+              </span>
+            )}
           </div>
           <div className="flex items-center gap-2">
             {lmeUpdatedAt && (
@@ -229,12 +252,31 @@ export default function Home() {
       {/* ── Forex & Indices ─────────────────────────────────── */}
       {!loadingLme && hasForex && (
         <section>
-          <div className="flex items-center gap-2 mb-3">
-            <Globe size={15} color="#CFB53B" />
-            <span style={{ color: 'rgba(255,255,255,0.5)', fontSize: 11, fontWeight: 700,
-              textTransform: 'uppercase', letterSpacing: '0.08em' }}>
-              Forex &amp; Indices
-            </span>
+          <div className="flex items-center justify-between mb-3">
+            <div className="flex items-center gap-2">
+              <Globe size={15} color="#CFB53B" />
+              <span style={{ color: 'rgba(255,255,255,0.5)', fontSize: 11, fontWeight: 700,
+                textTransform: 'uppercase', letterSpacing: '0.08em' }}>
+                Forex &amp; Indices
+              </span>
+            </div>
+            <div className="flex items-center gap-2">
+              {/* Show admin paste time if available, else last fetch time */}
+              {(liveData?.forexUpdatedAt || lmeUpdatedAt) && (
+                <span className="flex items-center gap-1" style={{ fontSize: 10, color: 'rgba(255,255,255,0.25)' }}>
+                  <Clock size={11} />
+                  {liveData?.forexUpdatedAt
+                    ? format(new Date(liveData.forexUpdatedAt), 'dd MMM, hh:mm a')
+                    : format(lmeUpdatedAt, 'dd MMM, hh:mm a')}
+                </span>
+              )}
+              <button onClick={() => loadLme(true)} disabled={refreshingLme}
+                style={{ padding: '5px', borderRadius: 8, background: 'rgba(255,255,255,0.05)',
+                  border: '1px solid rgba(255,255,255,0.08)', cursor: 'pointer', display: 'flex',
+                  color: 'rgba(255,255,255,0.4)' }}>
+                <RefreshCw size={13} style={{ animation: refreshingLme ? 'spin 1s linear infinite' : 'none' }} />
+              </button>
+            </div>
           </div>
 
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: 8 }}>
@@ -271,10 +313,11 @@ export default function Home() {
               textTransform: 'uppercase', letterSpacing: '0.08em' }}>
               Local Spot Rates
             </span>
-            {localUpdatedAt && (
+            {(localRates?.messageTimestampStr || localUpdatedAt) && (
               <span className="flex items-center gap-1" style={{ fontSize: 10, color: 'rgba(255,255,255,0.25)' }}>
                 <Clock size={10} />
-                {format(localUpdatedAt, 'hh:mm a')}
+                {/* Prefer the string from the message itself — no timezone ambiguity */}
+                {localRates?.messageTimestampStr || format(localUpdatedAt, 'dd MMM, hh:mm a')}
               </span>
             )}
           </div>
@@ -374,27 +417,16 @@ export default function Home() {
                         transition={{ duration: 0.18 }}
                         style={{ overflow: 'hidden' }}
                       >
-                        {/* Column headers */}
-                        <div style={{ display: 'grid', gridTemplateColumns: '1fr auto',
-                          padding: '6px 16px', background: 'rgba(255,255,255,0.02)',
-                          borderTop: '1px solid rgba(255,255,255,0.05)', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
-                          <span style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase',
-                            letterSpacing: '0.1em', color: 'rgba(255,255,255,0.2)' }}>Grade</span>
-                          <div style={{ display: 'flex', gap: 24 }}>
-                            <span style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase',
-                              letterSpacing: '0.1em', color: 'rgba(255,255,255,0.2)', width: 72, textAlign: 'right' }}>Buy</span>
-                            <span style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase',
-                              letterSpacing: '0.1em', color: 'rgba(255,255,255,0.2)', width: 72, textAlign: 'right' }}>Sell</span>
-                          </div>
-                        </div>
-
                         <div>
                           {grades.map(({ grade, rate }, gi) => {
                             const chgUp = rate.change > 0, chgDn = rate.change < 0;
+                            const primary = rate.buyPrice ?? rate.sellPrice;
+                            const secondary = rate.buyPrice && rate.sellPrice ? rate.sellPrice : null;
                             return (
                               <div key={grade.id} style={{
-                                display: 'grid', gridTemplateColumns: '1fr auto',
-                                padding: '10px 16px', alignItems: 'center',
+                                display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                                padding: '10px 16px',
+                                borderTop: gi === 0 ? '1px solid rgba(255,255,255,0.05)' : 'none',
                                 borderBottom: gi < grades.length - 1 ? '1px solid rgba(255,255,255,0.04)' : 'none',
                               }}>
                                 <div>
@@ -410,16 +442,22 @@ export default function Home() {
                                     </p>
                                   )}
                                 </div>
-                                <div style={{ display: 'flex', gap: 24 }}>
+                                {/* Price: ₹1140 / ₹1230 (and optional variant below) */}
+                                <div style={{ textAlign: 'right' }}>
                                   <span style={{ fontSize: 13, fontFamily: 'monospace', fontWeight: 700,
-                                    color: '#fff', width: 72, textAlign: 'right' }}>
-                                    ₹{fmt(rate.buyPrice ?? rate.sellPrice)}
+                                    color: '#fff', whiteSpace: 'nowrap' }}>
+                                    ₹{fmt(primary)}
+                                    {secondary && (
+                                      <span style={{ color: '#CFB53B' }}> / ₹{fmt(secondary)}</span>
+                                    )}
                                   </span>
-                                  <span style={{ fontSize: 13, fontFamily: 'monospace', fontWeight: 600,
-                                    color: rate.sellPrice ? '#CFB53B' : 'rgba(255,255,255,0.15)',
-                                    width: 72, textAlign: 'right' }}>
-                                    {rate.sellPrice ? `₹${fmt(rate.sellPrice)}` : '—'}
-                                  </span>
+                                  {/* Variant e.g. "1.6MM: ₹1236" */}
+                                  {rate.variantPrice && (
+                                    <p style={{ fontSize: 10, fontFamily: 'monospace', margin: '2px 0 0',
+                                      color: 'rgba(207,181,59,0.6)', whiteSpace: 'nowrap' }}>
+                                      {rate.variantLabel || 'Variant'}: ₹{fmt(rate.variantPrice)}
+                                    </p>
+                                  )}
                                 </div>
                               </div>
                             );

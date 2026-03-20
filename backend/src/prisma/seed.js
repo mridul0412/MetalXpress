@@ -51,11 +51,11 @@ const METALS = [
   { name: 'Other', emoji: '⚡', colorHex: '#F5A623', sortOrder: 6, grades: [
     { name: 'Tin', hasVariants: false },
     { name: 'Nickel', hasVariants: false },
-    { name: 'Gun Metal Local', hasVariants: false },
+    { name: 'Gun Metal', hasVariants: false },
   ]},
   { name: 'MS', emoji: '🏗️', colorHex: '#888888', sortOrder: 7, grades: [
-    { name: 'Mandi MS Scrap', hasVariants: false },
-    { name: 'Mandi MS Ingot', hasVariants: false },
+    { name: 'Mandi Scrap', hasVariants: false },
+    { name: 'Mandi Ingot', hasVariants: false },
   ]},
 ];
 
@@ -96,11 +96,11 @@ const DELHI_MANDOLI_RATES = {
   'Other': {
     'Tin': { buyPrice: 4750, sellPrice: 4950 },
     'Nickel': { buyPrice: 1630, sellPrice: 1720 },
-    'Gun Metal Local': { buyPrice: 817, sellPrice: 847 },
+    'Gun Metal': { buyPrice: 817, sellPrice: 847 },
   },
   'MS': {
-    'Mandi MS Scrap': { buyPrice: 32600, sellPrice: null },
-    'Mandi MS Ingot': { buyPrice: 44600, sellPrice: null },
+    'Mandi Scrap': { buyPrice: 32600, sellPrice: null },
+    'Mandi Ingot': { buyPrice: 44600, sellPrice: null },
   },
 };
 
