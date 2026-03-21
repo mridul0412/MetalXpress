@@ -10,22 +10,23 @@ const FEATURES = [
 
 export default function HeroSection() {
   return (
-    <section style={{ textAlign: 'center', paddingBottom: 8, position: 'relative', overflow: 'hidden' }}>
-      {/* Gold glow behind hero */}
+    <section style={{ textAlign: 'center', paddingBottom: 8, position: 'relative' }}>
+      {/* Gold glow behind hero — clipped independently */}
       <div style={{
         position: 'absolute', top: 0, left: '50%', transform: 'translateX(-50%)',
         width: 600, height: 400, background: 'radial-gradient(circle, rgba(207,181,59,0.08) 0%, transparent 70%)',
-        pointerEvents: 'none', zIndex: 0,
+        pointerEvents: 'none', zIndex: 0, overflow: 'hidden',
       }} />
 
-      {/* ॐ watermark — divine blessing behind the hero */}
+      {/* ॐ watermark — using background-image with encoded text so NO clipping occurs */}
       <div style={{
-        position: 'absolute', top: '50%', left: '50%',
-        transform: 'translate(-50%, -50%)',
-        fontSize: 420, fontWeight: 800, lineHeight: 1,
-        color: 'rgba(207,181,59,0.035)',
+        position: 'absolute', top: 0, left: 0, right: 0, bottom: 0,
         pointerEvents: 'none', userSelect: 'none', zIndex: 0,
-      }}>ॐ</div>
+        backgroundImage: `url("data:image/svg+xml,${encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200"><text x="100" y="140" text-anchor="middle" font-size="180" font-weight="800" fill="rgba(207,181,59,0.08)">ॐ</text></svg>')}")`,
+        backgroundRepeat: 'no-repeat',
+        backgroundPosition: 'center center',
+        backgroundSize: 'contain',
+      }} />
 
       <div style={{ position: 'relative', zIndex: 1 }}>
         <h1 style={{
