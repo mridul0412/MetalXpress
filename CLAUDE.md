@@ -48,6 +48,7 @@ MetalXpress is a real-time scrap metal rate platform for Indian traders. It repl
 - **2026-03-21 (session 4)**: Auth overhaul, landing page, paywall gate, footer/legal pages — see Session 4 details below
 - **2026-03-21 (session 5)**: Auth integration, pro test user, alerts fix, initial marketplace filters
 - **2026-03-21 (session 6)**: Complete marketplace overhaul — deal flow with 0.1% commission gate, sell-only listings, card redesign, dropdown fix, listing verification, contact reveal after payment
+- **2026-03-21 (session 7)**: Negotiation-first deal flow redesign, Profile page, Admin marketplace panel — see Session 7 details below
 
 ## Session 3 Changes (2026-03-20) — Full Detail
 
@@ -275,15 +276,76 @@ Grade names updated to match actual WhatsApp message format (so `normGrade` matc
 - **Forgot password**: Not implemented yet — email+password flow has no password reset
 - **Email verification**: Not implemented — users can register with any email without confirming it
 - **Contact page**: Phone/WhatsApp numbers are placeholder "XXXXX XXXXX" — update with real numbers
-- **Marketplace commission**: 0.1% commission flow working in dev mode (instant payment) — needs Razorpay integration for production
+- **Marketplace commission**: 0.1% negotiation-first flow working in dev mode (instant payment) — needs Razorpay integration for production
+- **Deal notifications**: Polling-based (30s/15s intervals) — consider WebSocket or SSE for real-time updates
 - **Analytics layer**: Charts, market analysis, Hindi toggle — Phase 2 feature, not yet built
 
-## Current Status (as of 2026-03-21, session 6)
+## Session 7 Changes (2026-03-21) — Full Detail
+
+### Negotiation-First Deal Flow (Marketplace Redesign)
+- **Problem**: Paying 0.1% commission just for a phone number has no moat — phone numbers are freely available in this industry
+- **Solution**: Negotiation happens BEFORE payment. Commission is only charged after both parties agree on price+qty
+- **Deal status flow**: `negotiating → agreed → paid → connected → completed` (also: `cancelled`, `expired`)
+- **Commission calculation**: 0.1% of agreed deal value (`agreedPrice × agreedQty × 0.001`), NOT listing price
+- **Lazy deal expiry**: Deals with no activity for 7 days auto-expire, checked on access (no cron needed)
+
+### Prisma Schema Changes
+- **New `Offer` model**: `id, dealId, fromUserId, pricePerKg, qty, message, status, createdAt`
+- **Modified `Deal` model**: Added `sellerId`, `agreedPrice`, `agreedQty`, `lastOfferAt`, `expiresAt`; `dealAmount`/`commission` changed to `Float?` (nullable, set only on agreement); status default changed to `"negotiating"`
+- **User relations**: Split from single `deals Deal[]` to `buyerDeals @relation("BuyerDeals")` + `sellerDeals @relation("SellerDeals")` + `offers Offer[]`
+
+### Backend — marketplace.js New Endpoints
+- **POST `/deals`**: Buyer makes initial offer (creates Deal + first Offer, checks no existing active negotiation)
+- **POST `/deals/:id/counter`**: Counter-offer (validates it's other party's turn, marks previous as "countered")
+- **POST `/deals/:id/accept`**: Accept last offer (calculates commission, sets deal to "agreed")
+- **POST `/deals/:id/reject`**: Cancel negotiation
+- **POST `/deals/:id/pay`**: Pay commission (status must be "agreed" — dev mode: instant)
+- **PATCH `/deals/:id/complete`**: Either party can mark deal as completed
+- **GET `/deals/:id`**: Full deal detail with offers; strips contacts unless `connected`/`completed`
+- **GET `/my-deals`**: All deals as buyer OR seller, with role flag and unread indicator
+- **GET `/notifications`**: Lightweight poll for pending offers count
+- **GET `/pending`**: Admin endpoint — fetch listings pending verification
+- **Helper**: `expireStaleDeals()` lazy-expires deals with no activity for 7 days
+
+### Frontend — Marketplace.jsx (Complete Rewrite, 815 lines)
+- **4 tabs**: Browse, Sell Scrap, My Listings, My Deals (last two: logged-in only)
+- **OfferModal**: Listing summary, price/qty inputs (pre-filled from listing), message field, commission preview with "only charged after both agree" note
+- **DealDetailPanel**: Full-screen overlay with chat-style offer history (buyer right, seller left), status badge, action bar adapts per state:
+  - Negotiating: Accept / Counter / Reject buttons
+  - Agreed: Pay Commission button with amount breakdown
+  - Connected: Contact info revealed + Mark Complete
+- **MyDealsTab**: Deal cards with status badges, "NEW" indicator for unread offers, auto-refresh every 30s
+- **MyListingsTab**: Delete button per listing with confirmation, status badges (Pending/Verified/Rejected)
+- **Polling**: My Deals tab polls every 30s, Deal Detail auto-refreshes every 15s
+
+### Profile Page (New — `/profile`)
+- Subscription status card (Pro Plan green / Free Plan gold)
+- Personal info form: name, email, phone, city
+- Trader type selector: 2×2 grid (Buyer / Seller / Buyer & Seller / Just Checking Rates)
+- Save Changes → PATCH `/api/auth/profile`
+- Sign Out button
+- Auth loading check prevents redirect race condition
+
+### Admin Marketplace Panel
+- Admin.jsx now has tabbed layout: "Rate Management" (existing parser) + "Marketplace" (new)
+- MarketplaceAdmin component: fetches pending listings, shows verify/reject buttons per listing
+- Each pending listing shows: metal, grade, qty, location, price, description, seller name + phone
+
+### Auth Linking (Point 4)
+- Backend PATCH `/api/auth/profile` already handles phone+email linking with uniqueness validation
+- Profile page allows users to add/update phone or email to their existing account
+- No backend changes needed — existing logic sufficient
+
+### Navbar Update
+- Username now links to `/profile` page
+
+## Current Status (as of 2026-03-21, session 7)
 - **Auth**: Email+password + Phone OTP (linkable accounts) + Google OAuth (plug-and-play) — all three working
 - **Subscription**: Pro test user `test@metalxpress.in` / `test1234` — pro plan via PRO_EMAILS env var
 - **Landing**: Hero section for non-logged-in users with feature cards and CTAs
 - **Paywall**: Local rates blurred/gated for non-subscribers with "Sign Up" or "Upgrade to Pro" overlay
-- **Marketplace**: Sell-only listings, deal flow with 0.1% commission gate, contact reveal after payment, admin verification (pending→verified→rejected), proper card layout (metal badge, grade title, ₹/kg), dark-styled dropdowns, 3-tab UI (Browse/Sell Scrap/My Listings)
+- **Marketplace**: Negotiation-first deal flow (offer→negotiate→agree→pay→connect), 0.1% commission on agreed value, chat-style offer thread, 4-tab UI (Browse/Sell Scrap/My Listings/My Deals), admin verification panel, lazy deal expiry (7d)
+- **Profile**: `/profile` page with subscription status, personal info form, trader type, save + sign out
 - **Accordion**: All metals default-open, per-metal collapse, Expand/Collapse All button
 - **Footer**: Company + Legal links on all consumer pages
 - **Static pages**: About, Terms, Privacy, Contact — all styled in dark navy glass theme
@@ -397,9 +459,11 @@ frontend/src/
                                       + LocalRatesGate (paywall) + metal accordion (closedMetals Set)
     Login.jsx                      ← Email+Password primary, Google OAuth, Phone OTP secondary
     Signup.jsx                     ← Email+password registration + Google + Phone OTP + trader type
-    Marketplace.jsx                ← Browse/Post tabs, listing cards
+    Marketplace.jsx                ← 4-tab UI (Browse/Sell/My Listings/My Deals), OfferModal,
+                                      DealDetailPanel (chat-style negotiation), MyDealsTab, MyListingsTab
     Alerts.jsx                     ← Price alerts (basic, old style — not updated yet)
-    Admin.jsx                      ← Standalone layout, unified smart parser, auto-detect message type
+    Admin.jsx                      ← Standalone layout, unified smart parser + Marketplace admin (verify/reject)
+    Profile.jsx                    ← Subscription status, personal info form, trader type, save/sign-out
     About.jsx                      ← Company info, What We Do, Data Sources, Mission
     Terms.jsx                      ← Terms of Service (placeholder legal text)
     Privacy.jsx                    ← Privacy Policy (placeholder legal text)
@@ -416,7 +480,9 @@ frontend/src/
     RateTable.jsx                  ← (legacy)
     LMERatesPanel.jsx              ← (legacy)
   utils/
-    api.js                         ← Axios instance + all endpoints incl. registerEmail, loginEmail, checkSubscription
+    api.js                         ← Axios instance + all endpoints incl. registerEmail, loginEmail, checkSubscription,
+                                      fetchDealDetail, counterOffer, acceptOffer, rejectDeal, fetchMyDeals,
+                                      fetchDealNotifications, fetchPendingListings, verifyListing, deleteListing
   context/
     AuthContext.jsx                ← Email/Phone/Google auth, JWT in localStorage, subscription state
 
@@ -429,7 +495,9 @@ backend/src/
                                       + GET /subscription + Google OAuth (with email dedup)
     cities.js                      ← GET /api/cities (returns plain array [{id,name,hubs:[]}])
     metals.js, alerts.js, admin.js
-    marketplace.js                     ← GET/POST/DELETE listings, PATCH verify (admin), accepts metal name filter
+    marketplace.js                 ← Full deal flow: POST /deals, /counter, /accept, /reject, /pay, /complete
+                                      GET /my-deals, /notifications, /pending (admin). Lazy deal expiry.
+                                      Listings: GET/POST/DELETE, PATCH verify (admin), metal name filter
   services/
     livePriceFetcher.js            ← Yahoo+Stooq+metals-api, returns {metals,forex,indices,crude,usdInr,lmeUpdatedAt,forexUpdatedAt}
     rateParser.js                  ← parseRateMessage, cleanText (exported), detectMessageType, extractMessageTimestamp
@@ -437,7 +505,8 @@ backend/src/
   middleware/
     auth.js
   prisma/
-    schema.prisma                  ← User model: email+passwordHash (nullable), phone (nullable)
+    schema.prisma                  ← User (email+passwordHash, phone), Deal (negotiation flow, sellerId,
+                                      agreedPrice, commission), Offer (price, qty, message, status)
     seed.js                        ← Seeds cities, hubs, metals, grades, sample listings
                                       Grade names match actual WhatsApp messages exactly
   .env.example                     ← Full documented env var reference
@@ -541,6 +610,32 @@ const { user, subscription } = useAuth();
 <LocalRatesGate>{/* metal accordion */}</LocalRatesGate>
 ```
 
+### Marketplace deal flow (Marketplace.jsx)
+```js
+// Deal status flow: negotiating → agreed → paid → connected → completed
+// Commission = agreedPrice × agreedQty × 0.001 (calculated on accept)
+// Buyer makes offer → seller accepts/counters/rejects
+// On accept: deal status = "agreed", commission calculated
+// On pay: deal status = "connected", contacts revealed
+// Either party can mark "completed"
+
+// API calls:
+await createDeal({ listingId, pricePerKg, qty, message });     // initial offer
+await counterOffer(dealId, { pricePerKg, qty, message });       // counter
+await acceptOffer(dealId);                                       // accept last offer
+await rejectDeal(dealId);                                        // cancel
+await payDeal(dealId);                                           // pay commission
+await completeDeal(dealId);                                      // mark done
+```
+
+### Profile page (Profile.jsx)
+```js
+// Uses useAuth() for user, subscription, loading state
+const { user, logout, subscription, loading: authLoading } = useAuth();
+// Save: PATCH /api/auth/profile with { name, email, phone, city, traderType }
+await updateProfile({ name, email, phone, city, traderType });
+```
+
 ### Accordion state (Home.jsx)
 ```js
 // closedMetals is a Set — empty means all open (default)
@@ -553,7 +648,7 @@ const isOpen = !closedMetals.has(metalName);
 - **Free tier**: LME/MCX live rates, Forex & Indices, Marketplace browsing
 - **Pro ₹299/month**: Local spot rates for all cities, analytics, 10 contact reveals/month, unlimited alerts
 - **Business ₹999/month**: Everything Pro + unlimited contacts + bulk listing + priority support
-- **Marketplace commission**: 0.1% on total transaction value, paid upfront by buyer before MetalXpress reveals contact details. If deal doesn't go through after commission paid → credit wallet (reusable on next deal).
+- **Marketplace commission**: 0.1% on agreed deal value (agreedPrice × agreedQty × 0.001). Negotiation happens FIRST (offer/counter-offer in-app), commission charged ONLY after both parties agree. Contact details revealed after payment. Value prop: verified counterparties, price discovery, deal history, dispute support.
 - **Listing verification**: Admin verifies listings via PATCH `/api/marketplace/listings/:id/verify`. Verified listings get green badge.
 - **PaywallModal**: Currently a stub — Razorpay integration pending
 - **Pro test access**: Set `PRO_EMAILS=email1,email2` in backend `.env` or use default `test@metalxpress.in` / `test1234`
