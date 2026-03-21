@@ -13,6 +13,7 @@ import About from './pages/About';
 import Terms from './pages/Terms';
 import Privacy from './pages/Privacy';
 import Contact from './pages/Contact';
+import Profile from './pages/Profile';
 
 // Layout with Navbar + Footer for consumer-facing pages
 function AppShell({ children }) {
@@ -42,6 +43,7 @@ export default function App() {
           <Route path="/terms" element={<AppShell><Terms /></AppShell>} />
           <Route path="/privacy" element={<AppShell><Privacy /></AppShell>} />
           <Route path="/contact" element={<AppShell><Contact /></AppShell>} />
+          <Route path="/profile" element={<AppShell><Profile /></AppShell>} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </AuthProvider>

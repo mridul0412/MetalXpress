@@ -4,7 +4,7 @@ import {
   Lock, Save, ClipboardPaste, ChevronLeft, LogOut,
   CheckCircle, AlertCircle, MapPin, Zap,
 } from 'lucide-react';
-import { adminParsePreview, saveParsedRates } from '../utils/api';
+import { adminParsePreview, saveParsedRates, fetchPendingListings, verifyListing } from '../utils/api';
 
 const ADMIN_PASS_KEY = 'mx_admin_pass';
 
@@ -113,18 +113,125 @@ export default function Admin() {
       </div>
 
       {/* ── Page body ── */}
-      <div style={{ maxWidth: 760, margin: '0 auto', padding: '28px 16px 80px' }}>
-        <div style={{ marginBottom: 28 }}>
-          <h1 style={{ fontSize: 26, fontWeight: 700, color: '#fff', margin: '0 0 4px' }}>
-            Rate Management
-          </h1>
-          <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.35)', margin: 0 }}>
-            Paste any WhatsApp broadcast · The parser auto-detects the type and routes it correctly
-          </p>
-        </div>
+      <AdminBody />
+    </div>
+  );
+}
 
-        <UnifiedParserPanel />
+// ── Admin Body with Tabs ──────────────────────────────────────────────────────
+function AdminBody() {
+  const [adminTab, setAdminTab] = useState('rates');
+  const ADMIN_TABS = [['rates', 'Rate Management'], ['marketplace', 'Marketplace']];
+
+  return (
+    <div style={{ maxWidth: 760, margin: '0 auto', padding: '28px 16px 80px' }}>
+      <div style={{ display: 'flex', gap: 8, marginBottom: 24 }}>
+        {ADMIN_TABS.map(([val, label]) => (
+          <button key={val} onClick={() => setAdminTab(val)} style={{
+            padding: '8px 18px', borderRadius: 8, fontSize: 13, fontWeight: 700,
+            border: 'none', cursor: 'pointer',
+            background: adminTab === val ? '#CFB53B' : 'rgba(255,255,255,0.05)',
+            color: adminTab === val ? '#000' : 'rgba(255,255,255,0.4)',
+          }}>{label}</button>
+        ))}
       </div>
+
+      {adminTab === 'rates' && (
+        <div>
+          <div style={{ marginBottom: 20 }}>
+            <h1 style={{ fontSize: 26, fontWeight: 700, color: '#fff', margin: '0 0 4px' }}>Rate Management</h1>
+            <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.35)', margin: 0 }}>
+              Paste any WhatsApp broadcast · The parser auto-detects the type
+            </p>
+          </div>
+          <UnifiedParserPanel />
+        </div>
+      )}
+
+      {adminTab === 'marketplace' && <MarketplaceAdmin />}
+    </div>
+  );
+}
+
+// ── Marketplace Admin (listing verification) ─────────────────────────────────
+function MarketplaceAdmin() {
+  const [listings, setListings] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [actionId, setActionId] = useState('');
+
+  const load = async () => {
+    setLoading(true);
+    try { setListings((await fetchPendingListings()).data || []); }
+    catch { setListings([]); }
+    finally { setLoading(false); }
+  };
+
+  useEffect(() => { load(); }, []);
+
+  const handleVerify = async (id, status) => {
+    setActionId(id);
+    try {
+      await verifyListing(id, status);
+      load();
+    } catch (err) { alert(err.response?.data?.error || 'Failed'); }
+    finally { setActionId(''); }
+  };
+
+  return (
+    <div>
+      <div style={{ marginBottom: 20 }}>
+        <h1 style={{ fontSize: 26, fontWeight: 700, color: '#fff', margin: '0 0 4px' }}>
+          Pending Listings
+        </h1>
+        <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.35)', margin: 0 }}>
+          Review and verify marketplace listings before they go live
+        </p>
+      </div>
+
+      {loading ? <p style={{ color: 'rgba(255,255,255,0.3)' }}>Loading…</p>
+      : listings.length === 0
+        ? <div style={{ background: 'rgba(255,255,255,0.03)', borderRadius: 14, padding: 40,
+            textAlign: 'center', border: '1px solid rgba(255,255,255,0.06)' }}>
+            <CheckCircle size={32} style={{ color: 'rgba(52,211,153,0.4)', marginBottom: 8 }} />
+            <p style={{ color: 'rgba(255,255,255,0.35)', fontSize: 14 }}>No pending listings</p>
+          </div>
+        : <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+            {listings.map(l => (
+              <div key={l.id} style={{ background: '#0D1420', borderRadius: 14,
+                border: '1px solid rgba(255,255,255,0.07)', padding: 18 }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 8 }}>
+                  <div>
+                    <div style={{ display: 'flex', gap: 6, marginBottom: 4 }}>
+                      <span style={{ fontSize: 10, fontWeight: 700, padding: '2px 8px', borderRadius: 6,
+                        background: 'rgba(207,181,59,0.15)', color: '#CFB53B' }}>{l.metal?.name}</span>
+                      {l.grade && <span style={{ fontSize: 10, padding: '2px 8px', borderRadius: 6,
+                        background: 'rgba(255,255,255,0.05)', color: 'rgba(255,255,255,0.4)' }}>{l.grade.name}</span>}
+                    </div>
+                    <p style={{ fontSize: 14, fontWeight: 700, color: '#fff', margin: '0 0 2px' }}>
+                      {l.qty} kg · {l.location} {l.price ? `· ₹${l.price}/kg` : '· Negotiable'}
+                    </p>
+                    {l.description && <p style={{ fontSize: 12, color: 'rgba(255,255,255,0.4)', margin: '0 0 4px' }}>{l.description}</p>}
+                    <p style={{ fontSize: 11, color: 'rgba(255,255,255,0.25)', margin: 0 }}>
+                      Seller: {l.user?.name || 'N/A'} · {l.user?.phone || l.user?.email || 'No contact'}
+                      · Contact: {l.contact}
+                    </p>
+                  </div>
+                </div>
+                <div style={{ display: 'flex', gap: 8, marginTop: 10 }}>
+                  <button onClick={() => handleVerify(l.id, 'verified')} disabled={actionId === l.id}
+                    style={{ flex: 1, padding: '10px', borderRadius: 8, fontSize: 12, fontWeight: 700,
+                      background: '#34d399', color: '#000', border: 'none', cursor: 'pointer' }}>
+                    ✓ Verify & Go Live
+                  </button>
+                  <button onClick={() => handleVerify(l.id, 'rejected')} disabled={actionId === l.id}
+                    style={{ padding: '10px 16px', borderRadius: 8, fontSize: 12, fontWeight: 700,
+                      background: 'transparent', color: '#f87171', border: '1px solid rgba(248,113,113,0.3)', cursor: 'pointer' }}>
+                    ✗ Reject
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>}
     </div>
   );
 }

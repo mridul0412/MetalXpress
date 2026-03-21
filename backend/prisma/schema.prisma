@@ -19,7 +19,9 @@ model User {
   updatedAt    DateTime    @updatedAt
   alerts       Alert[]
   listings     Listing[]
-  deals        Deal[]
+  buyerDeals   Deal[]      @relation("BuyerDeals")
+  sellerDeals  Deal[]      @relation("SellerDeals")
+  offers       Offer[]
 }
 
 enum TraderType {
@@ -171,17 +173,37 @@ model Listing {
 }
 
 model Deal {
-  id          String   @id @default(cuid())
-  listing     Listing  @relation(fields: [listingId], references: [id])
+  id          String    @id @default(cuid())
+  listing     Listing   @relation(fields: [listingId], references: [id])
   listingId   String
-  buyer       User     @relation(fields: [buyerId], references: [id])
+  buyer       User      @relation("BuyerDeals", fields: [buyerId], references: [id])
   buyerId     String
-  dealAmount  Float    // total deal value (price × qty)
-  commission  Float    // 0.1% of dealAmount
-  status      String   @default("pending") // "pending" | "paid" | "connected" | "completed" | "cancelled"
+  seller      User      @relation("SellerDeals", fields: [sellerId], references: [id])
+  sellerId    String
+  agreedPrice Float?
+  agreedQty   Float?
+  dealAmount  Float?    // agreedPrice × agreedQty, set on agreement
+  commission  Float?    // 0.1% of dealAmount, set on agreement
+  status      String    @default("negotiating") // negotiating | agreed | paid | connected | completed | cancelled | expired
+  offers      Offer[]
+  lastOfferAt DateTime?
+  expiresAt   DateTime?
   paidAt      DateTime?
   completedAt DateTime?
-  createdAt   DateTime @default(now())
+  createdAt   DateTime  @default(now())
+}
+
+model Offer {
+  id         String   @id @default(cuid())
+  deal       Deal     @relation(fields: [dealId], references: [id])
+  dealId     String
+  fromUser   User     @relation(fields: [fromUserId], references: [id])
+  fromUserId String
+  pricePerKg Float
+  qty        Float
+  message    String?  @db.Text
+  status     String   @default("pending") // pending | accepted | countered | rejected | expired
+  createdAt  DateTime @default(now())
 }
 
 model OTPSession {

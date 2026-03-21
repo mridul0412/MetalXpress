@@ -1,33 +1,52 @@
-import { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { useState, useEffect, useCallback } from 'react';
 import {
-  MapPin, Phone, Weight, Plus, Search, Filter, ShieldCheck,
-  X, ArrowRight, Package, Clock, CheckCircle, AlertCircle, Eye,
+  MapPin, Weight, Plus, ShieldCheck, X, ArrowRight, Package,
+  Clock, CheckCircle, AlertCircle, Trash2, MessageSquare, Send,
+  ChevronRight, DollarSign, Handshake,
 } from 'lucide-react';
-import { fetchListings, fetchMyListings, createListing, createDeal, payDeal, fetchMetals, fetchCities } from '../utils/api';
+import {
+  fetchListings, fetchMyListings, createListing, createDeal, counterOffer,
+  acceptOffer, rejectDeal, payDeal, fetchMyDeals, fetchDealDetail,
+  completeDeal, deleteListing, fetchMetals, fetchCities,
+} from '../utils/api';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 
+/* ── shared styles ─────────────────────────────────────────────────── */
 const inputStyle = {
   width: '100%', padding: '12px 14px', borderRadius: 10, fontSize: 13,
   background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)',
-  color: '#fff', outline: 'none', boxSizing: 'border-box', transition: 'border 0.15s',
-  fontFamily: 'inherit',
+  color: '#fff', outline: 'none', boxSizing: 'border-box', fontFamily: 'inherit',
 };
 const labelStyle = {
   fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.07em',
   color: 'rgba(255,255,255,0.35)', display: 'block', marginBottom: 6,
 };
+const selectStyle = {
+  ...inputStyle, appearance: 'none',
+  backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='rgba(255,255,255,0.3)' viewBox='0 0 16 16'%3E%3Cpath d='M8 11L3 6h10z'/%3E%3C/svg%3E")`,
+  backgroundRepeat: 'no-repeat', backgroundPosition: 'right 12px center',
+};
+const optionStyle = { background: '#0D1420', color: '#fff' };
+const fmt = n => n?.toLocaleString('en-IN') ?? '—';
+const STATUS_COLORS = {
+  negotiating: '#CFB53B', agreed: '#34d399', connected: '#38bdf8',
+  completed: '#22c55e', cancelled: '#6b7280', expired: '#6b7280', paid: '#38bdf8',
+};
 
+/* ══════════════════════════════════════════════════════════════════════ */
 export default function Marketplace() {
   const [tab, setTab] = useState('browse');
   const [listings, setListings] = useState([]);
   const [myListings, setMyListings] = useState([]);
+  const [deals, setDeals] = useState([]);
   const [loading, setLoading] = useState(true);
   const [filterMetal, setFilterMetal] = useState('');
   const [filterCity, setFilterCity] = useState('');
-  const [selectedListing, setSelectedListing] = useState(null);
+  const [offerListing, setOfferListing] = useState(null); // listing to make offer on
+  const [activeDeal, setActiveDeal] = useState(null);     // deal detail view
   const { user } = useAuth();
+  const navigate = useNavigate();
 
   const load = async () => {
     setLoading(true);
@@ -40,19 +59,29 @@ export default function Marketplace() {
 
   const loadMyListings = async () => {
     if (!user) return;
-    try {
-      const res = await fetchMyListings();
-      setMyListings(res.data || []);
-    } catch { setMyListings([]); }
+    try { setMyListings((await fetchMyListings()).data || []); } catch { setMyListings([]); }
+  };
+
+  const loadDeals = async () => {
+    if (!user) return;
+    try { setDeals((await fetchMyDeals()).data || []); } catch { setDeals([]); }
   };
 
   useEffect(() => { load(); }, [filterMetal, filterCity]);
   useEffect(() => { if (tab === 'my-listings') loadMyListings(); }, [tab, user]);
+  useEffect(() => { if (tab === 'my-deals') loadDeals(); }, [tab, user]);
+
+  // Poll deals every 30s when on deals tab
+  useEffect(() => {
+    if (tab !== 'my-deals' || !user) return;
+    const iv = setInterval(loadDeals, 30000);
+    return () => clearInterval(iv);
+  }, [tab, user]);
 
   const TABS = [
     ['browse', 'Browse'],
     ['post', 'Sell Scrap'],
-    ...(user ? [['my-listings', 'My Listings']] : []),
+    ...(user ? [['my-listings', 'My Listings'], ['my-deals', 'My Deals']] : []),
   ];
 
   return (
@@ -61,20 +90,19 @@ export default function Marketplace() {
       <div style={{ marginBottom: 20 }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12 }}>
           <div>
-            <h2 style={{ fontSize: 24, fontWeight: 700, color: '#fff', margin: 0, letterSpacing: '-0.02em' }}>
+            <h2 style={{ fontSize: 24, fontWeight: 700, color: '#fff', margin: 0 }}>
               Scrap <span style={{ color: '#CFB53B' }}>Marketplace</span>
             </h2>
             <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.35)', margin: '2px 0 0' }}>
-              Sell scrap metal · Buyers connect directly
+              Sell scrap metal · Negotiate · Connect
             </p>
           </div>
-
           <div style={{ display: 'flex', padding: 4, borderRadius: 12, background: 'rgba(255,255,255,0.05)',
-            border: '1px solid rgba(255,255,255,0.08)' }}>
+            border: '1px solid rgba(255,255,255,0.08)', flexWrap: 'wrap' }}>
             {TABS.map(([val, label]) => (
               <button key={val} onClick={() => setTab(val)} style={{
-                padding: '7px 16px', borderRadius: 8, fontSize: 12, fontWeight: 700,
-                transition: 'all 0.15s', border: 'none', cursor: 'pointer',
+                padding: '7px 14px', borderRadius: 8, fontSize: 12, fontWeight: 700,
+                border: 'none', cursor: 'pointer',
                 background: tab === val ? '#CFB53B' : 'transparent',
                 color: tab === val ? '#000' : 'rgba(255,255,255,0.4)',
               }}>{label}</button>
@@ -83,676 +111,705 @@ export default function Marketplace() {
         </div>
       </div>
 
-      {tab === 'browse' && (
-        <BrowseTab
-          listings={listings} loading={loading}
-          filterMetal={filterMetal} setFilterMetal={setFilterMetal}
-          filterCity={filterCity} setFilterCity={setFilterCity}
-          onSelect={setSelectedListing}
-        />
-      )}
-      {tab === 'post' && (
-        <PostForm onSuccess={() => { setTab('my-listings'); loadMyListings(); }} />
-      )}
-      {tab === 'my-listings' && (
-        <MyListingsTab listings={myListings} onRefresh={loadMyListings} />
-      )}
+      {tab === 'browse' && <BrowseTab listings={listings} loading={loading}
+        filterMetal={filterMetal} setFilterMetal={setFilterMetal}
+        filterCity={filterCity} setFilterCity={setFilterCity}
+        user={user} navigate={navigate} onMakeOffer={setOfferListing} />}
 
-      {/* Deal / Connect Modal */}
-      <AnimatePresence>
-        {selectedListing && (
-          <DealModal listing={selectedListing} onClose={() => setSelectedListing(null)} />
-        )}
-      </AnimatePresence>
+      {tab === 'post' && (user
+        ? <PostForm user={user} onSuccess={() => { setTab('my-listings'); loadMyListings(); }} />
+        : <LoginPrompt navigate={navigate} />)}
+
+      {tab === 'my-listings' && <MyListingsTab listings={myListings} onRefresh={loadMyListings} />}
+
+      {tab === 'my-deals' && <MyDealsTab deals={deals} user={user}
+        onRefresh={loadDeals} onViewDeal={setActiveDeal} />}
+
+      {/* Offer Modal */}
+      {offerListing && <OfferModal listing={offerListing}
+        onClose={() => setOfferListing(null)}
+        onSuccess={(deal) => { setOfferListing(null); setActiveDeal(deal); setTab('my-deals'); loadDeals(); }} />}
+
+      {/* Deal Detail Panel */}
+      {activeDeal && <DealDetailPanel dealId={typeof activeDeal === 'string' ? activeDeal : activeDeal.id}
+        user={user} onClose={() => { setActiveDeal(null); loadDeals(); }} />}
     </div>
   );
 }
 
-// ── Browse Tab ────────────────────────────────────────────────────────────────
-function BrowseTab({ listings, loading, filterMetal, setFilterMetal, filterCity, setFilterCity, onSelect }) {
-  const METALS = ['Copper', 'Aluminium', 'Brass', 'Lead', 'Zinc', 'Nickel'];
-
+/* ── Browse Tab ───────────────────────────────────────────────────── */
+function BrowseTab({ listings, loading, filterMetal, setFilterMetal, filterCity, setFilterCity, user, navigate, onMakeOffer }) {
   return (
-    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
+    <div>
       {/* Filters */}
-      <div style={{ display: 'flex', gap: 12, marginBottom: 20, flexWrap: 'wrap',
-        padding: 16, borderRadius: 14, background: 'rgba(13,20,32,0.8)',
-        border: '1px solid rgba(255,255,255,0.08)' }}>
-        <div style={{ flex: 1, minWidth: 140, position: 'relative' }}>
-          <Filter size={14} color="rgba(255,255,255,0.3)" style={{
-            position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none', zIndex: 1 }} />
-          <select value={filterMetal} onChange={e => setFilterMetal(e.target.value)} style={{
-            ...inputStyle, paddingLeft: 34, appearance: 'none',
-            color: filterMetal ? '#fff' : 'rgba(255,255,255,0.4)',
-            backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='rgba(255,255,255,0.3)' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E")`,
-            backgroundRepeat: 'no-repeat', backgroundPosition: 'right 12px center',
-          }}>
-            <option value="" style={{ background: '#0d1420', color: '#fff' }}>All Metals</option>
-            {METALS.map(m => <option key={m} value={m} style={{ background: '#0d1420', color: '#fff' }}>{m}</option>)}
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 20 }}>
+        <div style={{ position: 'relative' }}>
+          <select value={filterMetal} onChange={e => setFilterMetal(e.target.value)} style={selectStyle}>
+            <option value="" style={optionStyle}>All Metals</option>
+            {['Copper','Aluminium','Brass','Lead','Zinc','Nickel'].map(m =>
+              <option key={m} value={m} style={optionStyle}>{m}</option>)}
           </select>
         </div>
-        <div style={{ flex: 1, minWidth: 140, position: 'relative' }}>
-          <MapPin size={14} color="rgba(255,255,255,0.3)" style={{
-            position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }} />
-          <input type="text" placeholder="Filter by city…" value={filterCity}
-            onChange={e => setFilterCity(e.target.value)}
-            style={{ ...inputStyle, paddingLeft: 34 }} />
-        </div>
+        <input value={filterCity} onChange={e => setFilterCity(e.target.value)}
+          placeholder="Filter by city…" style={inputStyle} />
       </div>
 
-      {loading ? (
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: 14 }}>
-          {[1, 2, 3, 4].map(i => (
-            <div key={i} style={{ height: 200, borderRadius: 14, background: 'rgba(255,255,255,0.03)',
-              border: '1px solid rgba(255,255,255,0.05)', animation: 'pulse 1.5s ease-in-out infinite' }} />
-          ))}
-        </div>
-      ) : listings.length === 0 ? (
-        <div style={{ textAlign: 'center', padding: '64px 0', borderRadius: 16,
-          background: 'rgba(13,20,32,0.6)', border: '1px dashed rgba(255,255,255,0.1)' }}>
-          <Search size={40} color="rgba(255,255,255,0.15)" style={{ margin: '0 auto 14px', display: 'block' }} />
-          <h3 style={{ fontSize: 18, fontWeight: 700, color: '#fff', margin: '0 0 6px' }}>No listings found</h3>
-          <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.35)', margin: 0 }}>
-            Try adjusting your filters or be the first to post.
-          </p>
-        </div>
-      ) : (
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: 14 }}>
-          {listings.map((item, idx) => (
-            <ListingCard key={item.id} item={item} delay={idx * 0.04} onConnect={() => onSelect(item)} />
-          ))}
-        </div>
-      )}
-
-      <style>{`@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.5} }`}</style>
-    </motion.div>
+      {loading ? <p style={{ color: 'rgba(255,255,255,0.3)', textAlign: 'center', padding: 40 }}>Loading…</p>
+      : listings.length === 0
+        ? <p style={{ color: 'rgba(255,255,255,0.3)', textAlign: 'center', padding: 40 }}>No listings found</p>
+        : <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: 16 }}>
+            {listings.map(l => <ListingCard key={l.id} listing={l}
+              onAction={() => user ? onMakeOffer(l) : navigate('/login')}
+              actionLabel="Make Offer" />)}
+          </div>}
+    </div>
   );
 }
 
-// ── Listing Card ──────────────────────────────────────────────────────────────
-function ListingCard({ item, delay, onConnect }) {
-  const totalValue = item.price && item.qty ? item.price * item.qty : null;
+/* ── Listing Card ─────────────────────────────────────────────────── */
+function ListingCard({ listing: l, onAction, actionLabel, showStatus, onDelete }) {
+  const metalName = l.metal?.name || 'Metal';
+  const gradeName = l.grade?.name || metalName;
+  const priceStr = l.price ? `₹${fmt(l.price)}` : 'Negotiate';
+  const totalVal = l.price && l.qty ? l.price * l.qty : null;
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}
-      transition={{ delay, duration: 0.2 }}
-      style={{
-        borderRadius: 14, padding: 18, display: 'flex', flexDirection: 'column', justifyContent: 'space-between',
-        background: 'rgba(13,20,32,0.8)', backdropFilter: 'blur(20px)',
-        border: '1px solid rgba(255,255,255,0.08)', transition: 'border-color 0.15s',
-      }}
-    >
-      <div>
-        {/* Metal + Grade header */}
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 10 }}>
-          <div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 6 }}>
-              <span style={{
-                fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em',
-                padding: '2px 6px', borderRadius: 4,
-                background: 'rgba(207,181,59,0.12)', color: '#CFB53B',
-                border: '1px solid rgba(207,181,59,0.25)',
-              }}>
-                {item.metal?.name}
-              </span>
-              <span style={{
-                fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em',
-                padding: '2px 6px', borderRadius: 4,
-                background: 'rgba(52,211,153,0.12)', color: '#34d399',
-                border: '1px solid rgba(52,211,153,0.25)',
-              }}>
-                <ShieldCheck size={8} style={{ marginRight: 2, verticalAlign: 'middle' }} />
-                Verified
-              </span>
-            </div>
-            <h3 style={{ fontSize: 17, fontWeight: 700, color: '#fff', margin: 0 }}>
-              {item.grade?.name || 'Mixed Grade'}
-            </h3>
-            <p style={{ fontSize: 11, color: 'rgba(255,255,255,0.35)', margin: '2px 0 0' }}>
-              by {item.sellerName}
-            </p>
-          </div>
-          <div style={{ textAlign: 'right' }}>
-            {item.price ? (
-              <>
-                <span style={{ fontSize: 22, fontWeight: 700, color: '#fff', fontFamily: 'monospace', display: 'block' }}>
-                  ₹{item.price.toLocaleString('en-IN')}
-                </span>
-                <span style={{ fontSize: 10, color: 'rgba(255,255,255,0.3)' }}>per kg</span>
-              </>
-            ) : (
-              <span style={{ fontSize: 14, fontWeight: 700, color: 'rgba(207,181,59,0.7)' }}>Negotiate</span>
-            )}
-          </div>
+    <div style={{ background: '#0D1420', borderRadius: 14, border: '1px solid rgba(255,255,255,0.07)', padding: 18, display: 'flex', flexDirection: 'column' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 8 }}>
+        <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', alignItems: 'center' }}>
+          <span style={{ fontSize: 10, fontWeight: 700, padding: '2px 8px', borderRadius: 6,
+            background: 'rgba(207,181,59,0.15)', color: '#CFB53B', textTransform: 'uppercase' }}>{metalName}</span>
+          {l.status === 'verified' && <span style={{ fontSize: 10, fontWeight: 700, padding: '2px 8px',
+            borderRadius: 6, background: 'rgba(52,211,153,0.15)', color: '#34d399',
+            display: 'flex', alignItems: 'center', gap: 3 }}><ShieldCheck size={10} /> VERIFIED</span>}
+          {showStatus && l.status === 'pending' && <span style={{ fontSize: 10, fontWeight: 700, padding: '2px 8px',
+            borderRadius: 6, background: 'rgba(207,181,59,0.15)', color: '#CFB53B' }}>Pending Review</span>}
+          {showStatus && l.status === 'rejected' && <span style={{ fontSize: 10, fontWeight: 700, padding: '2px 8px',
+            borderRadius: 6, background: 'rgba(248,113,113,0.15)', color: '#f87171' }}>Rejected</span>}
         </div>
-
-        {item.description && (
-          <p style={{ fontSize: 12, color: 'rgba(255,255,255,0.4)', margin: '0 0 12px', lineHeight: 1.4,
-            display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
-            {item.description}
-          </p>
-        )}
-      </div>
-
-      <div>
-        {/* Qty + Location */}
-        <div style={{ display: 'flex', gap: 14, fontSize: 11, color: 'rgba(255,255,255,0.35)', marginBottom: 12 }}>
-          <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-            <Weight size={11} />
-            {item.qty.toLocaleString('en-IN')} {item.unit || 'kg'}
-          </span>
-          <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-            <MapPin size={11} />
-            {item.location}
-          </span>
-        </div>
-
-        {/* Total value + Connect button */}
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-          paddingTop: 12, borderTop: '1px solid rgba(255,255,255,0.06)' }}>
-          {totalValue ? (
-            <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.25)' }}>
-              Total: ₹{totalValue.toLocaleString('en-IN')}
-            </span>
-          ) : <span />}
-          <button onClick={onConnect} style={{
-            display: 'flex', alignItems: 'center', gap: 5, fontSize: 12, fontWeight: 700,
-            color: '#000', background: '#CFB53B', padding: '8px 16px',
-            borderRadius: 8, border: 'none', cursor: 'pointer',
-            boxShadow: '0 2px 8px rgba(207,181,59,0.25)',
-          }}>
-            Connect <ArrowRight size={13} />
-          </button>
+        <div style={{ textAlign: 'right' }}>
+          <span style={{ fontSize: 20, fontWeight: 700, color: '#fff' }}>{priceStr}</span>
+          {l.price && <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.3)', marginLeft: 4 }}>per kg</span>}
         </div>
       </div>
-    </motion.div>
+
+      <h3 style={{ fontSize: 17, fontWeight: 700, color: '#fff', margin: '0 0 4px' }}>{gradeName}</h3>
+      {l.sellerName && <p style={{ fontSize: 11, color: 'rgba(255,255,255,0.3)', margin: '0 0 8px' }}>by {l.sellerName}</p>}
+      {l.description && <p style={{ fontSize: 12, color: 'rgba(255,255,255,0.5)', margin: '0 0 10px', lineHeight: 1.5 }}>
+        {l.description.length > 100 ? l.description.slice(0, 100) + '…' : l.description}</p>}
+
+      <div style={{ display: 'flex', gap: 16, fontSize: 11, color: 'rgba(255,255,255,0.35)', marginBottom: 10, flexWrap: 'wrap' }}>
+        <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}><Weight size={12} /> {fmt(l.qty)} {l.unit || 'kg'}</span>
+        <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}><MapPin size={12} /> {l.location}</span>
+      </div>
+
+      <div style={{ marginTop: 'auto', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        {totalVal && <span style={{ fontSize: 12, color: 'rgba(255,255,255,0.3)' }}>Total: ₹{fmt(totalVal)}</span>}
+        <div style={{ display: 'flex', gap: 8, marginLeft: 'auto' }}>
+          {onDelete && <button onClick={onDelete} style={{
+            padding: '8px 14px', borderRadius: 8, fontSize: 12, fontWeight: 700,
+            border: '1px solid rgba(248,113,113,0.3)', background: 'transparent', color: '#f87171', cursor: 'pointer',
+          }}><Trash2 size={12} /></button>}
+          {onAction && <button onClick={onAction} style={{
+            padding: '8px 18px', borderRadius: 8, fontSize: 12, fontWeight: 700,
+            background: '#CFB53B', color: '#000', border: 'none', cursor: 'pointer',
+            display: 'flex', alignItems: 'center', gap: 6,
+          }}>{actionLabel || 'View'} <ArrowRight size={14} /></button>}
+        </div>
+      </div>
+    </div>
   );
 }
 
-// ── Deal Modal ────────────────────────────────────────────────────────────────
-function DealModal({ listing, onClose }) {
-  const { user } = useAuth();
-  const navigate = useNavigate();
-  const [step, setStep] = useState('preview'); // 'preview' | 'paying' | 'connected'
-  const [deal, setDeal] = useState(null);
-  const [contact, setContact] = useState(null);
-  const [loading, setLoading] = useState(false);
+/* ── Offer Modal (Make Offer) ─────────────────────────────────────── */
+function OfferModal({ listing: l, onClose, onSuccess }) {
+  const [price, setPrice] = useState(l.price || '');
+  const [qty, setQty] = useState(l.qty || '');
+  const [message, setMessage] = useState('');
+  const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
 
-  const price = listing.price || 0;
-  const totalValue = price * listing.qty;
-  const commission = Math.max(Math.ceil(totalValue * 0.001), 1);
+  const totalVal = price && qty ? parseFloat(price) * parseFloat(qty) : 0;
+  const commission = Math.max(Math.ceil(totalVal * 0.001), 1);
 
-  const handleInitiateDeal = async () => {
-    if (!user) { navigate('/login'); return; }
-    setLoading(true); setError('');
+  const handleSubmit = async () => {
+    if (!price || !qty) return setError('Price and quantity required');
+    setSubmitting(true); setError('');
     try {
-      const res = await createDeal({ listingId: listing.id });
-      setDeal(res.data.deal);
-      setStep('paying');
+      const res = await createDeal({ listingId: l.id, pricePerKg: parseFloat(price), qty: parseFloat(qty), message });
+      onSuccess(res.data.deal);
     } catch (err) {
-      setError(err.response?.data?.error || 'Failed to initiate deal');
-    } finally { setLoading(false); }
-  };
-
-  const handlePayCommission = async () => {
-    if (!deal) return;
-    setLoading(true); setError('');
-    try {
-      const res = await payDeal(deal.id);
-      setContact(res.data.sellerContact);
-      setStep('connected');
-    } catch (err) {
-      setError(err.response?.data?.error || 'Payment failed');
-    } finally { setLoading(false); }
+      setError(err.response?.data?.error || 'Failed to send offer');
+    } finally { setSubmitting(false); }
   };
 
   return (
-    <motion.div
-      initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-      style={{
-        position: 'fixed', inset: 0, zIndex: 1000,
-        background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(8px)',
-        display: 'flex', alignItems: 'center', justifyContent: 'center',
-        padding: 16,
-      }}
-      onClick={onClose}
-    >
-      <motion.div
-        initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.95, opacity: 0 }}
-        onClick={e => e.stopPropagation()}
-        style={{
-          width: '100%', maxWidth: 480, borderRadius: 20, padding: 28,
-          background: 'rgba(13,20,32,0.95)', backdropFilter: 'blur(30px)',
-          border: '1px solid rgba(255,255,255,0.1)',
-          borderTop: '2px solid rgba(207,181,59,0.4)',
-          boxShadow: '0 24px 64px rgba(0,0,0,0.6)',
-          maxHeight: '90vh', overflowY: 'auto',
-        }}
-      >
-        {/* Close button */}
-        <button onClick={onClose} style={{
-          position: 'absolute', top: 16, right: 16, background: 'rgba(255,255,255,0.05)',
-          border: '1px solid rgba(255,255,255,0.1)', borderRadius: 8, padding: 6,
-          cursor: 'pointer', color: 'rgba(255,255,255,0.4)',
-        }}><X size={16} /></button>
+    <div style={{ position: 'fixed', inset: 0, zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center',
+      background: 'rgba(0,0,0,0.7)', padding: 16 }} onClick={onClose}>
+      <div onClick={e => e.stopPropagation()} style={{ width: '100%', maxWidth: 420, borderRadius: 16,
+        background: '#0D1420', border: '1px solid rgba(207,181,59,0.2)', padding: 24 }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 16 }}>
+          <h3 style={{ fontSize: 18, fontWeight: 700, color: '#fff', margin: 0 }}>Make an Offer</h3>
+          <button onClick={onClose} style={{ background: 'none', border: 'none', color: '#666', cursor: 'pointer' }}><X size={20} /></button>
+        </div>
 
-        {step === 'preview' && (
-          <>
-            <h3 style={{ fontSize: 18, fontWeight: 700, color: '#fff', margin: '0 0 4px' }}>
-              Connect with Seller
-            </h3>
-            <p style={{ fontSize: 12, color: 'rgba(255,255,255,0.35)', margin: '0 0 20px' }}>
-              Pay a small commission to get the seller's contact details
+        {/* Listing summary */}
+        <div style={{ background: 'rgba(255,255,255,0.03)', borderRadius: 10, padding: 14, marginBottom: 16,
+          border: '1px solid rgba(255,255,255,0.06)' }}>
+          <div style={{ fontSize: 13, color: '#CFB53B', fontWeight: 700 }}>{l.metal?.name} — {l.grade?.name || l.metal?.name}</div>
+          <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.4)', marginTop: 4 }}>
+            Listed: {l.qty} kg {l.price ? `@ ₹${fmt(l.price)}/kg` : '(Negotiable)'} · {l.location}
+          </div>
+          <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.25)', marginTop: 2 }}>by {l.sellerName || 'Seller'}</div>
+        </div>
+
+        {/* Offer form */}
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 12 }}>
+          <div>
+            <label style={labelStyle}>Your Offer (₹/kg) *</label>
+            <input type="number" value={price} onChange={e => setPrice(e.target.value)}
+              placeholder={l.price ? String(l.price) : 'Enter price'} style={inputStyle} />
+          </div>
+          <div>
+            <label style={labelStyle}>Quantity (kg) *</label>
+            <input type="number" value={qty} onChange={e => setQty(e.target.value)} style={inputStyle} />
+          </div>
+        </div>
+        <div style={{ marginBottom: 16 }}>
+          <label style={labelStyle}>Message (optional)</label>
+          <textarea value={message} onChange={e => setMessage(e.target.value)}
+            placeholder="Any details about your requirements…"
+            style={{ ...inputStyle, minHeight: 60, resize: 'vertical' }} />
+        </div>
+
+        {/* Commission preview */}
+        {totalVal > 0 && (
+          <div style={{ background: 'rgba(207,181,59,0.08)', borderRadius: 10, padding: 12, marginBottom: 16,
+            border: '1px solid rgba(207,181,59,0.15)', fontSize: 12 }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', color: 'rgba(255,255,255,0.5)' }}>
+              <span>Deal value</span><span>₹{fmt(totalVal)}</span>
+            </div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', color: '#CFB53B', fontWeight: 700, marginTop: 4 }}>
+              <span>Commission (0.1%)</span><span>₹{fmt(commission)}</span>
+            </div>
+            <p style={{ fontSize: 10, color: 'rgba(255,255,255,0.25)', margin: '6px 0 0' }}>
+              Commission is only charged after both parties agree on price
             </p>
-
-            {/* Listing summary */}
-            <div style={{ padding: 16, borderRadius: 12, background: 'rgba(255,255,255,0.03)',
-              border: '1px solid rgba(255,255,255,0.06)', marginBottom: 16 }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8 }}>
-                <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.35)' }}>Metal / Grade</span>
-                <span style={{ fontSize: 13, fontWeight: 700, color: '#fff' }}>
-                  {listing.metal?.name} — {listing.grade?.name || 'Mixed'}
-                </span>
-              </div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8 }}>
-                <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.35)' }}>Quantity</span>
-                <span style={{ fontSize: 13, fontWeight: 600, color: '#fff' }}>
-                  {listing.qty.toLocaleString('en-IN')} {listing.unit || 'kg'}
-                </span>
-              </div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8 }}>
-                <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.35)' }}>Price</span>
-                <span style={{ fontSize: 13, fontWeight: 600, color: '#CFB53B' }}>
-                  {price ? `₹${price.toLocaleString('en-IN')}/kg` : 'Negotiable'}
-                </span>
-              </div>
-              {totalValue > 0 && (
-                <div style={{ display: 'flex', justifyContent: 'space-between', paddingTop: 8,
-                  borderTop: '1px solid rgba(255,255,255,0.06)' }}>
-                  <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.35)' }}>Total Value</span>
-                  <span style={{ fontSize: 15, fontWeight: 700, color: '#fff', fontFamily: 'monospace' }}>
-                    ₹{totalValue.toLocaleString('en-IN')}
-                  </span>
-                </div>
-              )}
-            </div>
-
-            {/* Commission breakdown */}
-            <div style={{ padding: 14, borderRadius: 12,
-              background: 'rgba(207,181,59,0.06)', border: '1px solid rgba(207,181,59,0.15)',
-              marginBottom: 20 }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <div>
-                  <p style={{ fontSize: 12, fontWeight: 700, color: '#CFB53B', margin: '0 0 2px' }}>
-                    Connection Fee (0.1%)
-                  </p>
-                  <p style={{ fontSize: 10, color: 'rgba(255,255,255,0.3)', margin: 0 }}>
-                    One-time fee to reveal seller contact
-                  </p>
-                </div>
-                <span style={{ fontSize: 20, fontWeight: 700, color: '#CFB53B', fontFamily: 'monospace' }}>
-                  ₹{commission.toLocaleString('en-IN')}
-                </span>
-              </div>
-            </div>
-
-            {error && (
-              <p style={{ fontSize: 12, color: '#f87171', marginBottom: 12, display: 'flex', alignItems: 'center', gap: 4 }}>
-                <AlertCircle size={13} /> {error}
-              </p>
-            )}
-
-            <button onClick={handleInitiateDeal} disabled={loading} style={{
-              width: '100%', padding: 14, borderRadius: 12, fontWeight: 700, fontSize: 14,
-              background: '#CFB53B', color: '#000', border: 'none', cursor: 'pointer',
-              display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
-              boxShadow: '0 4px 16px rgba(207,181,59,0.3)',
-              opacity: loading ? 0.6 : 1,
-            }}>
-              {loading ? 'Processing...' : `Pay ₹${commission.toLocaleString('en-IN')} & Connect`}
-              {!loading && <ArrowRight size={16} />}
-            </button>
-
-            {!user && (
-              <p style={{ textAlign: 'center', fontSize: 11, color: 'rgba(255,255,255,0.3)', marginTop: 8 }}>
-                You'll need to sign in first
-              </p>
-            )}
-          </>
+          </div>
         )}
 
-        {step === 'paying' && (
-          <>
-            <h3 style={{ fontSize: 18, fontWeight: 700, color: '#fff', margin: '0 0 16px' }}>
-              Confirm Payment
-            </h3>
+        {error && <p style={{ color: '#f87171', fontSize: 12, marginBottom: 12 }}>{error}</p>}
 
-            <div style={{ textAlign: 'center', padding: 24 }}>
-              <p style={{ fontSize: 14, color: 'rgba(255,255,255,0.5)', marginBottom: 8 }}>
-                Commission amount
-              </p>
-              <p style={{ fontSize: 36, fontWeight: 700, color: '#CFB53B', fontFamily: 'monospace', margin: '0 0 4px' }}>
-                ₹{commission.toLocaleString('en-IN')}
-              </p>
-              <p style={{ fontSize: 11, color: 'rgba(255,255,255,0.25)', margin: '0 0 24px' }}>
-                {listing.metal?.name} {listing.grade?.name} · {listing.qty.toLocaleString('en-IN')} kg
-              </p>
-
-              {error && (
-                <p style={{ fontSize: 12, color: '#f87171', marginBottom: 12 }}>{error}</p>
-              )}
-
-              <button onClick={handlePayCommission} disabled={loading} style={{
-                width: '100%', padding: 14, borderRadius: 12, fontWeight: 700, fontSize: 14,
-                background: '#34d399', color: '#000', border: 'none', cursor: 'pointer',
-                display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
-                opacity: loading ? 0.6 : 1,
-              }}>
-                {loading ? 'Processing Payment...' : 'Pay Now (Dev Mode — Free)'}
-                {!loading && <CheckCircle size={16} />}
-              </button>
-
-              <p style={{ fontSize: 10, color: 'rgba(255,255,255,0.2)', marginTop: 8 }}>
-                In production, this will open Razorpay payment
-              </p>
-            </div>
-          </>
-        )}
-
-        {step === 'connected' && contact && (
-          <>
-            <div style={{ textAlign: 'center', marginBottom: 20 }}>
-              <div style={{
-                width: 56, height: 56, borderRadius: 14, margin: '0 auto 12px',
-                background: 'rgba(52,211,153,0.15)', border: '1px solid rgba(52,211,153,0.3)',
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-              }}>
-                <CheckCircle size={28} color="#34d399" />
-              </div>
-              <h3 style={{ fontSize: 18, fontWeight: 700, color: '#34d399', margin: '0 0 4px' }}>
-                Connected!
-              </h3>
-              <p style={{ fontSize: 12, color: 'rgba(255,255,255,0.4)', margin: 0 }}>
-                Contact the seller directly to negotiate and complete the deal
-              </p>
-            </div>
-
-            <div style={{ padding: 16, borderRadius: 12, background: 'rgba(52,211,153,0.06)',
-              border: '1px solid rgba(52,211,153,0.15)', marginBottom: 16 }}>
-              <p style={{ fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em',
-                color: 'rgba(255,255,255,0.35)', margin: '0 0 10px' }}>
-                Seller Contact
-              </p>
-              <p style={{ fontSize: 15, fontWeight: 700, color: '#fff', margin: '0 0 4px' }}>
-                {contact.name || 'Seller'}
-              </p>
-              {contact.listingContact && (
-                <a href={`tel:${contact.listingContact}`} style={{
-                  display: 'flex', alignItems: 'center', gap: 6, fontSize: 14, fontWeight: 700,
-                  color: '#34d399', textDecoration: 'none', margin: '6px 0',
-                }}>
-                  <Phone size={14} /> {contact.listingContact}
-                </a>
-              )}
-              {contact.email && (
-                <p style={{ fontSize: 12, color: 'rgba(255,255,255,0.4)', margin: '4px 0 0' }}>
-                  {contact.email}
-                </p>
-              )}
-            </div>
-
-            <button onClick={onClose} style={{
-              width: '100%', padding: 12, borderRadius: 12, fontWeight: 700, fontSize: 13,
-              background: 'rgba(255,255,255,0.06)', color: 'rgba(255,255,255,0.6)',
-              border: '1px solid rgba(255,255,255,0.1)', cursor: 'pointer',
-            }}>
-              Close
-            </button>
-          </>
-        )}
-      </motion.div>
-    </motion.div>
+        <button onClick={handleSubmit} disabled={submitting} style={{
+          width: '100%', padding: '14px', borderRadius: 10, fontSize: 14, fontWeight: 700,
+          background: '#CFB53B', color: '#000', border: 'none', cursor: 'pointer',
+          opacity: submitting ? 0.6 : 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+        }}><Send size={16} /> {submitting ? 'Sending…' : 'Send Offer'}</button>
+      </div>
+    </div>
   );
 }
 
-// ── My Listings Tab ───────────────────────────────────────────────────────────
-function MyListingsTab({ listings, onRefresh }) {
-  const STATUS_STYLES = {
-    pending: { bg: 'rgba(251,191,36,0.1)', color: '#fbbf24', border: 'rgba(251,191,36,0.25)', label: 'Pending Review', icon: Clock },
-    verified: { bg: 'rgba(52,211,153,0.1)', color: '#34d399', border: 'rgba(52,211,153,0.25)', label: 'Verified & Live', icon: CheckCircle },
-    rejected: { bg: 'rgba(248,113,113,0.1)', color: '#f87171', border: 'rgba(248,113,113,0.25)', label: 'Rejected', icon: AlertCircle },
+/* ── Deal Detail Panel (full negotiation view) ────────────────────── */
+function DealDetailPanel({ dealId, user, onClose }) {
+  const [deal, setDeal] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [counterPrice, setCounterPrice] = useState('');
+  const [counterQty, setCounterQty] = useState('');
+  const [counterMsg, setCounterMsg] = useState('');
+  const [showCounter, setShowCounter] = useState(false);
+  const [actionLoading, setActionLoading] = useState('');
+  const [error, setError] = useState('');
+
+  const loadDeal = useCallback(async () => {
+    try {
+      const res = await fetchDealDetail(dealId);
+      setDeal(res.data);
+      setLoading(false);
+    } catch { setLoading(false); }
+  }, [dealId]);
+
+  useEffect(() => { loadDeal(); }, [loadDeal]);
+
+  // Auto-refresh every 15s
+  useEffect(() => {
+    const iv = setInterval(loadDeal, 15000);
+    return () => clearInterval(iv);
+  }, [loadDeal]);
+
+  if (loading) return <Overlay onClose={onClose}><p style={{ color: '#fff', textAlign: 'center' }}>Loading…</p></Overlay>;
+  if (!deal) return <Overlay onClose={onClose}><p style={{ color: '#f87171', textAlign: 'center' }}>Deal not found</p></Overlay>;
+
+  const myRole = deal.buyerId === user?.id ? 'buyer' : 'seller';
+  const otherParty = myRole === 'buyer' ? deal.seller : deal.buyer;
+  const lastOffer = deal.offers?.[deal.offers.length - 1];
+  const canRespond = lastOffer && lastOffer.fromUserId !== user?.id && lastOffer.status === 'pending' && deal.status === 'negotiating';
+  const isMyTurn = canRespond;
+  const isConnected = ['connected', 'completed'].includes(deal.status);
+
+  const handleAction = async (action) => {
+    setActionLoading(action); setError('');
+    try {
+      if (action === 'accept') {
+        await acceptOffer(deal.id);
+      } else if (action === 'reject') {
+        await rejectDeal(deal.id);
+      } else if (action === 'counter') {
+        if (!counterPrice) { setError('Price required'); setActionLoading(''); return; }
+        await counterOffer(deal.id, {
+          pricePerKg: parseFloat(counterPrice),
+          qty: counterQty ? parseFloat(counterQty) : undefined,
+          message: counterMsg || undefined,
+        });
+        setShowCounter(false); setCounterPrice(''); setCounterQty(''); setCounterMsg('');
+      } else if (action === 'pay') {
+        await payDeal(deal.id);
+      } else if (action === 'complete') {
+        await completeDeal(deal.id);
+      }
+      await loadDeal();
+    } catch (err) {
+      setError(err.response?.data?.error || 'Action failed');
+    } finally { setActionLoading(''); }
   };
 
   return (
-    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
-      {listings.length === 0 ? (
-        <div style={{ textAlign: 'center', padding: '64px 0', borderRadius: 16,
-          background: 'rgba(13,20,32,0.6)', border: '1px dashed rgba(255,255,255,0.1)' }}>
-          <Package size={40} color="rgba(255,255,255,0.15)" style={{ margin: '0 auto 14px', display: 'block' }} />
-          <h3 style={{ fontSize: 18, fontWeight: 700, color: '#fff', margin: '0 0 6px' }}>No listings yet</h3>
-          <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.35)', margin: 0 }}>
-            Post your first scrap listing to start selling.
-          </p>
+    <Overlay onClose={onClose}>
+      <div onClick={e => e.stopPropagation()} style={{ width: '100%', maxWidth: 480, maxHeight: '90vh',
+        borderRadius: 16, background: '#0D1420', border: '1px solid rgba(207,181,59,0.2)',
+        display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+
+        {/* Header */}
+        <div style={{ padding: '16px 20px', borderBottom: '1px solid rgba(255,255,255,0.06)',
+          display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <div>
+            <h3 style={{ fontSize: 16, fontWeight: 700, color: '#fff', margin: 0 }}>
+              {deal.listing?.metal?.name} — {deal.listing?.grade?.name || deal.listing?.metal?.name}
+            </h3>
+            <p style={{ fontSize: 11, color: 'rgba(255,255,255,0.3)', margin: '2px 0 0' }}>
+              {myRole === 'buyer' ? 'Seller' : 'Buyer'}: {otherParty?.name || 'Anonymous'}
+              {otherParty?.city && ` · ${otherParty.city}`}
+            </p>
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <span style={{ fontSize: 10, fontWeight: 700, padding: '3px 10px', borderRadius: 6,
+              background: `${STATUS_COLORS[deal.status] || '#666'}20`,
+              color: STATUS_COLORS[deal.status] || '#666', textTransform: 'uppercase' }}>{deal.status}</span>
+            <button onClick={onClose} style={{ background: 'none', border: 'none', color: '#666', cursor: 'pointer' }}><X size={18} /></button>
+          </div>
         </div>
-      ) : (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-          {listings.map(item => {
-            const st = STATUS_STYLES[item.status] || STATUS_STYLES.pending;
-            const Icon = st.icon;
+
+        {/* Offer history (chat-like) */}
+        <div style={{ flex: 1, overflowY: 'auto', padding: '16px 20px' }}>
+          {deal.offers?.map((offer, i) => {
+            const isMine = offer.fromUserId === user?.id;
             return (
-              <div key={item.id} style={{
-                padding: 16, borderRadius: 14, background: 'rgba(13,20,32,0.8)',
-                border: '1px solid rgba(255,255,255,0.08)',
-                display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16,
+              <div key={offer.id} style={{
+                display: 'flex', justifyContent: isMine ? 'flex-end' : 'flex-start', marginBottom: 12,
               }}>
-                <div style={{ flex: 1 }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
-                    <span style={{ fontSize: 14, fontWeight: 700, color: '#fff' }}>
-                      {item.metal?.name} — {item.grade?.name || 'Mixed'}
-                    </span>
-                    <span style={{
-                      fontSize: 9, fontWeight: 700, padding: '2px 6px', borderRadius: 4,
-                      background: st.bg, color: st.color, border: `1px solid ${st.border}`,
-                      display: 'inline-flex', alignItems: 'center', gap: 3,
-                    }}>
-                      <Icon size={9} /> {st.label}
-                    </span>
+                <div style={{
+                  maxWidth: '80%', padding: '10px 14px', borderRadius: 12,
+                  background: isMine ? 'rgba(207,181,59,0.1)' : 'rgba(255,255,255,0.05)',
+                  border: `1px solid ${isMine ? 'rgba(207,181,59,0.2)' : 'rgba(255,255,255,0.08)'}`,
+                }}>
+                  <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.3)', marginBottom: 4 }}>
+                    {isMine ? 'You' : otherParty?.name || 'Other'} · {new Date(offer.createdAt).toLocaleString('en-IN', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })}
                   </div>
-                  <p style={{ fontSize: 12, color: 'rgba(255,255,255,0.35)', margin: 0 }}>
-                    {item.qty.toLocaleString('en-IN')} kg · {item.location}
-                    {item.price && ` · ₹${item.price.toLocaleString('en-IN')}/kg`}
-                  </p>
+                  <div style={{ fontSize: 15, fontWeight: 700, color: '#fff' }}>
+                    ₹{fmt(offer.pricePerKg)}/kg × {fmt(offer.qty)} kg
+                  </div>
+                  <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.4)', marginTop: 2 }}>
+                    = ₹{fmt(offer.pricePerKg * offer.qty)}
+                  </div>
+                  {offer.message && <p style={{ fontSize: 12, color: 'rgba(255,255,255,0.5)', margin: '6px 0 0', fontStyle: 'italic' }}>"{offer.message}"</p>}
+                  {offer.status !== 'pending' && (
+                    <span style={{ fontSize: 9, fontWeight: 700, color: offer.status === 'accepted' ? '#34d399' : '#6b7280',
+                      textTransform: 'uppercase', marginTop: 4, display: 'inline-block' }}>{offer.status}</span>
+                  )}
                 </div>
               </div>
             );
           })}
+
+          {/* Waiting indicator */}
+          {deal.status === 'negotiating' && lastOffer?.fromUserId === user?.id && (
+            <p style={{ textAlign: 'center', fontSize: 12, color: 'rgba(255,255,255,0.25)', padding: '12px 0' }}>
+              <Clock size={14} style={{ verticalAlign: 'middle', marginRight: 4 }} />
+              Waiting for {otherParty?.name || 'the other party'} to respond…
+            </p>
+          )}
         </div>
-      )}
-    </motion.div>
+
+        {/* Action bar */}
+        <div style={{ padding: '16px 20px', borderTop: '1px solid rgba(255,255,255,0.06)' }}>
+          {error && <p style={{ color: '#f87171', fontSize: 12, marginBottom: 8 }}>{error}</p>}
+
+          {/* Negotiation actions */}
+          {isMyTurn && !showCounter && (
+            <div style={{ display: 'flex', gap: 8 }}>
+              <button onClick={() => handleAction('accept')} disabled={!!actionLoading}
+                style={{ flex: 1, padding: '12px', borderRadius: 10, fontSize: 13, fontWeight: 700,
+                  background: '#34d399', color: '#000', border: 'none', cursor: 'pointer' }}>
+                {actionLoading === 'accept' ? 'Accepting…' : 'Accept Offer'}
+              </button>
+              <button onClick={() => setShowCounter(true)}
+                style={{ flex: 1, padding: '12px', borderRadius: 10, fontSize: 13, fontWeight: 700,
+                  background: '#CFB53B', color: '#000', border: 'none', cursor: 'pointer' }}>
+                Counter
+              </button>
+              <button onClick={() => handleAction('reject')} disabled={!!actionLoading}
+                style={{ padding: '12px 16px', borderRadius: 10, fontSize: 13, fontWeight: 700,
+                  background: 'transparent', color: '#f87171', border: '1px solid rgba(248,113,113,0.3)', cursor: 'pointer' }}>
+                Reject
+              </button>
+            </div>
+          )}
+
+          {/* Counter-offer form */}
+          {showCounter && (
+            <div>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginBottom: 8 }}>
+                <input type="number" value={counterPrice} onChange={e => setCounterPrice(e.target.value)}
+                  placeholder="Your price ₹/kg" style={{ ...inputStyle, padding: '10px 12px' }} />
+                <input type="number" value={counterQty} onChange={e => setCounterQty(e.target.value)}
+                  placeholder={`Qty (${lastOffer?.qty || ''} kg)`} style={{ ...inputStyle, padding: '10px 12px' }} />
+              </div>
+              <input value={counterMsg} onChange={e => setCounterMsg(e.target.value)}
+                placeholder="Message (optional)" style={{ ...inputStyle, padding: '10px 12px', marginBottom: 8 }} />
+              <div style={{ display: 'flex', gap: 8 }}>
+                <button onClick={() => handleAction('counter')} disabled={!!actionLoading}
+                  style={{ flex: 1, padding: '12px', borderRadius: 10, fontSize: 13, fontWeight: 700,
+                    background: '#CFB53B', color: '#000', border: 'none', cursor: 'pointer' }}>
+                  {actionLoading === 'counter' ? 'Sending…' : 'Send Counter'}
+                </button>
+                <button onClick={() => setShowCounter(false)}
+                  style={{ padding: '12px 16px', borderRadius: 10, fontSize: 13,
+                    background: 'transparent', color: '#666', border: '1px solid rgba(255,255,255,0.1)', cursor: 'pointer' }}>
+                  Cancel
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* Agreed — pay commission */}
+          {deal.status === 'agreed' && myRole === 'buyer' && (
+            <div>
+              <div style={{ background: 'rgba(52,211,153,0.08)', borderRadius: 10, padding: 14, marginBottom: 12,
+                border: '1px solid rgba(52,211,153,0.15)' }}>
+                <div style={{ fontSize: 14, fontWeight: 700, color: '#34d399', marginBottom: 4 }}>
+                  <Handshake size={16} style={{ verticalAlign: 'middle', marginRight: 6 }} /> Deal Agreed!
+                </div>
+                <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.5)' }}>
+                  ₹{fmt(deal.agreedPrice)}/kg × {fmt(deal.agreedQty)} kg = ₹{fmt(deal.dealAmount)}
+                </div>
+                <div style={{ fontSize: 13, fontWeight: 700, color: '#CFB53B', marginTop: 6 }}>
+                  Commission (0.1%): ₹{fmt(deal.commission)}
+                </div>
+              </div>
+              <button onClick={() => handleAction('pay')} disabled={!!actionLoading}
+                style={{ width: '100%', padding: '14px', borderRadius: 10, fontSize: 14, fontWeight: 700,
+                  background: '#34d399', color: '#000', border: 'none', cursor: 'pointer' }}>
+                {actionLoading === 'pay' ? 'Processing…' : `Pay ₹${fmt(deal.commission)} & Connect`}
+              </button>
+              <p style={{ fontSize: 10, color: 'rgba(255,255,255,0.2)', textAlign: 'center', marginTop: 6 }}>
+                Dev mode — instant payment. Production will use Razorpay.
+              </p>
+            </div>
+          )}
+          {deal.status === 'agreed' && myRole === 'seller' && (
+            <div style={{ background: 'rgba(52,211,153,0.08)', borderRadius: 10, padding: 14,
+              border: '1px solid rgba(52,211,153,0.15)', textAlign: 'center' }}>
+              <Handshake size={20} style={{ color: '#34d399', marginBottom: 6 }} />
+              <p style={{ fontSize: 13, fontWeight: 700, color: '#34d399' }}>Deal agreed! Waiting for buyer to pay commission.</p>
+              <p style={{ fontSize: 11, color: 'rgba(255,255,255,0.4)', marginTop: 4 }}>
+                ₹{fmt(deal.agreedPrice)}/kg × {fmt(deal.agreedQty)} kg · Commission: ₹{fmt(deal.commission)}
+              </p>
+            </div>
+          )}
+
+          {/* Connected — show contacts */}
+          {isConnected && (
+            <div>
+              <div style={{ background: 'rgba(56,189,248,0.08)', borderRadius: 10, padding: 16, marginBottom: 8,
+                border: '1px solid rgba(56,189,248,0.15)' }}>
+                <div style={{ fontSize: 14, fontWeight: 700, color: '#38bdf8', marginBottom: 8 }}>
+                  <CheckCircle size={16} style={{ verticalAlign: 'middle', marginRight: 6 }} />
+                  {deal.status === 'completed' ? 'Deal Completed' : 'Connected!'}
+                </div>
+                <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.3)', textTransform: 'uppercase', marginBottom: 4 }}>
+                  {myRole === 'buyer' ? 'Seller' : 'Buyer'} Contact
+                </div>
+                <div style={{ fontSize: 15, fontWeight: 700, color: '#fff' }}>
+                  {(myRole === 'buyer' ? deal.seller : deal.buyer)?.name || 'N/A'}
+                </div>
+                {(myRole === 'buyer' ? deal.seller : deal.buyer)?.phone && (
+                  <a href={`tel:${(myRole === 'buyer' ? deal.seller : deal.buyer).phone}`}
+                    style={{ fontSize: 14, color: '#34d399', textDecoration: 'none', display: 'block', marginTop: 4 }}>
+                    📞 {(myRole === 'buyer' ? deal.seller : deal.buyer).phone}
+                  </a>
+                )}
+                {(myRole === 'buyer' ? deal.seller : deal.buyer)?.email && (
+                  <a href={`mailto:${(myRole === 'buyer' ? deal.seller : deal.buyer).email}`}
+                    style={{ fontSize: 12, color: 'rgba(255,255,255,0.5)', textDecoration: 'none', display: 'block', marginTop: 2 }}>
+                    ✉ {(myRole === 'buyer' ? deal.seller : deal.buyer).email}
+                  </a>
+                )}
+              </div>
+              {deal.status === 'connected' && (
+                <button onClick={() => handleAction('complete')} disabled={!!actionLoading}
+                  style={{ width: '100%', padding: '12px', borderRadius: 10, fontSize: 13, fontWeight: 700,
+                    background: 'rgba(34,197,94,0.15)', color: '#22c55e', border: '1px solid rgba(34,197,94,0.2)', cursor: 'pointer' }}>
+                  {actionLoading === 'complete' ? 'Completing…' : 'Mark Deal as Completed'}
+                </button>
+              )}
+            </div>
+          )}
+
+          {/* Cancelled/expired */}
+          {['cancelled', 'expired'].includes(deal.status) && (
+            <p style={{ textAlign: 'center', fontSize: 13, color: '#6b7280', padding: '8px 0' }}>
+              This deal has been {deal.status}.
+            </p>
+          )}
+        </div>
+      </div>
+    </Overlay>
   );
 }
 
-// ── Post Form ─────────────────────────────────────────────────────────────────
-function PostForm({ onSuccess }) {
-  const { user } = useAuth();
-  const navigate = useNavigate();
-  const [metals, setMetals] = useState([]);
-  const [cities, setCities] = useState([]);
-  const [selectedMetalId, setSelectedMetalId] = useState('');
-  const [selectedMetal, setSelectedMetal] = useState(null);
-  const [form, setForm] = useState({
-    gradeId: '', qty: '', location: '', price: '', contact: '', description: '',
-  });
-  const [submitting, setSubmitting] = useState(false);
-  const [error, setError] = useState('');
-  const [success, setSuccess] = useState(false);
-
-  useEffect(() => {
-    fetchMetals().then(r => {
-      const list = r.data || [];
-      setMetals(list);
-    }).catch(() => {});
-    fetchCities().then(r => {
-      const list = Array.isArray(r.data) ? r.data : (r.data?.cities || []);
-      setCities(list);
-    }).catch(() => {});
-  }, []);
-
-  useEffect(() => {
-    setSelectedMetal(metals.find(m => m.id === selectedMetalId) || null);
-    setForm(f => ({ ...f, gradeId: '' }));
-  }, [selectedMetalId, metals]);
-
-  if (!user) {
-    return (
-      <div style={{ textAlign: 'center', padding: '64px 16px', borderRadius: 16,
-        background: 'rgba(13,20,32,0.8)', border: '1px solid rgba(255,255,255,0.08)' }}>
-        <h3 style={{ fontSize: 20, fontWeight: 700, color: '#fff', margin: '0 0 8px' }}>Sign in required</h3>
-        <p style={{ fontSize: 14, color: 'rgba(255,255,255,0.4)', margin: '0 0 20px' }}>
-          You must be logged in to post a listing.
-        </p>
-        <button onClick={() => navigate('/login')} style={{
-          padding: '12px 28px', borderRadius: 12, fontWeight: 700, fontSize: 14,
-          background: '#CFB53B', color: '#000', border: 'none', cursor: 'pointer' }}>
-          Go to Login
-        </button>
-      </div>
-    );
-  }
-
-  const set = (k) => (e) => setForm(f => ({ ...f, [k]: e.target.value }));
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setSubmitting(true); setError('');
-    try {
-      await createListing({
-        metalId: selectedMetalId,
-        gradeId: form.gradeId || null,
-        qty: Number(form.qty),
-        location: form.location,
-        price: form.price ? Number(form.price) : null,
-        contact: form.contact,
-        description: form.description || null,
-      });
-      setSuccess(true);
-      setTimeout(() => onSuccess(), 1500);
-    } catch (err) {
-      setError(err.response?.data?.error || 'Failed to post listing. Try again.');
-    }
-    finally { setSubmitting(false); }
-  };
-
-  if (success) {
-    return (
-      <div style={{ textAlign: 'center', padding: '64px 16px', borderRadius: 16,
-        background: 'rgba(13,20,32,0.8)', border: '1px solid rgba(52,211,153,0.2)' }}>
-        <CheckCircle size={48} color="#34d399" style={{ margin: '0 auto 14px', display: 'block' }} />
-        <h3 style={{ fontSize: 20, fontWeight: 700, color: '#34d399', margin: '0 0 8px' }}>Listing Submitted!</h3>
-        <p style={{ fontSize: 14, color: 'rgba(255,255,255,0.4)', margin: 0 }}>
-          Your listing is pending review. It will go live once verified by our team.
-        </p>
-      </div>
-    );
-  }
+/* ── My Deals Tab ─────────────────────────────────────────────────── */
+function MyDealsTab({ deals, user, onRefresh, onViewDeal }) {
+  if (!deals.length) return (
+    <div style={{ textAlign: 'center', padding: '60px 20px' }}>
+      <MessageSquare size={40} style={{ color: 'rgba(255,255,255,0.1)', marginBottom: 12 }} />
+      <p style={{ color: 'rgba(255,255,255,0.3)', fontSize: 14 }}>No deals yet</p>
+      <p style={{ color: 'rgba(255,255,255,0.2)', fontSize: 12 }}>Make an offer on a listing to start negotiating</p>
+    </div>
+  );
 
   return (
-    <motion.form initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}
-      onSubmit={handleSubmit}
-      style={{ maxWidth: 640, margin: '0 auto', padding: 24, borderRadius: 18,
-        background: 'rgba(13,20,32,0.9)', border: '1px solid rgba(255,255,255,0.08)',
-        borderTop: '2px solid rgba(207,181,59,0.3)', boxShadow: '0 16px 48px rgba(0,0,0,0.4)' }}>
-      <h3 style={{ fontSize: 18, fontWeight: 700, color: '#fff', margin: '0 0 4px' }}>
-        Sell Your Scrap Metal
-      </h3>
-      <p style={{ fontSize: 12, color: 'rgba(255,255,255,0.35)', margin: '0 0 20px',
-        paddingBottom: 16, borderBottom: '1px solid rgba(255,255,255,0.07)' }}>
-        Your listing will be reviewed before going live. Buyers pay a small commission to connect with you.
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+      {deals.map(d => {
+        const lastOffer = d.lastOffer || d.offers?.[0];
+        const hasNew = d.hasNewOffer;
+        return (
+          <div key={d.id} onClick={() => onViewDeal(d.id)}
+            style={{ background: '#0D1420', borderRadius: 14, border: `1px solid ${hasNew ? 'rgba(207,181,59,0.3)' : 'rgba(255,255,255,0.07)'}`,
+              padding: 16, cursor: 'pointer', transition: 'border-color 0.15s' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+              <div>
+                <div style={{ display: 'flex', gap: 6, alignItems: 'center', marginBottom: 4 }}>
+                  <span style={{ fontSize: 10, fontWeight: 700, padding: '2px 8px', borderRadius: 6,
+                    background: 'rgba(207,181,59,0.15)', color: '#CFB53B', textTransform: 'uppercase' }}>
+                    {d.listing?.metal?.name}
+                  </span>
+                  <span style={{ fontSize: 10, fontWeight: 700, padding: '2px 8px', borderRadius: 6,
+                    background: `${STATUS_COLORS[d.status] || '#666'}20`,
+                    color: STATUS_COLORS[d.status], textTransform: 'uppercase' }}>{d.status}</span>
+                  {hasNew && <span style={{ fontSize: 9, fontWeight: 700, padding: '2px 6px', borderRadius: 4,
+                    background: '#CFB53B', color: '#000' }}>NEW</span>}
+                </div>
+                <h4 style={{ fontSize: 15, fontWeight: 700, color: '#fff', margin: '0 0 2px' }}>
+                  {d.listing?.grade?.name || d.listing?.metal?.name}
+                </h4>
+                <p style={{ fontSize: 11, color: 'rgba(255,255,255,0.3)', margin: 0 }}>
+                  {d.myRole === 'buyer' ? 'Seller' : 'Buyer'}: {d.otherParty?.name || 'Anonymous'}
+                </p>
+              </div>
+              <div style={{ textAlign: 'right' }}>
+                {lastOffer && <div style={{ fontSize: 15, fontWeight: 700, color: '#fff' }}>₹{fmt(lastOffer.pricePerKg)}/kg</div>}
+                {lastOffer && <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.3)' }}>{fmt(lastOffer.qty)} kg</div>}
+                <ChevronRight size={16} style={{ color: 'rgba(255,255,255,0.2)', marginTop: 4 }} />
+              </div>
+            </div>
+            {d.agreedPrice && (
+              <div style={{ marginTop: 8, fontSize: 12, color: '#34d399' }}>
+                Agreed: ₹{fmt(d.agreedPrice)}/kg × {fmt(d.agreedQty)} kg = ₹{fmt(d.dealAmount)} · Fee: ₹{fmt(d.commission)}
+              </div>
+            )}
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+/* ── My Listings Tab ──────────────────────────────────────────────── */
+function MyListingsTab({ listings, onRefresh }) {
+  const [deleting, setDeleting] = useState(null);
+
+  const handleDelete = async (id) => {
+    if (!confirm('Remove this listing?')) return;
+    setDeleting(id);
+    try {
+      await deleteListing(id);
+      onRefresh();
+    } catch { alert('Failed to delete'); }
+    finally { setDeleting(null); }
+  };
+
+  if (!listings.length) return (
+    <div style={{ textAlign: 'center', padding: '60px 20px' }}>
+      <Package size={40} style={{ color: 'rgba(255,255,255,0.1)', marginBottom: 12 }} />
+      <p style={{ color: 'rgba(255,255,255,0.3)', fontSize: 14 }}>No listings yet</p>
+    </div>
+  );
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+      {listings.map(l => (
+        <div key={l.id} style={{ background: '#0D1420', borderRadius: 14,
+          border: '1px solid rgba(255,255,255,0.07)', padding: 16 }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+            <div>
+              <div style={{ display: 'flex', gap: 6, marginBottom: 4 }}>
+                <span style={{ fontSize: 10, fontWeight: 700, padding: '2px 8px', borderRadius: 6,
+                  background: 'rgba(207,181,59,0.15)', color: '#CFB53B' }}>{l.metal?.name}</span>
+                {l.status === 'verified' && <span style={{ fontSize: 10, fontWeight: 700, padding: '2px 8px',
+                  borderRadius: 6, background: 'rgba(52,211,153,0.15)', color: '#34d399' }}>Verified & Live</span>}
+                {l.status === 'pending' && <span style={{ fontSize: 10, fontWeight: 700, padding: '2px 8px',
+                  borderRadius: 6, background: 'rgba(207,181,59,0.15)', color: '#CFB53B' }}>Pending Review</span>}
+                {l.status === 'rejected' && <span style={{ fontSize: 10, fontWeight: 700, padding: '2px 8px',
+                  borderRadius: 6, background: 'rgba(248,113,113,0.15)', color: '#f87171' }}>Rejected</span>}
+              </div>
+              <h4 style={{ fontSize: 15, fontWeight: 700, color: '#fff', margin: '0 0 2px' }}>
+                {l.grade?.name || l.metal?.name}
+              </h4>
+              <p style={{ fontSize: 11, color: 'rgba(255,255,255,0.3)' }}>
+                {fmt(l.qty)} kg · {l.location} {l.price ? `· ₹${fmt(l.price)}/kg` : '· Negotiable'}
+              </p>
+            </div>
+            <button onClick={() => handleDelete(l.id)} disabled={deleting === l.id}
+              style={{ padding: '8px', borderRadius: 8, background: 'transparent',
+                border: '1px solid rgba(248,113,113,0.2)', color: '#f87171', cursor: 'pointer' }}>
+              <Trash2 size={14} />
+            </button>
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+/* ── Post Form ────────────────────────────────────────────────────── */
+function PostForm({ user, onSuccess }) {
+  const [metals, setMetals] = useState([]);
+  const [metalId, setMetalId] = useState('');
+  const [gradeId, setGradeId] = useState('');
+  const [qty, setQty] = useState('');
+  const [price, setPrice] = useState('');
+  const [location, setLocation] = useState('');
+  const [contact, setContact] = useState('');
+  const [description, setDescription] = useState('');
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState('');
+
+  useEffect(() => {
+    fetchMetals().then(r => setMetals(r.data || [])).catch(() => {});
+  }, []);
+
+  const selectedMetal = metals.find(m => m.id === metalId);
+  const grades = selectedMetal?.grades || [];
+
+  const handleSubmit = async () => {
+    if (!metalId || !qty || !location || !contact) return setError('Metal, quantity, location, and contact are required');
+    setSubmitting(true); setError('');
+    try {
+      await createListing({ metalId, gradeId: gradeId || undefined, qty, price: price || undefined, location, contact, description: description || undefined });
+      onSuccess();
+    } catch (err) {
+      setError(err.response?.data?.error || 'Failed to publish');
+    } finally { setSubmitting(false); }
+  };
+
+  return (
+    <div style={{ background: '#0D1420', borderRadius: 16, border: '1px solid rgba(207,181,59,0.15)', padding: 24, maxWidth: 600 }}>
+      <h3 style={{ fontSize: 18, fontWeight: 700, color: '#fff', margin: '0 0 4px' }}>Sell Your Scrap Metal</h3>
+      <p style={{ fontSize: 12, color: 'rgba(255,255,255,0.35)', margin: '0 0 20px' }}>
+        Your listing will be reviewed before going live. Buyers negotiate and pay a small commission to connect.
       </p>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 12 }}>
         <div>
           <label style={labelStyle}>Metal *</label>
-          <select value={selectedMetalId} onChange={e => setSelectedMetalId(e.target.value)} required
-            style={{ ...inputStyle, appearance: 'none',
-              color: selectedMetalId ? '#fff' : 'rgba(255,255,255,0.4)',
-              backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='rgba(255,255,255,0.3)' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E")`,
-              backgroundRepeat: 'no-repeat', backgroundPosition: 'right 12px center',
-            }}>
-            <option value="" style={{ background: '#0d1420', color: 'rgba(255,255,255,0.5)' }}>Select metal</option>
-            {metals.map(m => (
-              <option key={m.id} value={m.id} style={{ background: '#0d1420', color: '#fff' }}>
-                {m.emoji} {m.name}
-              </option>
-            ))}
+          <select value={metalId} onChange={e => { setMetalId(e.target.value); setGradeId(''); }} style={selectStyle}>
+            <option value="" style={optionStyle}>Select metal</option>
+            {metals.map(m => <option key={m.id} value={m.id} style={optionStyle}>{m.emoji} {m.name}</option>)}
           </select>
         </div>
         <div>
           <label style={labelStyle}>Grade</label>
-          <select value={form.gradeId} onChange={set('gradeId')} disabled={!selectedMetal}
-            style={{ ...inputStyle, appearance: 'none',
-              color: form.gradeId ? '#fff' : 'rgba(255,255,255,0.4)',
-              opacity: selectedMetal ? 1 : 0.5,
-              backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='rgba(255,255,255,0.3)' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E")`,
-              backgroundRepeat: 'no-repeat', backgroundPosition: 'right 12px center',
-            }}>
-            <option value="" style={{ background: '#0d1420', color: 'rgba(255,255,255,0.5)' }}>Any grade</option>
-            {selectedMetal?.grades?.map(g => (
-              <option key={g.id} value={g.id} style={{ background: '#0d1420', color: '#fff' }}>{g.name}</option>
-            ))}
+          <select value={gradeId} onChange={e => setGradeId(e.target.value)} style={selectStyle} disabled={!grades.length}>
+            <option value="" style={optionStyle}>Any grade</option>
+            {grades.map(g => <option key={g.id} value={g.id} style={optionStyle}>{g.name}</option>)}
           </select>
-        </div>
-        <div>
-          <label style={labelStyle}>Quantity (kg) *</label>
-          <input type="number" value={form.qty} onChange={set('qty')}
-            placeholder="1000" min="1" required style={inputStyle} />
-        </div>
-        <div>
-          <label style={labelStyle}>Price (₹/kg)</label>
-          <input type="number" value={form.price} onChange={set('price')}
-            placeholder="Leave blank for negotiable" min="1" style={inputStyle} />
-        </div>
-        <div>
-          <label style={labelStyle}>Location *</label>
-          <input type="text" value={form.location} onChange={set('location')}
-            placeholder="e.g. Mandoli, Delhi" required style={inputStyle} />
-        </div>
-        <div>
-          <label style={labelStyle}>Contact Number *</label>
-          <input type="tel" value={form.contact} onChange={set('contact')}
-            placeholder="9876543210" required style={inputStyle} />
-        </div>
-        <div style={{ gridColumn: '1 / -1' }}>
-          <label style={labelStyle}>Description</label>
-          <textarea value={form.description} onChange={set('description')} rows={3}
-            placeholder="Condition, origin, availability, minimum order…"
-            style={{ ...inputStyle, resize: 'none', lineHeight: 1.5 }} />
         </div>
       </div>
 
-      {error && (
-        <p style={{ fontSize: 13, color: '#f87171', marginTop: 12, fontWeight: 600,
-          display: 'flex', alignItems: 'center', gap: 4 }}>
-          <AlertCircle size={14} /> {error}
-        </p>
-      )}
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 12 }}>
+        <div>
+          <label style={labelStyle}>Quantity (kg) *</label>
+          <input type="number" value={qty} onChange={e => setQty(e.target.value)} placeholder="1000" style={inputStyle} />
+        </div>
+        <div>
+          <label style={labelStyle}>Price (₹/kg)</label>
+          <input type="number" value={price} onChange={e => setPrice(e.target.value)} placeholder="Leave blank for negotiable" style={inputStyle} />
+        </div>
+      </div>
 
-      <button type="submit" disabled={submitting || !selectedMetalId} style={{
-        width: '100%', marginTop: 20, padding: '14px', borderRadius: 12, fontWeight: 700, fontSize: 15,
-        background: '#CFB53B', color: '#000', border: 'none',
-        cursor: (submitting || !selectedMetalId) ? 'not-allowed' : 'pointer',
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 12 }}>
+        <div>
+          <label style={labelStyle}>Location *</label>
+          <input value={location} onChange={e => setLocation(e.target.value)} placeholder="e.g. Mandoli, Delhi" style={inputStyle} />
+        </div>
+        <div>
+          <label style={labelStyle}>Contact Number *</label>
+          <input value={contact} onChange={e => setContact(e.target.value)} placeholder="9876543210" style={inputStyle} />
+        </div>
+      </div>
+
+      <div style={{ marginBottom: 16 }}>
+        <label style={labelStyle}>Description</label>
+        <textarea value={description} onChange={e => setDescription(e.target.value)}
+          placeholder="Condition, origin, availability, minimum order…"
+          style={{ ...inputStyle, minHeight: 80, resize: 'vertical' }} />
+      </div>
+
+      {error && <p style={{ color: '#f87171', fontSize: 12, marginBottom: 12 }}>{error}</p>}
+
+      <button onClick={handleSubmit} disabled={submitting} style={{
+        width: '100%', padding: '14px', borderRadius: 10, fontSize: 14, fontWeight: 700,
+        background: '#CFB53B', color: '#000', border: 'none', cursor: 'pointer', opacity: submitting ? 0.6 : 1,
         display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
-        boxShadow: '0 4px 16px rgba(207,181,59,0.25)',
-        opacity: (submitting || !selectedMetalId) ? 0.6 : 1,
-      }}>
-        {submitting ? 'Submitting…' : <><Plus size={18} /> Submit for Review</>}
-      </button>
+      }}><Plus size={16} /> {submitting ? 'Submitting…' : 'Submit for Review'}</button>
 
-      <p style={{ textAlign: 'center', fontSize: 10, color: 'rgba(255,255,255,0.2)', marginTop: 10 }}>
+      <p style={{ fontSize: 10, color: 'rgba(255,255,255,0.2)', textAlign: 'center', marginTop: 8 }}>
         Listings are reviewed within 24 hours. Contact info is only shared with paid buyers.
       </p>
-    </motion.form>
+    </div>
+  );
+}
+
+/* ── Login Prompt ─────────────────────────────────────────────────── */
+function LoginPrompt({ navigate }) {
+  return (
+    <div style={{ textAlign: 'center', padding: '60px 20px' }}>
+      <Package size={40} style={{ color: 'rgba(255,255,255,0.1)', marginBottom: 12 }} />
+      <p style={{ color: 'rgba(255,255,255,0.3)', fontSize: 14, marginBottom: 12 }}>Login to sell your scrap metal</p>
+      <button onClick={() => navigate('/login')} style={{
+        padding: '12px 32px', borderRadius: 10, fontSize: 14, fontWeight: 700,
+        background: '#CFB53B', color: '#000', border: 'none', cursor: 'pointer',
+      }}>Login / Sign Up</button>
+    </div>
+  );
+}
+
+/* ── Overlay wrapper ──────────────────────────────────────────────── */
+function Overlay({ onClose, children }) {
+  return (
+    <div style={{ position: 'fixed', inset: 0, zIndex: 1000, display: 'flex', alignItems: 'center',
+      justifyContent: 'center', background: 'rgba(0,0,0,0.7)', padding: 16 }} onClick={onClose}>
+      {children}
+    </div>
   );
 }

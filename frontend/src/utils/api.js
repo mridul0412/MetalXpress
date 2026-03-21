@@ -72,11 +72,20 @@ export const fetchMyListings = () => api.get('/marketplace/my-listings');
 export const createListing = (data) => api.post('/marketplace/listings', data);
 export const deleteListing = (id) => api.delete(`/marketplace/listings/${id}`);
 
-// Deals
+// Deals / Negotiation
 export const createDeal = (data) => api.post('/marketplace/deals', data);
+export const fetchDealDetail = (dealId) => api.get(`/marketplace/deals/${dealId}`);
+export const counterOffer = (dealId, data) => api.post(`/marketplace/deals/${dealId}/counter`, data);
+export const acceptOffer = (dealId) => api.post(`/marketplace/deals/${dealId}/accept`);
+export const rejectDeal = (dealId) => api.post(`/marketplace/deals/${dealId}/reject`);
 export const payDeal = (dealId) => api.post(`/marketplace/deals/${dealId}/pay`);
-export const fetchMyDeals = () => api.get('/marketplace/my-deals');
+export const fetchMyDeals = (role) => api.get('/marketplace/my-deals', { params: { role } });
 export const completeDeal = (dealId) => api.patch(`/marketplace/deals/${dealId}/complete`);
+export const fetchDealNotifications = () => api.get('/marketplace/notifications');
+
+// Admin marketplace
+export const fetchPendingListings = () => api.get('/marketplace/pending', { headers: adminHeaders() });
+export const verifyListing = (id, status) => api.patch(`/marketplace/listings/${id}/verify`, { status }, { headers: adminHeaders() });
 
 // Alerts
 export const fetchAlerts = () => api.get('/alerts');

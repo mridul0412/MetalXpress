@@ -67,9 +67,9 @@ export default function Navbar() {
           <div className="flex items-center gap-2">
             {user ? (
               <>
-                <span className="hidden sm:block text-xs" style={{ color: 'rgba(255,255,255,0.35)' }}>
+                <Link to="/profile" className="hidden sm:block text-xs" style={{ color: 'rgba(255,255,255,0.35)', textDecoration: 'none' }}>
                   {user.name || user.email || user.phone}
-                </span>
+                </Link>
                 <button onClick={logout} style={{
                   fontSize: '12px',
                   padding: '5px 12px',
