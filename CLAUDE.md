@@ -38,7 +38,7 @@ MetalXpress is a real-time scrap metal rate platform for Indian traders. It repl
 ```
 
 ## Current Date
-2026-03-21
+2026-03-22
 
 ## Session Log
 - **2026-03-19**: Initial UI overhaul (Replit-quality design, LME/MCX panel, hub selector, Login, Admin, Marketplace)
@@ -50,6 +50,7 @@ MetalXpress is a real-time scrap metal rate platform for Indian traders. It repl
 - **2026-03-21 (session 6)**: Complete marketplace overhaul — deal flow with 0.1% commission gate, sell-only listings, card redesign, dropdown fix, listing verification, contact reveal after payment
 - **2026-03-21 (session 7)**: Negotiation-first deal flow redesign, Profile page, Admin marketplace panel — see Session 7 details below
 - **2026-03-21 (session 8)**: Auth unification, dispute flow, image support, admin verification overhaul — see Session 8 details below
+- **2026-03-22 (session 9)**: OTP fix, multi-select trader type, file uploads, offer UX, admin user, comprehensive roadmap — see Session 9 details below
 
 ## Session 3 Changes (2026-03-20) — Full Detail
 
@@ -267,22 +268,100 @@ Grade names updated to match actual WhatsApp message format (so `normGrade` matc
 - 10 marketplace listings with realistic descriptions, locations, and prices
 - Pro test user: `test@metalxpress.in` / `test1234` (bcrypt hashed)
 
-## Known Remaining Issues
-- **Alerts**: Backend CRUD works, but no cron/background job to actually trigger alerts when rates cross thresholds. Needs: periodic check + notification mechanism (SMS or in-app).
-- **PaywallModal**: Not wired to actual Razorpay yet — opens with plan cards, shows "Coming soon" alert
+## Known Remaining Issues (updated session 9)
+- **Alerts**: Backend CRUD works, but no cron/background job to actually trigger alerts when rates cross thresholds. Needs: periodic check + notification mechanism (SMS or in-app). `node-cron` is installed but only partially used.
+- **PaywallModal**: Not wired to actual Razorpay yet — opens with plan cards, shows "Coming soon" alert. Razorpay env vars defined in `.env.example` but not integrated.
 - **Local rates other cities**: Only Delhi Mandoli seeded. Admin must paste real WhatsApp messages per hub to populate other cities.
 - **Nifty/Sensex**: ^NSEI and ^BSESN may occasionally return null (Yahoo rate limits); gracefully shows "—"
 - **LMEStrip in Navbar**: Currently uses `d.rates` fallback — should be updated to `d.metals` to match new `/live` shape
 - **Lead/Tin DB fallback**: Only served if admin-pasted LME message is ≤7 days old; otherwise shows "—"
-- **Forgot password**: Not implemented yet — email+password flow has no password reset
-- **Email verification**: Not implemented — users can register with any email without confirming it
-- **Contact page**: Phone/WhatsApp numbers are placeholder "XXXXX XXXXX" — update with real numbers
-- **Marketplace commission**: 0.1% negotiation-first flow working in dev mode (instant payment) — needs Razorpay integration for production
-- **Deal notifications**: Polling-based (30s/15s intervals) — consider WebSocket or SSE for real-time updates
-- **KYC verification**: Schema field `kycVerified` exists but no upload/verification flow — needs document upload (Aadhaar/PAN) + admin review
-- **Image uploads**: Currently URL-based (paste links from Imgur/Google Drive) — needs S3/Cloudinary file upload for production
-- **Dispute SLA**: 48-hour resolution promise is manual (admin reviews) — needs notification to admin when dispute filed
-- **Analytics layer**: Charts, market analysis, Hindi toggle — Phase 2 feature, not yet built
+- **Forgot password**: Not implemented — email+password flow has no password reset. Needs: reset token generation, email sending, reset page.
+- **Email verification**: Not implemented — users can register with any email without confirming it. Needs: verification token, confirmation email, frontend flow.
+- **Contact page**: Phone/WhatsApp numbers are placeholder "XXXXX XXXXX" in `Contact.jsx` — update with real numbers before go-live.
+- **Marketplace commission**: 0.1% negotiation-first flow working in dev mode (instant payment) — needs Razorpay integration for production.
+- **Deal notifications**: Polling-based (30s/15s intervals) — consider WebSocket or SSE for real-time updates in production.
+- **KYC verification**: Schema fields `kycVerified` and `phoneVerified` exist. Phone verification works via OTP. KYC needs: document upload (Aadhaar/PAN), file storage, admin review panel.
+- **Image storage for production**: Currently files saved to local `backend/uploads/` folder via multer. For production at scale, migrate to S3/Cloudinary with CDN. Local disk works fine for MVP/early launch.
+- **Dispute SLA**: 48-hour resolution promise is manual (admin reviews) — needs notification to admin when dispute filed.
+- **Analytics layer**: Charts, market analysis, Hindi toggle — Phase 2 feature, not yet built.
+- **Legacy components**: `CitySelector.jsx`, `MetalCard.jsx`, `RateTable.jsx`, `LMERatesPanel.jsx` — unused, can be removed.
+- **Unused dependencies**: `ioredis` installed but never used — remove before production.
+- **Google OAuth**: Plug-and-play but shows greyed "Soon" when `GOOGLE_CLIENT_ID` not set.
+- **SMS OTP**: Dev mode uses hardcoded OTP `1234`. Production needs MSG91 or Twilio integration. Env vars defined in `.env.example` but not wired to auth.js.
+- **Subscription lookup**: Currently env-var based (`PRO_EMAILS`). Needs real subscription table + Razorpay webhook when payments go live.
+
+## Session 9 Changes (2026-03-22) — Full Detail
+
+### OTP Phone Normalization Fix
+- **Problem**: OTP "Failed to send" error — phone regex `^\+?[6-9]\d{9}$` too strict for `+91 98765 43210` format
+- **Solution**: Added `normalizePhone()` helper function in `auth.js`:
+  ```js
+  function normalizePhone(raw) {
+    if (!raw) return null;
+    let p = raw.replace(/[\s\-()]/g, '');
+    if (p.startsWith('+91')) p = p.slice(3);
+    else if (p.startsWith('91') && p.length === 12) p = p.slice(2);
+    return /^[6-9]\d{9}$/.test(p) ? p : null;
+  }
+  ```
+- Applied across all 4 auth endpoints: `request-otp`, `verify-otp`, `register`, `profile`
+- Frontend also normalizes phone before sending OTP
+
+### Trader Type Multi-Select
+- **Problem**: "Buyer & Seller" option was redundant; user couldn't select multiple roles
+- **Solution**: Removed "Buyer & Seller" from options. Changed to 3-option multi-select with checkmarks:
+  - Buyer / Seller / Just Checking
+  - Users can select any combination (e.g., Buyer ✓ + Seller ✓)
+  - On submit: `BUYER+SELLER` maps to `BOTH` enum for DB compatibility
+- Updated across **Signup.jsx**, **Login.jsx** (OTP flow), **Profile.jsx**
+- State changed from `traderType` (string) to `traderTypes` (array)
+
+### Make Offer — Quantity Read-Only
+- **Problem**: Buyer could edit quantity in Make Offer modal, but qty should come from listing
+- **Solution**: Removed qty input from OfferModal. Shows "Quantity: 2,000 kg (as listed by seller)" as read-only text. Only price is editable by buyer.
+- Counter-offer still allows qty editing (seller can adjust terms during negotiation)
+
+### Browse Tab Login Prompt
+- **Problem**: Logged-out users saw "No listings found" on Browse tab
+- **Solution**: Shows styled "Browse Scrap Metal Listings" prompt with "Sign Up Free" + "Login" buttons when not authenticated
+
+### File Upload for Photos/Videos (multer)
+- **Problem**: Users had to paste image URLs from Imgur/Google Drive — bad UX for traders
+- **Solution**: Direct file upload via `multer` to `backend/uploads/` folder
+- **Backend**: `POST /api/marketplace/upload` — accepts up to 5 files (5MB each)
+  - Allowed formats: jpg, jpeg, png, gif, webp, mp4, mov, webm
+  - Files saved with unique names: `{timestamp}-{randomhex}.{ext}`
+  - Returns array of `/uploads/{filename}` paths
+  - Files served via `express.static('/uploads', ...)`
+- **Frontend PostForm**: Replaced URL paste input with drag-and-drop file picker
+  - Camera icon + "Add Photos" label
+  - Preview thumbnails with remove button
+  - Video file support (shows `<video>` tag)
+  - Upload progress indicator
+- **Listing cards**: Image URLs prefixed with backend URL for `/uploads/` paths
+- **Schema unchanged**: `images` field still stores JSON array of paths in `@db.Text`
+
+### Admin User with Full Access
+- Created `admin@metalxpress.in` / `admin1234` with:
+  - `phoneVerified: true`, `kycVerified: true`, `traderType: BOTH`
+  - Added to `PRO_EMAILS` env var for full pro subscription access
+- Added to `seed.js` for future re-seeds
+- `PRO_EMAILS="test@metalxpress.in,admin@metalxpress.in"` in `.env`
+
+### Dependencies Added
+- `multer` — file upload middleware for Express
+
+### Files Modified
+- `backend/src/routes/auth.js` — `normalizePhone()` helper, applied to all endpoints
+- `backend/src/routes/marketplace.js` — multer upload endpoint, file filter
+- `backend/src/index.js` — `express.static('/uploads')`, `path` import
+- `backend/src/prisma/seed.js` — admin user, phoneVerified flags
+- `backend/package.json` — multer dependency
+- `frontend/src/pages/Signup.jsx` — multi-select trader type, phone normalization
+- `frontend/src/pages/Login.jsx` — multi-select trader type in OTP flow
+- `frontend/src/pages/Profile.jsx` — multi-select trader type, BOTH↔array mapping
+- `frontend/src/pages/Marketplace.jsx` — file upload PostForm, read-only qty, browse login prompt
+- `frontend/src/utils/api.js` — `uploadMedia()` function
 
 ## Session 7 Changes (2026-03-21) — Full Detail
 
@@ -404,15 +483,15 @@ Grade names updated to match actual WhatsApp message format (so `normGrade` matc
 - Live deal value + commission preview below inputs
 - Instructional text: "Edit both price and quantity to counter-offer"
 
-## Current Status (as of 2026-03-21, session 8)
-- **Auth**: Unified signup (email+phone+OTP mandatory), email+password login, phone OTP login, Google OAuth — prevents duplicate accounts
-- **Subscription**: Pro test user `test@metalxpress.in` / `test1234` — pro plan via PRO_EMAILS env var
+## Current Status (as of 2026-03-22, session 9)
+- **Auth**: Unified signup (email+phone+OTP mandatory), email+password login, phone OTP login, Google OAuth — prevents duplicate accounts. Phone normalization handles +91 prefix, spaces, dashes.
+- **Subscription**: Pro test user `test@metalxpress.in` / `test1234`, Admin user `admin@metalxpress.in` / `admin1234` — pro plan via PRO_EMAILS env var
 - **Landing**: Hero section for non-logged-in users with feature cards and CTAs
 - **Paywall**: Local rates blurred/gated for non-subscribers with "Sign Up" or "Upgrade to Pro" overlay
-- **Marketplace**: Negotiation-first deal flow, 0.1% commission on agreed value, chat-style offer thread, image support on listings, dispute/escrow mechanism, 4-tab UI (Browse/Sell Scrap/My Listings/My Deals)
+- **Marketplace**: Negotiation-first deal flow, 0.1% commission on agreed value, chat-style offer thread, direct file upload for photos/videos (multer → local disk), dispute/escrow mechanism, 4-tab UI (Browse shows login prompt when logged out / Sell Scrap / My Listings / My Deals). Make Offer has read-only qty (from listing), only price editable.
 - **Disputes**: Full dispute lifecycle — raise dispute → admin reviews → refund/complete/cancel resolution
-- **Profile**: `/profile` page with subscription status, personal info form, trader type, save + sign out
-- **Admin**: 3-tab admin (Rate Management / Listings / Disputes), detailed listing verification with seller profile + checklist, dispute resolution panel
+- **Profile**: `/profile` page with subscription status, personal info form, multi-select trader type (Buyer/Seller/Just Checking with checkmarks), save + sign out
+- **Admin**: 3-tab admin (Rate Management / Listings / Disputes), detailed listing verification with seller profile + KYC checklist, dispute resolution panel
 - **Accordion**: All metals default-open, per-metal collapse, Expand/Collapse All button
 - **Footer**: Company + Legal links on all consumer pages
 - **Static pages**: About, Terms, Privacy, Contact — all styled in dark navy glass theme
@@ -421,6 +500,7 @@ Grade names updated to match actual WhatsApp message format (so `normGrade` matc
 - Admin: Single unified smart parser — auto-detects message type
 - metals-api.com: plug-and-play (set METALS_API_KEY in .env to activate)
 - Google OAuth: plug-and-play (set GOOGLE_CLIENT_ID + GOOGLE_CLIENT_SECRET)
+- File uploads: multer → `backend/uploads/` folder, served via express.static
 
 ## Live Data Sources
 ### Metals (backend/src/services/livePriceFetcher.js)
@@ -741,31 +821,100 @@ const isOpen = !closedMetals.has(metalName);
 - Backend serves frontend build from `frontend/dist/`
 - Add to `backend/src/index.js`: `app.use(express.static(path.join(__dirname, '../../frontend/dist')))`
 
-## Feature Roadmap
-### Phase 1 — Live (current)
-- LME/MCX/Forex live rates (Yahoo + Stooq)
-- Admin WhatsApp unified smart parser (auto-detect local vs LME)
-- Login with phone OTP
-- Marketplace listing (post/browse)
-- Price alerts (basic)
+## Feature Roadmap — Comprehensive
 
-### Phase 2 — Deployment
-- Railway backend + Vercel frontend
-- PostgreSQL production DB seeded
-- Admin pastes real WhatsApp rates to populate hub data
-- MSG91 / Twilio for real SMS OTP
+### Phase 1 — MVP Complete ✅ (current state)
+- [x] LME/MCX/Forex live rates (Yahoo Finance + Stooq + DB fallback)
+- [x] Admin WhatsApp unified smart parser (auto-detect local vs LME)
+- [x] Email+password login + Phone OTP login + Google OAuth (plug-and-play)
+- [x] Unified signup: email + phone + OTP verification mandatory
+- [x] Marketplace: post listings, browse, negotiate (offer/counter/accept/reject)
+- [x] Deal flow: negotiation → agreement → commission payment → contact reveal
+- [x] Dispute/escrow mechanism for deal protection
+- [x] Photo/video upload on listings (multer → local disk)
+- [x] Admin: rate management + listing verification (detailed) + disputes
+- [x] Price alerts (basic CRUD — no trigger mechanism yet)
+- [x] Pro subscription gating (local rates, via PRO_EMAILS env var)
+- [x] Profile page with multi-select trader type
+- [x] Landing page with hero section + feature cards
+- [x] Footer + static pages (About, Terms, Privacy, Contact)
 
-### Phase 3 — Monetization Live
-- Razorpay subscription (Pro + Business tiers)
-- PaywallModal fully wired (not just stub)
-- Contact reveal gated behind Pro
-- Local rates gated behind Pro
+### Phase 2 — Production Readiness (next)
+**Priority: HIGH — needed before go-live**
+- [ ] **Forgot Password**: Reset token generation → email with reset link → reset page. No email service configured yet.
+- [ ] **Email Verification**: Send confirmation email on signup. Currently any email accepted without verification.
+- [ ] **SMS OTP (production)**: Wire MSG91 or Twilio to `auth.js` request-otp endpoint. Currently hardcoded `1234` in dev. Env vars already in `.env.example` (MSG91_API_KEY, TWILIO_ACCOUNT_SID, etc.) but not integrated.
+- [ ] **Contact page real numbers**: Replace placeholder "XXXXX XXXXX" in Contact.jsx with actual phone/WhatsApp numbers.
+- [ ] **LMEStrip fix**: Update `d.rates` fallback to `d.metals` in Navbar's LMEStrip component.
+- [ ] **Remove unused dependencies**: `ioredis` (installed but never used), legacy components (CitySelector, MetalCard, RateTable, LMERatesPanel).
+- [ ] **Production deployment**: Railway backend + Vercel frontend (or single Railway service serving frontend build). PostgreSQL production DB.
+- [ ] **Seed production DB**: Run seed.js, then admin pastes real WhatsApp rates per hub.
+- [ ] **Environment security**: Generate unique JWT_SECRET, ADMIN_PASSWORD for production. Remove hardcoded dev OTP.
 
-### Phase 4 — Automation
-- metals-api.com key set → auto-update LME rates hourly
-- Cron job: auto-refresh rates, send price alert SMS/push
-- Listing verification / admin approval
-- Separate admin app from consumer app
+### Phase 3 — Monetization
+**Priority: HIGH — revenue features**
+- [ ] **Razorpay subscription integration**: Wire PaywallModal to Razorpay Checkout for Pro (₹299/mo) and Business (₹999/mo) tiers. Env vars defined (RAZORPAY_KEY_ID, RAZORPAY_KEY_SECRET, RAZORPAY_WEBHOOK_SECRET) but not integrated.
+- [ ] **Razorpay deal commission**: Replace dev-mode instant payment in `/deals/:id/pay` with actual Razorpay payment flow. Commission amount already calculated correctly.
+- [ ] **Subscription DB table**: Replace env-var PRO_EMAILS lookup with proper Subscription model + Razorpay webhook for payment confirmation.
+- [ ] **PaywallModal full wiring**: Currently shows "Coming soon" alert. Wire to Razorpay Checkout flow.
+
+### Phase 4 — Enhanced Features
+**Priority: MEDIUM — post-launch improvements**
+- [ ] **Price alert triggers**: Cron job (node-cron already installed) to periodically check alert thresholds + send SMS/push notifications. `alertService.js` has Twilio stub.
+- [ ] **KYC verification flow**: Document upload (Aadhaar/PAN) → file storage → admin review panel. Schema `kycVerified` field exists.
+- [ ] **metals-api.com**: Set METALS_API_KEY → auto-update all 6 LME metals hourly. Currently plug-and-play in `livePriceFetcher.js`.
+- [ ] **Google OAuth**: Set GOOGLE_CLIENT_ID + GOOGLE_CLIENT_SECRET → instant activation. Currently shows greyed "Soon".
+- [ ] **Analytics layer**: Price charts, market analysis, trend graphs. Pro-tier feature. Not started.
+- [ ] **Hindi / i18n**: Language toggle for Hindi-speaking traders. Not started.
+- [ ] **Image storage upgrade**: Migrate from local `uploads/` folder to S3/Cloudinary with CDN for production at scale. Local disk works fine for MVP.
+
+### Phase 5 — Scale & Automation
+**Priority: LOW — future growth**
+- [ ] **Real-time notifications**: Replace polling (30s/15s) with WebSocket or SSE for instant deal updates.
+- [ ] **Dispute SLA automation**: Auto-notify admin when dispute filed. Escalation timer.
+- [ ] **Separate admin app**: Decouple admin from consumer app for security.
+- [ ] **Auto-rate refresh**: Background worker to auto-fetch Yahoo/Stooq rates without admin paste.
+- [ ] **Multi-city expansion**: Automated hub onboarding, admin per city.
+- [ ] **Mobile app**: React Native wrapper or PWA for app store presence.
+
+## Comprehensive TODO List — All Pending Items
+
+### Critical (before go-live)
+1. Forgot password flow (reset email + token + page)
+2. Email verification on signup
+3. SMS OTP production integration (MSG91/Twilio)
+4. Real contact numbers on Contact page
+5. LMEStrip `d.rates` → `d.metals` fix
+6. Production env vars (JWT_SECRET, ADMIN_PASSWORD, etc.)
+7. Deploy to Railway/Vercel
+
+### Important (before first paying users)
+8. Razorpay subscription payments (Pro/Business tiers)
+9. Razorpay deal commission payments
+10. Subscription DB model (replace PRO_EMAILS env var)
+11. PaywallModal wired to Razorpay Checkout
+
+### Nice-to-have (post-launch)
+12. Price alert cron trigger + SMS notifications
+13. KYC document upload + admin verification
+14. Google OAuth activation (just needs env vars)
+15. metals-api.com activation (just needs env var)
+16. Analytics/charts for Pro users
+17. Hindi language toggle
+18. S3/Cloudinary image migration
+19. WebSocket/SSE real-time notifications
+20. Remove ioredis + legacy components
+21. Dispute SLA automation + admin notifications
+
+### Env Vars Reference (all optional integrations)
+| Env Var | Integration | Status | Cost |
+|---------|------------|--------|------|
+| `METALS_API_KEY` | metals-api.com LME prices | Plug-and-play | Free 50/mo, $15/mo Starter |
+| `GOOGLE_CLIENT_ID` + `SECRET` | Google OAuth login | Plug-and-play | Free |
+| `MSG91_API_KEY` + `TEMPLATE_ID` | SMS OTP | NOT wired | Pay per SMS |
+| `TWILIO_ACCOUNT_SID` + `TOKEN` + `PHONE` | SMS OTP + alerts | NOT wired | Pay per SMS |
+| `RAZORPAY_KEY_ID` + `SECRET` + `WEBHOOK` | Payments | NOT wired | 2% per txn |
+| `PRO_EMAILS` | Pro subscription override | Working | Free (dev shortcut) |
 
 ## WhatsApp Message Format (standard admin input)
 
@@ -846,13 +995,28 @@ git push origin claude/great-goldwasser:main
 - `PB-USD` on Yahoo Finance is Petrobras stock (Brazil oil), NOT Lead metal — confirmed no free Lead source
 - Stooq returns CSV with header row starting with "Symbol" — skip those lines in parser
 - metals-api.com returns rates as `1 USD = N units of metal (troy oz)` → invert to get USD/troy oz
-- `ioredis` / Redis installed but unused — can remove before production
+- `ioredis` / Redis installed but unused — remove before production (`npm uninstall ioredis`)
 - Admin page is standalone: NEVER render inside AppShell (no consumer Navbar)
 - Home.jsx uses `d.metals` (not `d.rates`) from `/api/rates/live` — breaking change from old shape
-- LMEStrip in Navbar still uses `d.rates` fallback — update to `d.metals` in next session
+- LMEStrip in Navbar still uses `d.rates` fallback — **TODO: update to `d.metals`**
 - WhatsApp bold Unicode: `𝐂𝐂𝐑` decodes with spaces → use `normGrade()` (strips all non-alphanumeric) for matching
 - ⏰ emoji between date/time in timestamps → use `[^\d]+` not `\s+` in timestamp regex
 - Admin-pasted LME change values are absolute (e.g., −100 USD/MT), NOT percentage → always use `absToChangePct()` before returning from `/live`
 - `messageTimestampStr` is a pre-formatted display string (e.g., "20 Mar, 01:45 PM") — do NOT pass through `new Date()` or `date-fns` on frontend
 - Shell testing Unicode on Windows: use Node.js test scripts with `\uXXXX` escapes instead of curl (curl mangles Unicode on Windows shells)
 - Debug files `ali.json`, `hg.json`, `znc.json`, `backend-log.txt` in worktree root — add to `.gitignore`, do not commit
+- Phone number normalization: Always use `normalizePhone()` in auth.js — handles `+91`, spaces, dashes, parentheses. Bare 10-digit `[6-9]\d{9}` stored in DB.
+- Trader type enum: DB uses `TraderType` enum (BUYER/SELLER/BOTH/CHECKING_RATES). Frontend multi-select maps BUYER+SELLER → BOTH on submit. Profile page maps BOTH back to [BUYER,SELLER] array.
+- Dev OTP is hardcoded `1234` — MUST replace with real SMS provider before production
+- Admin password `admin123` is default — MUST change before production
+- Uploaded files stored in `backend/uploads/` — this folder should be in `.gitignore` and backed up separately
+- `multer` file size limit: 5MB per file, max 5 files per upload
+- Image URLs in DB: `/uploads/filename.jpg` (relative). Frontend prefixes with backend URL for display.
+
+## Test Accounts
+| Email | Password | Role | Subscription |
+|-------|----------|------|-------------|
+| `admin@metalxpress.in` | `admin1234` | Admin + Trader | Pro (via PRO_EMAILS) |
+| `test@metalxpress.in` | `test1234` | Pro Tester | Pro (via PRO_EMAILS) |
+| `rajesh@test.com` | `test1234` | Seller (Delhi) | Free |
+| Admin panel | password: `admin123` | Admin | N/A (header auth) |
