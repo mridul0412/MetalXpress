@@ -10,7 +10,7 @@ const FEATURES = [
 
 export default function HeroSection() {
   return (
-    <section style={{ textAlign: 'center', paddingBottom: 8, position: 'relative' }}>
+    <section style={{ textAlign: 'center', paddingTop: 20, paddingBottom: 8, position: 'relative' }}>
       {/* Gold glow behind hero */}
       <div style={{
         position: 'absolute', top: 0, left: '50%', transform: 'translateX(-50%)',
@@ -18,18 +18,20 @@ export default function HeroSection() {
         pointerEvents: 'none', zIndex: 0,
       }} />
 
-      {/* ॐ watermark — divine blessing spanning full hero, never clipped */}
+      {/* ॐ watermark — divine blessing spanning full hero */}
       <div style={{
         position: 'absolute', top: 0, left: 0, right: 0, bottom: 0,
-        display: 'flex', alignItems: 'stretch', justifyContent: 'center',
         pointerEvents: 'none', userSelect: 'none', zIndex: 0,
+        overflow: 'visible',
+        display: 'flex', alignItems: 'flex-end', justifyContent: 'center',
       }}>
-        <svg viewBox="0 0 100 100" preserveAspectRatio="xMidYMid meet" style={{ width: '80%', maxWidth: 500, height: '100%' }}>
-          <text x="50" y="72" textAnchor="middle" style={{
-            fontSize: 90, fontWeight: 800,
-            fill: 'rgba(207,181,59,0.07)',
-          }}>ॐ</text>
-        </svg>
+        <div style={{
+          fontSize: 'clamp(280px, 70vw, 460px)',
+          fontWeight: 800,
+          lineHeight: 1,
+          color: 'rgba(207,181,59,0.06)',
+          marginBottom: '-0.05em',
+        }}>ॐ</div>
       </div>
 
       <div style={{ position: 'relative', zIndex: 1 }}>
