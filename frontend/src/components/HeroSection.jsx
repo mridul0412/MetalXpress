@@ -10,7 +10,7 @@ const FEATURES = [
 
 export default function HeroSection() {
   return (
-    <section style={{ textAlign: 'center', paddingTop: 20, paddingBottom: 8, position: 'relative' }}>
+    <section style={{ textAlign: 'center', paddingBottom: 8, position: 'relative', overflow: 'hidden' }}>
       {/* Gold glow behind hero */}
       <div style={{
         position: 'absolute', top: 0, left: '50%', transform: 'translateX(-50%)',
@@ -18,21 +18,14 @@ export default function HeroSection() {
         pointerEvents: 'none', zIndex: 0,
       }} />
 
-      {/* ॐ watermark — divine blessing spanning full hero */}
+      {/* ॐ watermark — divine blessing behind the hero */}
       <div style={{
-        position: 'absolute', top: 0, left: 0, right: 0, bottom: 0,
+        position: 'absolute', top: '50%', left: '50%',
+        transform: 'translate(-50%, -50%)',
+        fontSize: 420, fontWeight: 800, lineHeight: 1,
+        color: 'rgba(207,181,59,0.035)',
         pointerEvents: 'none', userSelect: 'none', zIndex: 0,
-        overflow: 'visible',
-        display: 'flex', alignItems: 'flex-end', justifyContent: 'center',
-      }}>
-        <div style={{
-          fontSize: 'clamp(280px, 70vw, 460px)',
-          fontWeight: 800,
-          lineHeight: 1,
-          color: 'rgba(207,181,59,0.06)',
-          marginBottom: '-0.05em',
-        }}>ॐ</div>
-      </div>
+      }}>ॐ</div>
 
       <div style={{ position: 'relative', zIndex: 1 }}>
         <h1 style={{
