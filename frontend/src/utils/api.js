@@ -51,6 +51,8 @@ export const fetchMetals = () => api.get('/metals');
 export const requestOTP = (phone) => api.post('/auth/request-otp', { phone });
 export const verifyOTP = (data) => api.post('/auth/verify-otp', data);
 export const fetchMe = () => api.get('/auth/me');
+export const registerEmail = (data) => api.post('/auth/register', data);
+export const loginEmail = (data) => api.post('/auth/login', data);
 
 // Google OAuth (handled via redirect — link to this URL)
 export const googleAuthUrl = () => `${API_BASE}/auth/google`;

@@ -8,7 +8,7 @@ const prisma = new PrismaClient();
 // GET /api/marketplace/listings
 router.get('/listings', async (req, res) => {
   try {
-    const { city, metalId, page = 1, limit = 20 } = req.query;
+    const { city, metal, metalId, page = 1, limit = 20 } = req.query;
     const skip = (parseInt(page) - 1) * parseInt(limit);
 
     const where = {
@@ -16,7 +16,12 @@ router.get('/listings', async (req, res) => {
       expiresAt: { gt: new Date() },
     };
 
-    if (metalId) where.metalId = metalId;
+    if (metalId) {
+      where.metalId = metalId;
+    } else if (metal) {
+      // Frontend sends metal name (e.g. "Copper") — look up by name
+      where.metal = { name: { equals: metal, mode: 'insensitive' } };
+    }
     if (city) {
       where.location = { contains: city, mode: 'insensitive' };
     }
@@ -92,6 +97,30 @@ router.delete('/listings/:id', authMiddleware, async (req, res) => {
     res.json({ success: true });
   } catch (err) {
     res.status(500).json({ error: 'Failed to delete listing' });
+  }
+});
+
+// PATCH /api/marketplace/listings/:id/verify — admin verification
+router.patch('/listings/:id/verify', async (req, res) => {
+  try {
+    const adminPass = req.headers['x-admin-password'];
+    if (adminPass !== process.env.ADMIN_PASSWORD) {
+      return res.status(403).json({ error: 'Admin access required' });
+    }
+
+    const listing = await prisma.listing.findUnique({ where: { id: req.params.id } });
+    if (!listing) return res.status(404).json({ error: 'Listing not found' });
+
+    const updated = await prisma.listing.update({
+      where: { id: req.params.id },
+      data: { isVerified: true },
+      include: { metal: true, grade: true },
+    });
+
+    res.json({ success: true, listing: updated });
+  } catch (err) {
+    console.error('/api/marketplace/verify error:', err);
+    res.status(500).json({ error: 'Failed to verify listing' });
   }
 });
 

@@ -8,15 +8,17 @@ datasource db {
 }
 
 model User {
-  id          String      @id @default(cuid())
-  phone       String      @unique
-  name        String?
-  city        String?
-  traderType  TraderType  @default(CHECKING_RATES)
-  createdAt   DateTime    @default(now())
-  updatedAt   DateTime    @updatedAt
-  alerts      Alert[]
-  listings    Listing[]
+  id           String      @id @default(cuid())
+  phone        String?     @unique
+  email        String?     @unique
+  passwordHash String?
+  name         String?
+  city         String?
+  traderType   TraderType  @default(CHECKING_RATES)
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
+  alerts       Alert[]
+  listings     Listing[]
 }
 
 enum TraderType {
@@ -163,6 +165,8 @@ model Listing {
   expiresAt   DateTime
   createdAt   DateTime @default(now())
   isActive    Boolean  @default(true)
+  isVerified  Boolean  @default(false)
+  listingType String   @default("sell") // "sell" | "buy"
 }
 
 model OTPSession {

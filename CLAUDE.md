@@ -13,7 +13,7 @@ MetalXpress is a real-time scrap metal rate platform for Indian traders. It repl
 ## Architecture
 - **Frontend**: React + Vite + Tailwind CSS (port 5173)
 - **Backend**: Node/Express + Prisma + PostgreSQL (port 3001)
-- **Auth**: Phone OTP (dev OTP: 1234), JWT tokens in localStorage as `mx_token`
+- **Auth**: Email+password (bcrypt), Phone OTP (dev OTP: 1234), Google OAuth — JWT tokens in localStorage as `mx_token`
 - **Admin auth**: Password in localStorage as `mx_admin_pass`, sent as `x-admin-password` header
 
 ## Design System (dark navy glass)
@@ -38,13 +38,15 @@ MetalXpress is a real-time scrap metal rate platform for Indian traders. It repl
 ```
 
 ## Current Date
-2026-03-20
+2026-03-21
 
 ## Session Log
 - **2026-03-19**: Initial UI overhaul (Replit-quality design, LME/MCX panel, hub selector, Login, Admin, Marketplace)
 - **2026-03-20 (session 1)**: Fixed Navbar not rendering (missing from App.jsx), rewrote CLAUDE.md, fixed Lead symbol (PB-USD→Stooq), added Forex+Indices+Crude display, city pills selector, standalone Admin layout, Login redesign (Google OAuth stub + phone OTP + profile), PaywallModal, plug-and-play API stubs for metals-api/Google/Razorpay/MSG91
 - **2026-03-20 (session 2)**: Corrected CLAUDE.md — owner is semi-technical; fixed Live Data Sources table (Lead/Tin are DB fallback, not Stooq); fixed Stooq symbol case ni.f → NI.F in docs
 - **2026-03-20 (session 3)**: Major fixes and unified Admin parser — see full details below
+- **2026-03-21 (session 4)**: Auth overhaul, landing page, paywall gate, footer/legal pages — see Session 4 details below
+- **2026-03-21 (session 5)**: Marketplace overhaul (filters, dummy data, buy/sell tags, verified badges), auth integration (phone+email linking), pro test user, listing verification — see Session 5 details below
 
 ## Session 3 Changes (2026-03-20) — Full Detail
 
@@ -144,7 +146,7 @@ MetalXpress is a real-time scrap metal rate platform for Indian traders. It repl
    messageTimestampStr: extractDisplayTs(lastUpdate?.rawMessage) || null
    ```
 
-6. **Data priority in `/live`**: Admin paste (12h for LME, 10m for MCX/Forex) overrides Yahoo/Stooq. Yahoo is fallback.
+6. **Data priority in `/live`**: Admin paste (15m for LME, 10m for MCX/Forex) overrides Yahoo/Stooq. Yahoo is fallback.
 
 ### seed.js — Grade Name Fixes
 Grade names updated to match actual WhatsApp message format (so `normGrade` matching works reliably):
@@ -161,24 +163,135 @@ Grade names updated to match actual WhatsApp message format (so `normGrade` matc
 - **Variant prices**: Super D, CCR, Kaliya show 1.6MM price on second line ✓
 - **Unified parser**: LME message → auto-routes to LME save; local message → auto-routes to hub save ✓
 
+## Session 4 Changes (2026-03-21) — Full Detail
+
+### LME Admin Paste Cutoff: 12h → 15min
+- `CUTOFF_12H` renamed to `CUTOFF_15M` in `rates.js` `/live` endpoint
+- Admin-pasted LME data now only overrides Yahoo for 15 minutes (was 12 hours)
+- MCX/Forex cutoff remains 10 minutes, Lead/Tin DB fallback remains 7 days
+
+### Auth Overhaul — Email + Password
+- **Prisma schema**: `phone` changed from `String @unique` to `String? @unique`; added `email String? @unique` and `passwordHash String?`
+- **POST /api/auth/register**: Email+password signup with bcrypt hashing (12 rounds), JWT issuance, duplicate email check
+- **POST /api/auth/login**: Email+password login with bcrypt.compare, JWT issuance
+- **Google OAuth callback**: Now checks existing users by email first (dedup), then falls back to `google_<id>` phone placeholder
+- **bcryptjs** already installed in backend
+- **Frontend**: `registerEmail()` and `loginEmail()` added to `api.js`
+- **AuthContext**: Added `subscription` state, `refreshSubscription()` method, fetches `/api/auth/subscription` on mount
+
+### Login Page Redesign
+- **Primary flow**: Email + Password form (email input, password with eye toggle, "Sign In" CTA)
+- **Google OAuth**: Button above form (greyed "Soon" if not configured)
+- **Phone OTP**: Secondary link "Login with Phone OTP" — toggles to phone/OTP flow inline
+- **Mode state**: `mode: 'email' | 'phone' | 'otp'` — URL param `?method=phone` can set initial mode
+- **Signup link**: "Don't have an account? Sign Up" at bottom
+
+### New Signup Page (`/signup`)
+- Full registration form: Name, Email, Password, Confirm Password, Trader Type (2x2 grid)
+- Google OAuth button, Phone OTP link
+- Terms/Privacy links at bottom
+- Calls `POST /api/auth/register`, then `login(token, user)`, navigate to `/`
+
+### Hero Section for Non-Logged-In Users
+- **HeroSection.jsx**: Gold gradient headline "India's Real-Time Scrap Metal Rate Platform"
+- Two CTAs: "Get Started Free" → `/signup`, "View Live Rates" → scrolls to `#lme-section`
+- 2x2 feature cards: LME/MCX Live (FREE), Local Spot Rates (PRO), Marketplace (FREE), Price Alerts (FREE)
+- Only renders when `!user` (logged-in users skip straight to rates)
+
+### Local Rates Paywall Gate
+- **LocalRatesGate.jsx**: Wraps the local rates accordion in Home.jsx
+- Non-subscribed users see: blurred content (filter: blur(6px), maxHeight 320px) with gradient overlay
+- CTA varies: `!user` → "Sign Up Free" + "Login" buttons; logged-in free user → "Upgrade to Pro — ₹299/mo" → opens PaywallModal
+- Pro/Business subscribers see full content unblurred
+
+### Accordion Default-All-Open
+- Replaced `openMetal` (single string) with `closedMetals` (Set)
+- Empty set = all metals expanded (default on load)
+- Clicking a metal header toggles only that metal
+- Added "Expand All" / "Collapse All" button in Local Spot Rates header
+
+### Footer Component
+- **Footer.jsx**: Renders on all consumer pages (not Admin) via AppShell
+- 3-column layout: Brand + description, Company (About, Contact), Legal (Terms, Privacy)
+- Copyright year + "Made in India 🇮🇳"
+
+### Static Pages
+- **About.jsx** (`/about`): Company info, What We Do, Live Data Sources, Mission — glass-panel sections
+- **Terms.jsx** (`/terms`): Terms of Service with 8 sections (placeholder legal text)
+- **Privacy.jsx** (`/privacy`): Privacy Policy with 8 sections (placeholder legal text)
+- **Contact.jsx** (`/contact`): Contact cards (Email, WhatsApp, Phone, Office) + FAQ section
+
+### App.jsx Route Updates
+- Added routes: `/signup`, `/about`, `/terms`, `/privacy`, `/contact`
+- Footer integrated into AppShell (renders on all consumer pages)
+- Admin remains standalone (no Navbar, no Footer)
+
+### Navbar Update
+- User display now shows `user.name || user.email || user.phone` (was just `user.phone`)
+
+## Session 5 Changes (2026-03-21) — Full Detail
+
+### Alerts Page Fix
+- **Duplicate Navbar removed**: Alerts.jsx imported and rendered its own `<Navbar />` while also wrapped in AppShell — caused double LME ticker strip. Removed the redundant import and render.
+
+### Auth Integration (Phone + Email Linking)
+- **OTP login**: Now checks for existing user by phone (was upsert which could create duplicates). If found, updates profile fields; if not, creates new user.
+- **Email registration**: Accepts optional `phone` field — validates uniqueness before creating. Phone is linked to the same account.
+- **Profile endpoint**: PATCH `/api/auth/profile` now supports linking `phone` or `email` to existing account with uniqueness validation.
+- **Subscription endpoint**: `GET /api/auth/subscription` now returns `plan: 'pro'` for accounts in `PRO_EMAILS` env var (default: `test@metalxpress.in`).
+
+### Pro Test User
+- **Seeded**: `test@metalxpress.in` / `test1234` with `plan: 'pro'` subscription
+- Add your own email to `PRO_EMAILS` env var (comma-separated) to get pro access on any account
+- Pro users see full local rates (no blur), analytics (when built)
+
+### Marketplace Overhaul
+- **Filter fix**: Backend `/api/marketplace/listings` now accepts `metal` query param (name string like "Copper") in addition to `metalId`. Frontend sends metal name → backend matches via `metal.name` relation.
+- **10 diverse dummy listings** seeded across 5 test users:
+  - Sellers: Rajesh Kumar (Delhi), Suresh Patel (Ahmedabad), Priya Verma (Chennai), Vikram Singh (Ludhiana)
+  - Buyer: Amit Sharma (Mumbai)
+  - Metals: Copper (4), Brass (2), Aluminium (2), Lead (1), Zinc (1)
+- **BUY/SELL tags**: Each listing shows a colored badge — blue "BUY" or green "SELL"
+- **Verified badge**: Green shield + "Verified" for admin-verified listings
+- **Price label adapts**: "Asking price" for sell, "Willing to pay" for buy, "Negotiate" when no price set
+- **Listing verification**: PATCH `/api/marketplace/listings/:id/verify` endpoint (admin-only, requires `x-admin-password` header)
+
+### Schema Changes
+- `Listing` model: Added `isVerified Boolean @default(false)` and `listingType String @default("sell")`
+
+### Seed Data Updates
+- 6 test users created (5 traders + 1 pro test account)
+- 10 marketplace listings with realistic descriptions, locations, and prices
+- Pro test user: `test@metalxpress.in` / `test1234` (bcrypt hashed)
+
 ## Known Remaining Issues
-- **Alerts page**: Not updated in latest overhaul — still uses old style
-- **PaywallModal**: Not wired to actual Razorpay yet — just a component stub
-- **Login guard**: navigating via `window.location.href = '/login'` while logged-in redirects to home — expected behavior; consider adding explicit "logged-in" guard on Login page
+- **Alerts**: Backend CRUD works, but no cron/background job to actually trigger alerts when rates cross thresholds. Needs: periodic check + notification mechanism (SMS or in-app).
+- **PaywallModal**: Not wired to actual Razorpay yet — opens with plan cards, shows "Coming soon" alert
 - **Local rates other cities**: Only Delhi Mandoli seeded. Admin must paste real WhatsApp messages per hub to populate other cities.
 - **Nifty/Sensex**: ^NSEI and ^BSESN may occasionally return null (Yahoo rate limits); gracefully shows "—"
 - **LMEStrip in Navbar**: Currently uses `d.rates` fallback — should be updated to `d.metals` to match new `/live` shape
 - **Lead/Tin DB fallback**: Only served if admin-pasted LME message is ≤7 days old; otherwise shows "—"
+- **Forgot password**: Not implemented yet — email+password flow has no password reset
+- **Email verification**: Not implemented — users can register with any email without confirming it
+- **Contact page**: Phone/WhatsApp numbers are placeholder "XXXXX XXXXX" — update with real numbers
+- **Marketplace commission**: 0.1% commission model designed but not implemented — needs Razorpay integration + deal flow UI
+- **Analytics layer**: Charts, market analysis, Hindi toggle — Phase 2 feature, not yet built
+- **Marketplace Post form**: Still uses old field names (metalType, grade as string) — needs updating to use metalId/gradeId from DB
 
-## Current Status (as of 2026-03-20, session 3)
-- Live data: Yahoo Finance (Copper HG=F, Aluminium ALI=F, Zinc ZNC=F) + Stooq (Nickel NI.F) + DB fallback (Lead, Tin)
-- Forex/Indices: Yahoo (USDINR=X, EURUSD=X, ^NSEI, ^BSESN, CL=F)
-- Admin: Single unified smart parser — auto-detects message type, routes save correctly
-- Local rates: Grade fuzzy-matching fixed (WhatsApp bold Unicode spaces handled)
-- % change: All metals and forex show correct percentage (not raw absolute USD)
-- Timestamps: WhatsApp message timestamp shown directly (IST-aware, no browser timezone issues)
+## Current Status (as of 2026-03-21, session 5)
+- **Auth**: Email+password + Phone OTP (linkable accounts) + Google OAuth (plug-and-play) — all three working
+- **Subscription**: Pro test user `test@metalxpress.in` / `test1234` — pro plan via PRO_EMAILS env var
+- **Landing**: Hero section for non-logged-in users with feature cards and CTAs
+- **Paywall**: Local rates blurred/gated for non-subscribers with "Sign Up" or "Upgrade to Pro" overlay
+- **Marketplace**: 10 dummy listings, working metal/city filters, BUY/SELL tags, Verified badges, admin verification endpoint
+- **Accordion**: All metals default-open, per-metal collapse, Expand/Collapse All button
+- **Footer**: Company + Legal links on all consumer pages
+- **Static pages**: About, Terms, Privacy, Contact — all styled in dark navy glass theme
+- Live data: Yahoo Finance + Stooq + DB fallback (Lead, Tin)
+- LME admin paste cutoff: 15 minutes
+- Admin: Single unified smart parser — auto-detects message type
 - metals-api.com: plug-and-play (set METALS_API_KEY in .env to activate)
-- Google OAuth: plug-and-play stub (set GOOGLE_CLIENT_ID + GOOGLE_CLIENT_SECRET)
+- Google OAuth: plug-and-play (set GOOGLE_CLIENT_ID + GOOGLE_CLIENT_SECRET)
 
 ## Live Data Sources
 ### Metals (backend/src/services/livePriceFetcher.js)
@@ -197,7 +310,7 @@ When `METALS_API_KEY` is set, metals-api.com takes priority and covers all 6 met
 
 ### Data Priority in /api/rates/live
 1. **metals-api.com** (if `METALS_API_KEY` set) — all 6 metals, hourly cache
-2. **Admin-pasted LME** (from DB, ≤12h old) — overrides Yahoo for LME
+2. **Admin-pasted LME** (from DB, ≤15m old) — overrides Yahoo for LME
 3. **Yahoo Finance / Stooq** — live fallback for Copper, Aluminium, Zinc, Nickel
 4. **DB fallback** — Lead, Tin from last admin paste (≤7d)
 
@@ -278,16 +391,24 @@ The ⏰ emoji (U+23F0) can appear between date and time in messages. Fix: use `[
 ## File Structure
 ```
 frontend/src/
-  App.jsx                          ← AppShell pattern — Admin gets no consumer Navbar
+  App.jsx                          ← AppShell (Navbar + Footer) — Admin gets no Navbar/Footer
   pages/
-    Home.jsx                       ← LME/MCX table + Forex grid + city pills + metal accordion + 5-min auto-refresh
-                                      Inline prices (₹buy / ₹sell), variant line, messageTimestampStr display
-    Login.jsx                      ← 3-step: Welcome (Google+Phone) → Phone → OTP+Profile
+    Home.jsx                       ← HeroSection (non-auth) + LME/MCX table + Forex grid + city pills
+                                      + LocalRatesGate (paywall) + metal accordion (closedMetals Set)
+    Login.jsx                      ← Email+Password primary, Google OAuth, Phone OTP secondary
+    Signup.jsx                     ← Email+password registration + Google + Phone OTP + trader type
     Marketplace.jsx                ← Browse/Post tabs, listing cards
     Alerts.jsx                     ← Price alerts (basic, old style — not updated yet)
     Admin.jsx                      ← Standalone layout, unified smart parser, auto-detect message type
+    About.jsx                      ← Company info, What We Do, Data Sources, Mission
+    Terms.jsx                      ← Terms of Service (placeholder legal text)
+    Privacy.jsx                    ← Privacy Policy (placeholder legal text)
+    Contact.jsx                    ← Contact cards (Email, WhatsApp, Phone, Office) + FAQ
   components/
     Navbar.jsx                     ← Sticky glass header + LMEStrip + mobile bottom nav
+    Footer.jsx                     ← Site-wide footer (Company + Legal links) — rendered in AppShell
+    HeroSection.jsx                ← Landing hero for unauthenticated users (gold gradient + feature cards)
+    LocalRatesGate.jsx             ← Blur overlay + paywall CTA for non-subscribers
     LMEStrip.jsx                   ← Marquee ticker fetching /api/rates/live (uses d.rates fallback — update to d.metals)
     PaywallModal.jsx               ← Free/Pro/Business plan gate, Razorpay stub
     CitySelector.jsx               ← (legacy)
@@ -295,18 +416,20 @@ frontend/src/
     RateTable.jsx                  ← (legacy)
     LMERatesPanel.jsx              ← (legacy)
   utils/
-    api.js                         ← Axios instance + all endpoints incl. googleAuthUrl, updateProfile, checkSubscription
+    api.js                         ← Axios instance + all endpoints incl. registerEmail, loginEmail, checkSubscription
   context/
-    AuthContext.jsx                ← phone/OTP auth, JWT in localStorage
+    AuthContext.jsx                ← Email/Phone/Google auth, JWT in localStorage, subscription state
 
 backend/src/
   index.js                         ← Express app, CORS, rate limit, cron alerts
   routes/
-    rates.js                       ← GET /api/rates/live (new shape), /local (with messageTimestampStr), POST save-parsed
+    rates.js                       ← GET /api/rates/live (15m LME cutoff), /local (with messageTimestampStr), POST save-parsed
                                       absToChangePct(), fxChangePct(), normGrade(), extractDisplayTs() helpers
-    auth.js                        ← OTP + /me + PATCH /profile + GET /subscription + Google OAuth routes
+    auth.js                        ← POST /register + /login (email+pw) + OTP + /me + PATCH /profile
+                                      + GET /subscription + Google OAuth (with email dedup)
     cities.js                      ← GET /api/cities (returns plain array [{id,name,hubs:[]}])
-    metals.js, marketplace.js, alerts.js, admin.js
+    metals.js, alerts.js, admin.js
+    marketplace.js                     ← GET/POST/DELETE listings, PATCH verify (admin), accepts metal name filter
   services/
     livePriceFetcher.js            ← Yahoo+Stooq+metals-api, returns {metals,forex,indices,crude,usdInr,lmeUpdatedAt,forexUpdatedAt}
     rateParser.js                  ← parseRateMessage, cleanText (exported), detectMessageType, extractMessageTimestamp
@@ -314,6 +437,7 @@ backend/src/
   middleware/
     auth.js
   prisma/
+    schema.prisma                  ← User model: email+passwordHash (nullable), phone (nullable)
     seed.js                        ← Seeds cities, hubs, metals, grades, sample listings
                                       Grade names match actual WhatsApp messages exactly
   .env.example                     ← Full documented env var reference
@@ -390,6 +514,17 @@ const canSave = preview && (
 5. Redirects to `${FRONTEND_URL}/?token=<jwt>`
 6. Login.jsx detects `?token=` param on mount → calls `login(token, {})` → navigate('/')
 
+### Email+Password auth
+```js
+// Register
+const res = await registerEmail({ email, password, name, traderType });
+login(res.data.token, res.data.user);
+
+// Login
+const res = await loginEmail({ email, password });
+login(res.data.token, res.data.user);
+```
+
 ### OTP verification
 ```js
 const res = await verifyOTP({ phone, otp, name, traderType, city });
@@ -397,12 +532,31 @@ const { token, user } = res.data;
 login(token, user);
 ```
 
+### Subscription gating (Home.jsx)
+```jsx
+// AuthContext provides subscription state
+const { user, subscription } = useAuth();
+// LocalRatesGate checks: subscription?.plan === 'pro' || 'business'
+// Non-subscribers see blurred content + CTA overlay
+<LocalRatesGate>{/* metal accordion */}</LocalRatesGate>
+```
+
+### Accordion state (Home.jsx)
+```js
+// closedMetals is a Set — empty means all open (default)
+const [closedMetals, setClosedMetals] = useState(new Set());
+const isOpen = !closedMetals.has(metalName);
+// Toggle: add/remove from set
+```
+
 ## Monetization Model
 - **Free tier**: LME/MCX live rates, Forex & Indices, Marketplace browsing
-- **Pro ₹299/month**: Local spot rates for all cities, 10 contact reveals/month, unlimited alerts
+- **Pro ₹299/month**: Local spot rates for all cities, analytics, 10 contact reveals/month, unlimited alerts
 - **Business ₹999/month**: Everything Pro + unlimited contacts + bulk listing + priority support
-- **Commission**: Future — fee on verified deals closed via platform
+- **Marketplace commission**: 0.1% on total transaction value, paid upfront by buyer before MetalXpress reveals contact details. If deal doesn't go through after commission paid → credit wallet (reusable on next deal).
+- **Listing verification**: Admin verifies listings via PATCH `/api/marketplace/listings/:id/verify`. Verified listings get green badge.
 - **PaywallModal**: Currently a stub — Razorpay integration pending
+- **Pro test access**: Set `PRO_EMAILS=email1,email2` in backend `.env` or use default `test@metalxpress.in` / `test1234`
 
 ## API Roadmap (with costs)
 | API | Purpose | Cost | Sign-up |

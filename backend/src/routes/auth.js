@@ -1,5 +1,6 @@
 const express = require('express');
 const jwt = require('jsonwebtoken');
+const bcrypt = require('bcryptjs');
 const { PrismaClient } = require('@prisma/client');
 
 const router = express.Router();
@@ -7,6 +8,7 @@ const prisma = new PrismaClient();
 
 const DEV_OTP = '1234';
 const OTP_EXPIRY_MINUTES = 10;
+const BCRYPT_ROUNDS = 12;
 
 // POST /api/auth/request-otp
 router.post('/request-otp', async (req, res) => {
@@ -70,21 +72,30 @@ router.post('/verify-otp', async (req, res) => {
     // Mark used
     await prisma.oTPSession.update({ where: { id: session.id }, data: { used: true } });
 
-    // Upsert user
-    const user = await prisma.user.upsert({
-      where: { phone: cleanPhone },
-      create: {
-        phone: cleanPhone,
-        name: name || null,
-        city: city || null,
-        traderType: traderType || 'CHECKING_RATES',
-      },
-      update: {
-        ...(name && { name }),
-        ...(city && { city }),
-        ...(traderType && { traderType }),
-      },
-    });
+    // Find existing user by phone (exact match or on an email-registered account)
+    let user = await prisma.user.findUnique({ where: { phone: cleanPhone } });
+
+    if (user) {
+      // Update profile fields if provided
+      user = await prisma.user.update({
+        where: { id: user.id },
+        data: {
+          ...(name && { name }),
+          ...(city && { city }),
+          ...(traderType && { traderType }),
+        },
+      });
+    } else {
+      // Create new user with phone
+      user = await prisma.user.create({
+        data: {
+          phone: cleanPhone,
+          name: name || null,
+          city: city || null,
+          traderType: traderType || 'CHECKING_RATES',
+        },
+      });
+    }
 
     const token = jwt.sign(
       { userId: user.id, phone: user.phone },
@@ -114,7 +125,7 @@ router.get('/me', async (req, res) => {
   }
 });
 
-// PATCH /api/auth/profile — update user profile after OTP login
+// PATCH /api/auth/profile — update user profile (name, city, phone, email linking)
 router.patch('/profile', async (req, res) => {
   try {
     const header = req.headers.authorization;
@@ -122,14 +133,35 @@ router.patch('/profile', async (req, res) => {
     const token = header.replace('Bearer ', '');
     const payload = jwt.verify(token, process.env.JWT_SECRET);
 
-    const { name, traderType, city } = req.body;
+    const { name, traderType, city, phone, email } = req.body;
+    const updateData = {};
+    if (name) updateData.name = name;
+    if (traderType) updateData.traderType = traderType;
+    if (city) updateData.city = city;
+
+    // Link phone to account
+    if (phone) {
+      const cleanPhone = phone.replace(/\s/g, '');
+      const existing = await prisma.user.findUnique({ where: { phone: cleanPhone } });
+      if (existing && existing.id !== payload.userId) {
+        return res.status(409).json({ error: 'This phone number is already linked to another account' });
+      }
+      updateData.phone = cleanPhone;
+    }
+
+    // Link email to account
+    if (email) {
+      const cleanEmail = email.toLowerCase().trim();
+      const existing = await prisma.user.findUnique({ where: { email: cleanEmail } });
+      if (existing && existing.id !== payload.userId) {
+        return res.status(409).json({ error: 'This email is already linked to another account' });
+      }
+      updateData.email = cleanEmail;
+    }
+
     const user = await prisma.user.update({
       where: { id: payload.userId },
-      data: {
-        ...(name && { name }),
-        ...(traderType && { traderType }),
-        ...(city && { city }),
-      },
+      data: updateData,
     });
     res.json({ success: true, user });
   } catch (err) {
@@ -138,7 +170,7 @@ router.patch('/profile', async (req, res) => {
   }
 });
 
-// GET /api/auth/subscription — check user subscription status (stub)
+// GET /api/auth/subscription — check user subscription status
 router.get('/subscription', async (req, res) => {
   try {
     const header = req.headers.authorization;
@@ -147,10 +179,87 @@ router.get('/subscription', async (req, res) => {
     const payload = jwt.verify(token, process.env.JWT_SECRET);
     const user = await prisma.user.findUnique({ where: { id: payload.userId } });
     if (!user) return res.json({ plan: 'free', active: false });
+
+    // Pro test accounts: test@metalxpress.in or any email in PRO_EMAILS env var
+    const proEmails = (process.env.PRO_EMAILS || 'test@metalxpress.in').split(',').map(e => e.trim().toLowerCase());
+    if (user.email && proEmails.includes(user.email.toLowerCase())) {
+      return res.json({ plan: 'pro', active: true, userId: user.id });
+    }
+
     // TODO: real subscription lookup when Razorpay is integrated
     res.json({ plan: 'free', active: true, userId: user.id });
   } catch {
     res.json({ plan: 'free', active: false });
+  }
+});
+
+// ── Email + Password Auth ────────────────────────────────────────────────────
+
+// POST /api/auth/register — email+password signup
+router.post('/register', async (req, res) => {
+  try {
+    const { email, password, name, traderType, city, phone } = req.body;
+    if (!email || !password) return res.status(400).json({ error: 'Email and password required' });
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return res.status(400).json({ error: 'Invalid email format' });
+    if (password.length < 6) return res.status(400).json({ error: 'Password must be at least 6 characters' });
+
+    const existing = await prisma.user.findUnique({ where: { email: email.toLowerCase().trim() } });
+    if (existing) return res.status(409).json({ error: 'An account with this email already exists' });
+
+    // If phone provided, check it's not already taken
+    const cleanPhone = phone ? phone.replace(/\s/g, '') : null;
+    if (cleanPhone) {
+      const phoneUser = await prisma.user.findUnique({ where: { phone: cleanPhone } });
+      if (phoneUser) return res.status(409).json({ error: 'This phone number is already registered' });
+    }
+
+    const passwordHash = await bcrypt.hash(password, BCRYPT_ROUNDS);
+    const user = await prisma.user.create({
+      data: {
+        email: email.toLowerCase().trim(),
+        passwordHash,
+        phone: cleanPhone || null,
+        name: name || null,
+        city: city || null,
+        traderType: traderType || 'CHECKING_RATES',
+      },
+    });
+
+    const token = jwt.sign(
+      { userId: user.id, email: user.email },
+      process.env.JWT_SECRET,
+      { expiresIn: '30d' }
+    );
+
+    res.json({ success: true, token, user: { id: user.id, email: user.email, name: user.name, phone: user.phone, traderType: user.traderType } });
+  } catch (err) {
+    console.error('/api/auth/register error:', err);
+    res.status(500).json({ error: 'Registration failed' });
+  }
+});
+
+// POST /api/auth/login — email+password login
+router.post('/login', async (req, res) => {
+  try {
+    const { email, password } = req.body;
+    if (!email || !password) return res.status(400).json({ error: 'Email and password required' });
+
+    const user = await prisma.user.findUnique({ where: { email: email.toLowerCase().trim() } });
+    if (!user || !user.passwordHash) return res.status(401).json({ error: 'Invalid email or password' });
+
+    const valid = await bcrypt.compare(password, user.passwordHash);
+    if (!valid) return res.status(401).json({ error: 'Invalid email or password' });
+
+    const token = jwt.sign(
+      { userId: user.id, email: user.email },
+      process.env.JWT_SECRET,
+      { expiresIn: '30d' }
+    );
+
+    res.json({ success: true, token, user: { id: user.id, email: user.email, name: user.name, phone: user.phone, traderType: user.traderType } });
+  } catch (err) {
+    console.error('/api/auth/login error:', err);
+    res.status(500).json({ error: 'Login failed' });
   }
 });
 
@@ -226,25 +335,28 @@ router.get('/google/callback', async (req, res) => {
     const googleUser = await userInfoRes.json();
     if (!googleUser.id || !googleUser.email) throw new Error('Invalid user info from Google');
 
-    // Use google_<id> as phone placeholder (phone is required in schema)
-    const phonePlaceholder = `google_${googleUser.id}`;
-
-    // Upsert user — try by phone placeholder first, then by email if available
+    // Find existing user by email first, then by google phone placeholder
     let user;
-    const existing = await prisma.user.findFirst({
-      where: { phone: phonePlaceholder },
-    });
+    const existingByEmail = googleUser.email
+      ? await prisma.user.findUnique({ where: { email: googleUser.email.toLowerCase() } })
+      : null;
+    const phonePlaceholder = `google_${googleUser.id}`;
+    const existingByPhone = await prisma.user.findFirst({ where: { phone: phonePlaceholder } });
+
+    const existing = existingByEmail || existingByPhone;
 
     if (existing) {
       user = await prisma.user.update({
         where: { id: existing.id },
         data: {
           name: existing.name || googleUser.name || null,
+          email: existing.email || googleUser.email?.toLowerCase() || null,
         },
       });
     } else {
       user = await prisma.user.create({
         data: {
+          email: googleUser.email?.toLowerCase() || null,
           phone: phonePlaceholder,
           name: googleUser.name || null,
           traderType: 'CHECKING_RATES',

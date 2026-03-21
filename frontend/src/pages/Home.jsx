@@ -2,9 +2,12 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   TrendingUp, MapPin, Clock, RefreshCw, ArrowUpRight, ArrowDownRight,
-  Minus, ChevronRight, Zap, Globe,
+  Minus, ChevronRight, ChevronDown, Zap, Globe,
 } from 'lucide-react';
 import { format } from 'date-fns';
+import { useAuth } from '../context/AuthContext';
+import HeroSection from '../components/HeroSection';
+import LocalRatesGate from '../components/LocalRatesGate';
 
 const METAL_META = {
   Copper:         { color: '#f59e0b', dot: '#f59e0b', emoji: '🥇' },
@@ -48,20 +51,37 @@ function ChangeChip({ value, decimals = 2 }) {
 const LOCAL_REFRESH_MS = 5 * 60 * 1000;
 
 export default function Home() {
-  const [liveData, setLiveData]               = useState(null);   // full /api/rates/live response
+  const { user } = useAuth();
+  const [liveData, setLiveData]               = useState(null);
   const [localRates, setLocalRates]           = useState(null);
   const [cities, setCities]                   = useState([]);
-  const [selectedCity, setSelectedCity]       = useState(null);   // full city object
-  const [openMetal, setOpenMetal]             = useState(null);
+  const [selectedCity, setSelectedCity]       = useState(null);
+  // closedMetals: Set of metal names user has collapsed. Empty = all open (default).
+  const [closedMetals, setClosedMetals]       = useState(new Set());
   const [loadingLme, setLoadingLme]           = useState(true);
   const [loadingLocal, setLoadingLocal]       = useState(false);
   const [refreshingLme, setRefreshingLme]     = useState(false);
   const [refreshingLocal, setRefreshingLocal] = useState(false);
   const [lmeUpdatedAt, setLmeUpdatedAt]       = useState(null);
-  // localUpdatedAt = timestamp from the message itself (parsedAt), not the fetch time
   const [localUpdatedAt, setLocalUpdatedAt]   = useState(null);
   const localRefreshTimer = useRef(null);
   const lmeRefreshTimer   = useRef(null);
+
+  const toggleMetal = (name) => {
+    setClosedMetals(prev => {
+      const next = new Set(prev);
+      if (next.has(name)) next.delete(name); else next.add(name);
+      return next;
+    });
+  };
+
+  const toggleAll = () => {
+    if (closedMetals.size > 0) {
+      setClosedMetals(new Set()); // expand all
+    } else {
+      setClosedMetals(new Set(sortedMetals)); // collapse all
+    }
+  };
 
   // Fetch live LME + forex + indices
   const loadLme = useCallback(async (force = false) => {
@@ -77,7 +97,6 @@ export default function Home() {
     finally { setLoadingLme(false); setRefreshingLme(false); }
   }, []);
 
-  // Fetch cities list + start LME auto-refresh every 5 min
   useEffect(() => {
     fetch('/api/cities')
       .then(r => r.json())
@@ -87,15 +106,11 @@ export default function Home() {
         if (list.length) setSelectedCity(list[0]);
       })
       .catch(() => {});
-
     loadLme();
-
-    // Auto-refresh LME every 5 minutes (same as local rates)
     lmeRefreshTimer.current = setInterval(() => loadLme(true), LOCAL_REFRESH_MS);
     return () => clearInterval(lmeRefreshTimer.current);
   }, [loadLme]);
 
-  // Fetch local rates when city changes
   const loadLocal = useCallback(async (hubSlug, isRefresh = false) => {
     if (!hubSlug) return;
     if (isRefresh) setRefreshingLocal(true); else setLoadingLocal(true);
@@ -103,8 +118,6 @@ export default function Home() {
       const r = await fetch(`/api/rates/local?hub=${hubSlug}`);
       const d = await r.json();
       setLocalRates(d);
-      // messageTimestampStr is a pre-formatted string e.g. "20 Mar, 01:45 PM"
-      // extracted from the raw WhatsApp message — no timezone conversion needed
       const ts = d.lastUpdated;
       setLocalUpdatedAt(ts ? new Date(ts) : new Date());
     } catch {}
@@ -115,12 +128,8 @@ export default function Home() {
     const hubSlug = selectedCity?.hubs?.[0]?.slug;
     if (hubSlug) {
       loadLocal(hubSlug);
-
-      // Auto-refresh every 5 minutes
       clearInterval(localRefreshTimer.current);
-      localRefreshTimer.current = setInterval(() => {
-        loadLocal(hubSlug, true);
-      }, LOCAL_REFRESH_MS);
+      localRefreshTimer.current = setInterval(() => loadLocal(hubSlug, true), LOCAL_REFRESH_MS);
     }
     return () => clearInterval(localRefreshTimer.current);
   }, [selectedCity, loadLocal]);
@@ -147,10 +156,13 @@ export default function Home() {
   const currentHubSlug = selectedCity?.hubs?.[0]?.slug;
 
   return (
-    <div className="max-w-5xl mx-auto px-4 py-5 pb-24 md:pb-8 flex flex-col gap-6">
+    <div className="max-w-5xl mx-auto px-4 py-5 pb-24 md:pb-8 flex flex-col gap-6" style={{ position: 'relative' }}>
 
-      {/* ── LME / MCX Table ────────────────────────────────── */}
-      <section>
+      {/* ── Hero for non-logged-in users ───────────────── */}
+      {!user && <HeroSection />}
+
+      {/* ── LME / MCX Table ────────────────────────────── */}
+      <section id="lme-section">
         <div className="flex items-center justify-between mb-3">
           <div className="flex items-center gap-2">
             <TrendingUp size={15} color="#CFB53B" />
@@ -158,7 +170,6 @@ export default function Home() {
               textTransform: 'uppercase', letterSpacing: '0.08em' }}>
               LME / MCX Rates
             </span>
-            {/* Source badge: green = accurate LME from admin paste, amber = COMEX/Yahoo */}
             {liveData && (
               <span style={{
                 fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.07em',
@@ -189,7 +200,6 @@ export default function Home() {
         </div>
 
         <div style={{ borderRadius: 12, overflow: 'hidden', border: '1px solid rgba(255,255,255,0.07)', background: '#0d1420' }}>
-          {/* Header row */}
           <div style={{ display: 'grid', gridTemplateColumns: '2fr 2fr 2fr 1.2fr',
             padding: '10px 16px', background: 'rgba(255,255,255,0.025)', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
             {['Metal', 'LME ($/MT)', 'MCX (₹/kg)', 'Chg%'].map((h, i) => (
@@ -249,7 +259,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ── Forex & Indices ─────────────────────────────────── */}
+      {/* ── Forex & Indices ─────────────────────────────── */}
       {!loadingLme && hasForex && (
         <section>
           <div className="flex items-center justify-between mb-3">
@@ -261,7 +271,6 @@ export default function Home() {
               </span>
             </div>
             <div className="flex items-center gap-2">
-              {/* Show admin paste time if available, else last fetch time */}
               {(liveData?.forexUpdatedAt || lmeUpdatedAt) && (
                 <span className="flex items-center gap-1" style={{ fontSize: 10, color: 'rgba(255,255,255,0.25)' }}>
                   <Clock size={11} />
@@ -280,31 +289,16 @@ export default function Home() {
           </div>
 
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: 8 }}>
-            {/* USD/INR */}
-            {forex.usdInr != null && (
-              <ForexCard label="USD/INR" value={fmtNum(forex.usdInr, 3)} change={forex.usdInrChange} highlight />
-            )}
-            {/* EUR/USD */}
-            {forex.eurUsd != null && (
-              <ForexCard label="EUR/USD" value={fmtNum(forex.eurUsd, 4)} change={forex.eurUsdChange} />
-            )}
-            {/* Nifty 50 */}
-            {indices.nifty != null && (
-              <ForexCard label="Nifty 50" value={fmtNum(indices.nifty, 2)} change={indices.niftyChange} />
-            )}
-            {/* Sensex */}
-            {indices.sensex != null && (
-              <ForexCard label="Sensex" value={fmtNum(indices.sensex, 2)} change={indices.sensexChange} />
-            )}
-            {/* Crude WTI */}
-            {crude.price != null && (
-              <ForexCard label="Crude WTI" value={`$${fmtNum(crude.price, 2)}`} change={crude.change} />
-            )}
+            {forex.usdInr != null && <ForexCard label="USD/INR" value={fmtNum(forex.usdInr, 3)} change={forex.usdInrChange} highlight />}
+            {forex.eurUsd != null && <ForexCard label="EUR/USD" value={fmtNum(forex.eurUsd, 4)} change={forex.eurUsdChange} />}
+            {indices.nifty != null && <ForexCard label="Nifty 50" value={fmtNum(indices.nifty, 2)} change={indices.niftyChange} />}
+            {indices.sensex != null && <ForexCard label="Sensex" value={fmtNum(indices.sensex, 2)} change={indices.sensexChange} />}
+            {crude.price != null && <ForexCard label="Crude WTI" value={`$${fmtNum(crude.price, 2)}`} change={crude.change} />}
           </div>
         </section>
       )}
 
-      {/* ── Local Spot Rates ────────────────────────────────── */}
+      {/* ── Local Spot Rates ────────────────────────────── */}
       <section>
         <div className="flex items-center justify-between mb-3">
           <div className="flex items-center gap-2">
@@ -316,17 +310,26 @@ export default function Home() {
             {(localRates?.messageTimestampStr || localUpdatedAt) && (
               <span className="flex items-center gap-1" style={{ fontSize: 10, color: 'rgba(255,255,255,0.25)' }}>
                 <Clock size={10} />
-                {/* Prefer the string from the message itself — no timezone ambiguity */}
                 {localRates?.messageTimestampStr || format(localUpdatedAt, 'dd MMM, hh:mm a')}
               </span>
             )}
           </div>
-          <button onClick={() => loadLocal(currentHubSlug, true)} disabled={refreshingLocal}
-            style={{ padding: '5px', borderRadius: 8, background: 'rgba(255,255,255,0.05)',
-              border: '1px solid rgba(255,255,255,0.08)', cursor: 'pointer', display: 'flex',
-              color: 'rgba(255,255,255,0.4)' }}>
-            <RefreshCw size={13} style={{ animation: refreshingLocal ? 'spin 1s linear infinite' : 'none' }} />
-          </button>
+          <div className="flex items-center gap-2">
+            {sortedMetals.length > 0 && (
+              <button onClick={toggleAll}
+                style={{ padding: '3px 8px', borderRadius: 6, fontSize: 10, fontWeight: 600,
+                  background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.08)',
+                  color: 'rgba(255,255,255,0.35)', cursor: 'pointer' }}>
+                {closedMetals.size > 0 ? 'Expand All' : 'Collapse All'}
+              </button>
+            )}
+            <button onClick={() => loadLocal(currentHubSlug, true)} disabled={refreshingLocal}
+              style={{ padding: '5px', borderRadius: 8, background: 'rgba(255,255,255,0.05)',
+                border: '1px solid rgba(255,255,255,0.08)', cursor: 'pointer', display: 'flex',
+                color: 'rgba(255,255,255,0.4)' }}>
+              <RefreshCw size={13} style={{ animation: refreshingLocal ? 'spin 1s linear infinite' : 'none' }} />
+            </button>
+          </div>
         </div>
 
         {/* City selector pills */}
@@ -348,129 +351,125 @@ export default function Home() {
           })}
         </div>
 
-        {/* Hub sub-label */}
         {selectedCity?.hubs?.[0] && (
           <p style={{ fontSize: 11, color: 'rgba(255,255,255,0.25)', marginBottom: 12, marginTop: -8 }}>
             Hub: {selectedCity.hubs[0].name}
           </p>
         )}
 
-        {/* Metal accordion cards */}
-        {loadingLocal ? (
-          <div className="flex flex-col gap-3">
-            {[1, 2, 3, 4].map(i => (
-              <div key={i} style={{ height: 144, borderRadius: 12,
-                background: 'rgba(255,255,255,0.025)', border: '1px solid rgba(255,255,255,0.05)',
-                animation: 'pulse 1.5s ease-in-out infinite' }} />
-            ))}
-          </div>
-        ) : sortedMetals.length === 0 ? (
-          <div style={{ textAlign: 'center', padding: '48px 0', color: 'rgba(255,255,255,0.25)', fontSize: 14 }}>
-            No rates available for this hub
-          </div>
-        ) : (
-          <div className="flex flex-col gap-3">
-            {sortedMetals.map((metalName, idx) => {
-              const { metal, grades } = metalGroups[metalName];
-              const meta = getMeta(metalName);
-              const isOpen = openMetal === null || openMetal === metalName;
+        {/* Gated local rates — blurred for non-subscribers */}
+        <LocalRatesGate>
+          {loadingLocal ? (
+            <div className="flex flex-col gap-3">
+              {[1, 2, 3, 4].map(i => (
+                <div key={i} style={{ height: 144, borderRadius: 12,
+                  background: 'rgba(255,255,255,0.025)', border: '1px solid rgba(255,255,255,0.05)',
+                  animation: 'pulse 1.5s ease-in-out infinite' }} />
+              ))}
+            </div>
+          ) : sortedMetals.length === 0 ? (
+            <div style={{ textAlign: 'center', padding: '48px 0', color: 'rgba(255,255,255,0.25)', fontSize: 14 }}>
+              No rates available for this hub
+            </div>
+          ) : (
+            <div className="flex flex-col gap-3">
+              {sortedMetals.map((metalName, idx) => {
+                const { metal, grades } = metalGroups[metalName];
+                const meta = getMeta(metalName);
+                const isOpen = !closedMetals.has(metalName);
 
-              return (
-                <motion.div key={metalName}
-                  initial={{ opacity: 0, y: 8 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: idx * 0.04, duration: 0.2 }}
-                  style={{ borderRadius: 12, overflow: 'hidden', border: '1px solid rgba(255,255,255,0.07)', background: '#0d1420' }}
-                >
-                  {/* Metal header button */}
-                  <button onClick={() => setOpenMetal(openMetal === metalName ? null : metalName)}
-                    style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                      padding: '12px 16px', background: 'transparent', border: 'none', cursor: 'pointer',
-                      transition: 'background 0.15s' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                      <span style={{ fontSize: 16 }}>{meta.emoji}</span>
-                      <span style={{ fontSize: 13, fontWeight: 700, letterSpacing: '0.05em',
-                        textTransform: 'uppercase', color: meta.color }}>
-                        {metalName}
-                      </span>
-                      <span style={{ fontSize: 10, color: 'rgba(255,255,255,0.25)', fontWeight: 500 }}>
-                        {grades.length} grade{grades.length !== 1 ? 's' : ''}
-                      </span>
-                    </div>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                      <span style={{ fontSize: 9, background: 'rgba(207,181,59,0.1)', color: '#CFB53B',
-                        padding: '2px 6px', borderRadius: 4, fontWeight: 700, letterSpacing: '0.08em' }}>
-                        ₹/KG
-                      </span>
-                      <ChevronRight size={13} color="rgba(255,255,255,0.2)"
-                        style={{ transform: isOpen ? 'rotate(90deg)' : 'none', transition: 'transform 0.2s' }} />
-                    </div>
-                  </button>
+                return (
+                  <motion.div key={metalName}
+                    initial={{ opacity: 0, y: 8 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: idx * 0.04, duration: 0.2 }}
+                    style={{ borderRadius: 12, overflow: 'hidden', border: '1px solid rgba(255,255,255,0.07)', background: '#0d1420' }}
+                  >
+                    <button onClick={() => toggleMetal(metalName)}
+                      style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                        padding: '12px 16px', background: 'transparent', border: 'none', cursor: 'pointer' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                        <span style={{ fontSize: 16 }}>{meta.emoji}</span>
+                        <span style={{ fontSize: 13, fontWeight: 700, letterSpacing: '0.05em',
+                          textTransform: 'uppercase', color: meta.color }}>
+                          {metalName}
+                        </span>
+                        <span style={{ fontSize: 10, color: 'rgba(255,255,255,0.25)', fontWeight: 500 }}>
+                          {grades.length} grade{grades.length !== 1 ? 's' : ''}
+                        </span>
+                      </div>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                        <span style={{ fontSize: 9, background: 'rgba(207,181,59,0.1)', color: '#CFB53B',
+                          padding: '2px 6px', borderRadius: 4, fontWeight: 700, letterSpacing: '0.08em' }}>
+                          ₹/KG
+                        </span>
+                        <ChevronRight size={13} color="rgba(255,255,255,0.2)"
+                          style={{ transform: isOpen ? 'rotate(90deg)' : 'none', transition: 'transform 0.2s' }} />
+                      </div>
+                    </button>
 
-                  {/* Grades */}
-                  <AnimatePresence>
-                    {isOpen && (
-                      <motion.div
-                        initial={{ height: 0, opacity: 0 }}
-                        animate={{ height: 'auto', opacity: 1 }}
-                        exit={{ height: 0, opacity: 0 }}
-                        transition={{ duration: 0.18 }}
-                        style={{ overflow: 'hidden' }}
-                      >
-                        <div>
-                          {grades.map(({ grade, rate }, gi) => {
-                            const chgUp = rate.change > 0, chgDn = rate.change < 0;
-                            const primary = rate.buyPrice ?? rate.sellPrice;
-                            const secondary = rate.buyPrice && rate.sellPrice ? rate.sellPrice : null;
-                            return (
-                              <div key={grade.id} style={{
-                                display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                                padding: '10px 16px',
-                                borderTop: gi === 0 ? '1px solid rgba(255,255,255,0.05)' : 'none',
-                                borderBottom: gi < grades.length - 1 ? '1px solid rgba(255,255,255,0.04)' : 'none',
-                              }}>
-                                <div>
-                                  <p style={{ fontSize: 13, fontWeight: 600, color: 'rgba(255,255,255,0.88)', margin: 0 }}>
-                                    {grade.name}
-                                  </p>
-                                  {rate.change != null && rate.change !== 0 && (
-                                    <p style={{ fontSize: 10, fontWeight: 700, margin: '2px 0 0',
-                                      display: 'flex', alignItems: 'center', gap: 2,
-                                      color: chgUp ? '#34d399' : '#f87171' }}>
-                                      {chgUp ? <ArrowUpRight size={10} /> : <ArrowDownRight size={10} />}
-                                      {Math.abs(rate.change)} today
+                    <AnimatePresence>
+                      {isOpen && (
+                        <motion.div
+                          initial={{ height: 0, opacity: 0 }}
+                          animate={{ height: 'auto', opacity: 1 }}
+                          exit={{ height: 0, opacity: 0 }}
+                          transition={{ duration: 0.18 }}
+                          style={{ overflow: 'hidden' }}
+                        >
+                          <div>
+                            {grades.map(({ grade, rate }, gi) => {
+                              const chgUp = rate.change > 0, chgDn = rate.change < 0;
+                              const primary = rate.buyPrice ?? rate.sellPrice;
+                              const secondary = rate.buyPrice && rate.sellPrice ? rate.sellPrice : null;
+                              return (
+                                <div key={grade.id} style={{
+                                  display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                                  padding: '10px 16px',
+                                  borderTop: gi === 0 ? '1px solid rgba(255,255,255,0.05)' : 'none',
+                                  borderBottom: gi < grades.length - 1 ? '1px solid rgba(255,255,255,0.04)' : 'none',
+                                }}>
+                                  <div>
+                                    <p style={{ fontSize: 13, fontWeight: 600, color: 'rgba(255,255,255,0.88)', margin: 0 }}>
+                                      {grade.name}
                                     </p>
-                                  )}
-                                </div>
-                                {/* Price: ₹1140 / ₹1230 (and optional variant below) */}
-                                <div style={{ textAlign: 'right' }}>
-                                  <span style={{ fontSize: 13, fontFamily: 'monospace', fontWeight: 700,
-                                    color: '#fff', whiteSpace: 'nowrap' }}>
-                                    ₹{fmt(primary)}
-                                    {secondary && (
-                                      <span style={{ color: '#CFB53B' }}> / ₹{fmt(secondary)}</span>
+                                    {rate.change != null && rate.change !== 0 && (
+                                      <p style={{ fontSize: 10, fontWeight: 700, margin: '2px 0 0',
+                                        display: 'flex', alignItems: 'center', gap: 2,
+                                        color: chgUp ? '#34d399' : '#f87171' }}>
+                                        {chgUp ? <ArrowUpRight size={10} /> : <ArrowDownRight size={10} />}
+                                        {Math.abs(rate.change)} today
+                                      </p>
                                     )}
-                                  </span>
-                                  {/* Variant e.g. "1.6MM: ₹1236" */}
-                                  {rate.variantPrice && (
-                                    <p style={{ fontSize: 10, fontFamily: 'monospace', margin: '2px 0 0',
-                                      color: 'rgba(207,181,59,0.6)', whiteSpace: 'nowrap' }}>
-                                      {rate.variantLabel || 'Variant'}: ₹{fmt(rate.variantPrice)}
-                                    </p>
-                                  )}
+                                  </div>
+                                  <div style={{ textAlign: 'right' }}>
+                                    <span style={{ fontSize: 13, fontFamily: 'monospace', fontWeight: 700,
+                                      color: '#fff', whiteSpace: 'nowrap' }}>
+                                      ₹{fmt(primary)}
+                                      {secondary && (
+                                        <span style={{ color: '#CFB53B' }}> / ₹{fmt(secondary)}</span>
+                                      )}
+                                    </span>
+                                    {rate.variantPrice && (
+                                      <p style={{ fontSize: 10, fontFamily: 'monospace', margin: '2px 0 0',
+                                        color: 'rgba(207,181,59,0.6)', whiteSpace: 'nowrap' }}>
+                                        {rate.variantLabel || 'Variant'}: ₹{fmt(rate.variantPrice)}
+                                      </p>
+                                    )}
+                                  </div>
                                 </div>
-                              </div>
-                            );
-                          })}
-                        </div>
-                      </motion.div>
-                    )}
-                  </AnimatePresence>
-                </motion.div>
-              );
-            })}
-          </div>
-        )}
+                              );
+                            })}
+                          </div>
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+                  </motion.div>
+                );
+              })}
+            </div>
+          )}
+        </LocalRatesGate>
 
         <p style={{ textAlign: 'center', fontSize: 10, color: 'rgba(255,255,255,0.18)',
           marginTop: 16, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4 }}>

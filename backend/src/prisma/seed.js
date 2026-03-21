@@ -269,61 +269,120 @@ async function main() {
   }
   console.log(`  ✅ Delhi Mandoli rates: ${rateCount}`);
 
-  // Seed sample marketplace listings
-  const testUser = await prisma.user.create({
+  // Seed test users
+  const bcrypt = require('bcryptjs');
+  const testUsers = [
+    { phone: '9876543210', name: 'Rajesh Kumar', city: 'Delhi', traderType: 'SELLER' },
+    { phone: '9876543211', name: 'Amit Sharma', city: 'Mumbai', traderType: 'BUYER' },
+    { phone: '9876543212', name: 'Suresh Patel', city: 'Ahmedabad', traderType: 'BOTH' },
+    { phone: '9876543213', name: 'Priya Verma', city: 'Chennai', traderType: 'SELLER' },
+    { phone: '9876543214', name: 'Vikram Singh', city: 'Ludhiana', traderType: 'BUYER' },
+  ];
+
+  // Owner test account with pro subscription (email: test@metalxpress.in, password: test1234)
+  const ownerHash = await bcrypt.hash('test1234', 12);
+  const ownerUser = await prisma.user.create({
     data: {
-      phone: '9876543210',
-      name: 'Rajesh Kumar',
+      email: 'test@metalxpress.in',
+      passwordHash: ownerHash,
+      phone: '9999900000',
+      name: 'MX Pro Tester',
       city: 'Delhi',
-      traderType: 'SELLER',
+      traderType: 'BOTH',
     },
   });
+  console.log(`  ✅ Pro test user: test@metalxpress.in / test1234`);
 
+  const userMap = {};
+  for (const tu of testUsers) {
+    const u = await prisma.user.create({ data: tu });
+    userMap[tu.name] = u;
+  }
+  console.log(`  ✅ Test users: ${testUsers.length + 1}`);
+
+  // Seed sample marketplace listings (10 diverse listings)
   const copperMetal = metalMap['Copper'];
   const brassMetal = metalMap['Brass'];
   const alumMetal = metalMap['Aluminium'];
+  const leadMetal = metalMap['Lead'];
+  const zincMetal = metalMap['Zinc'];
 
   const listings = [
     {
-      userId: testUser.id,
-      metalId: copperMetal.id,
+      userId: userMap['Rajesh Kumar'].id, metalId: copperMetal.id,
       gradeId: gradeMap['Copper:Armature Bhatti']?.id || null,
-      qty: 500,
-      unit: 'kg',
-      location: 'Mandoli, Delhi',
-      price: 1140,
-      description: 'Good quality armature copper scrap. Available immediately.',
-      contact: '9876543210',
-      expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+      qty: 500, location: 'Mandoli, Delhi', price: 1140,
+      description: 'Good quality armature copper scrap. Available immediately. Regular supply.',
+      contact: '9876543210', listingType: 'sell', isVerified: true,
     },
     {
-      userId: testUser.id,
-      metalId: brassMetal.id,
+      userId: userMap['Rajesh Kumar'].id, metalId: copperMetal.id,
+      gradeId: gradeMap['Copper:CC Rod']?.id || null,
+      qty: 2000, location: 'Mandoli, Delhi', price: 1240,
+      description: 'CC Rod copper, premium quality. 2 ton lot ready for dispatch.',
+      contact: '9876543210', listingType: 'sell', isVerified: true,
+    },
+    {
+      userId: userMap['Amit Sharma'].id, metalId: brassMetal.id,
       gradeId: gradeMap['Brass:Purja']?.id || null,
-      qty: 200,
-      unit: 'kg',
-      location: 'Kurla, Mumbai',
-      price: 670,
-      description: 'Brass purja scrap, clean, no iron mixed.',
-      contact: '9876543211',
-      expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+      qty: 800, location: 'Kurla, Mumbai', price: 670,
+      description: 'Brass purja scrap, clean, no iron mixed. Can deliver within Mumbai.',
+      contact: '9876543211', listingType: 'sell', isVerified: true,
     },
     {
-      userId: testUser.id,
-      metalId: alumMetal.id,
+      userId: userMap['Amit Sharma'].id, metalId: copperMetal.id,
+      gradeId: gradeMap['Copper:Super D']?.id || null,
+      qty: 5000, location: 'Mumbai', price: 1280,
+      description: 'Looking for Super D copper in bulk. Minimum 5 ton lot. Regular requirement.',
+      contact: '9876543211', listingType: 'buy', isVerified: false,
+    },
+    {
+      userId: userMap['Suresh Patel'].id, metalId: alumMetal.id,
       gradeId: gradeMap['Aluminium:Ingot']?.id || null,
-      qty: 1000,
-      unit: 'kg',
-      location: 'Dharavi, Mumbai',
-      price: null,
+      qty: 3000, location: 'Naroda, Ahmedabad', price: 335,
       description: 'Aluminium ingot scrap lot. Best offer invited. Serious buyers only.',
-      contact: '9876543212',
-      expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+      contact: '9876543212', listingType: 'sell', isVerified: true,
+    },
+    {
+      userId: userMap['Suresh Patel'].id, metalId: zincMetal.id,
+      gradeId: gradeMap['Zinc:Slab']?.id || null,
+      qty: 1500, location: 'Naroda, Ahmedabad', price: 334,
+      description: 'Zinc slab — full truck load available. Ready for pickup.',
+      contact: '9876543212', listingType: 'sell', isVerified: false,
+    },
+    {
+      userId: userMap['Priya Verma'].id, metalId: leadMetal.id,
+      gradeId: gradeMap['Lead:Battery']?.id || null,
+      qty: 10000, location: 'Ambattur, Chennai', price: 112,
+      description: 'Used battery lead scrap. Monthly supply available. ISO certified recycler.',
+      contact: '9876543213', listingType: 'sell', isVerified: true,
+    },
+    {
+      userId: userMap['Priya Verma'].id, metalId: brassMetal.id,
+      gradeId: gradeMap['Brass:Honey']?.id || null,
+      qty: 600, location: 'Chennai', price: null,
+      description: 'Brass honey scrap — looking for buyers. Rate negotiable based on volume.',
+      contact: '9876543213', listingType: 'sell', isVerified: false,
+    },
+    {
+      userId: userMap['Vikram Singh'].id, metalId: copperMetal.id,
+      gradeId: gradeMap['Copper:CCR']?.id || null,
+      qty: 1000, location: 'Focal Point, Ludhiana', price: 1300,
+      description: 'Need CCR copper for manufacturing. Regular monthly requirement 1-2 tons.',
+      contact: '9876543214', listingType: 'buy', isVerified: true,
+    },
+    {
+      userId: userMap['Vikram Singh'].id, metalId: alumMetal.id,
+      gradeId: gradeMap['Aluminium:Wire Scrap']?.id || null,
+      qty: 2500, location: 'Ludhiana', price: 300,
+      description: 'Aluminium wire scrap for recycling. Have stock from power cable project.',
+      contact: '9876543214', listingType: 'sell', isVerified: true,
     },
   ];
 
+  const expiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000); // 30 days
   for (const l of listings) {
-    await prisma.listing.create({ data: l });
+    await prisma.listing.create({ data: { ...l, unit: 'kg', expiresAt } });
   }
   console.log(`  ✅ Sample listings: ${listings.length}`);
 

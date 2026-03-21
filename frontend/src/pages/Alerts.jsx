@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import Navbar from '../components/Navbar';
 import { fetchAlerts, createAlert, deleteAlert, fetchMetals, fetchCities } from '../utils/api';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
@@ -68,8 +67,7 @@ export default function Alerts() {
   };
 
   return (
-    <div className="min-h-screen bg-bg pb-16 sm:pb-0">
-      <Navbar />
+    <div className="min-h-screen pb-16 sm:pb-0">
       <main className="max-w-2xl mx-auto px-3 pt-4">
         <div className="flex items-center justify-between mb-4">
           <div>

@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { MapPin, Phone, Weight, Plus, Search, Filter } from 'lucide-react';
+import { MapPin, Phone, Weight, Plus, Search, Filter, ShieldCheck, Tag } from 'lucide-react';
 import { fetchListings, createListing } from '../utils/api';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
@@ -117,29 +117,51 @@ export default function Marketplace() {
 }
 
 function ListingCard({ item, delay }) {
+  const isBuy = item.listingType === 'buy';
   return (
     <motion.div
       initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}
       transition={{ delay, duration: 0.2 }}
       style={{ borderRadius: 14, padding: 18, display: 'flex', flexDirection: 'column', justifyContent: 'space-between',
         background: 'rgba(13,20,32,0.8)', backdropFilter: 'blur(20px)',
-        border: '1px solid rgba(255,255,255,0.08)', transition: 'border-color 0.15s' }}
+        border: `1px solid ${item.isVerified ? 'rgba(52,211,153,0.2)' : 'rgba(255,255,255,0.08)'}`,
+        transition: 'border-color 0.15s' }}
     >
       <div>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 10 }}>
           <div>
-            <span style={{ fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em',
-              color: '#CFB53B', display: 'block', marginBottom: 3 }}>
-              {item.metal?.name || item.metalType}
-            </span>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 3 }}>
+              <span style={{ fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em',
+                color: '#CFB53B' }}>
+                {item.metal?.name || item.metalType}
+              </span>
+              <span style={{
+                fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em',
+                padding: '1px 5px', borderRadius: 4,
+                background: isBuy ? 'rgba(96,165,250,0.12)' : 'rgba(52,211,153,0.12)',
+                color: isBuy ? '#60a5fa' : '#34d399',
+                border: `1px solid ${isBuy ? 'rgba(96,165,250,0.25)' : 'rgba(52,211,153,0.25)'}`,
+              }}>
+                {isBuy ? 'BUY' : 'SELL'}
+              </span>
+              {item.isVerified && (
+                <span style={{ display: 'flex', alignItems: 'center', gap: 2, fontSize: 9, fontWeight: 700,
+                  color: '#34d399', padding: '1px 5px', borderRadius: 4,
+                  background: 'rgba(52,211,153,0.1)', border: '1px solid rgba(52,211,153,0.2)' }}>
+                  <ShieldCheck size={9} /> Verified
+                </span>
+              )}
+            </div>
             <h3 style={{ fontSize: 16, fontWeight: 700, color: '#fff', margin: 0 }}>
-              {item.grade?.name || item.grade}
+              {item.grade?.name || item.grade || 'Mixed'}
             </h3>
           </div>
           <div style={{ textAlign: 'right' }}>
-            <span style={{ fontSize: 10, color: 'rgba(255,255,255,0.3)', display: 'block' }}>Expectation</span>
+            <span style={{ fontSize: 10, color: 'rgba(255,255,255,0.3)', display: 'block' }}>
+              {isBuy ? 'Willing to pay' : 'Asking price'}
+            </span>
             <span style={{ fontSize: 20, fontWeight: 700, color: '#fff', fontFamily: 'monospace' }}>
-              ₹{(item.price || item.priceExpectation || 0).toLocaleString('en-IN')}
+              {(item.price || item.priceExpectation) ? `₹${(item.price || item.priceExpectation).toLocaleString('en-IN')}` : 'Negotiate'}
             </span>
           </div>
         </div>

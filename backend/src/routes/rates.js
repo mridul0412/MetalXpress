@@ -164,21 +164,21 @@ router.get('/lme', async (req, res) => {
 
 // GET /api/rates/live
 // Priority per data type:
-//   LME metals  : admin paste (12h)  → Yahoo/Stooq → DB fallback Lead/Tin (7d)
+//   LME metals  : admin paste (15m)  → Yahoo/Stooq → DB fallback Lead/Tin (7d)
 //   MCX prices  : admin paste (10m)  → calculated (LME × usdInr / 1000)
 //   Forex/Indices: admin paste (10m) → Yahoo Finance
 //   usdInr      : admin paste (10m)  → Yahoo (used for MCX calculation)
 router.get('/live', async (req, res) => {
   try {
     const CUTOFF_10M = new Date(Date.now() - 10 * 60 * 1000);
-    const CUTOFF_12H = new Date(Date.now() - 12 * 60 * 60 * 1000);
+    const CUTOFF_15M = new Date(Date.now() - 15 * 60 * 1000);
     const CUTOFF_7D  = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
     const ALL_METALS = ['Copper', 'Aluminium', 'Zinc', 'Nickel', 'Lead', 'Tin'];
 
     // Fetch Yahoo + all DB tables in parallel
     const [yahooData, lmeRates, mcxRates, forexRates] = await Promise.all([
       fetchLivePrices(),
-      prisma.lMERate.findMany({ where: { createdAt: { gte: CUTOFF_12H } }, orderBy: { createdAt: 'desc' } }).catch(() => []),
+      prisma.lMERate.findMany({ where: { createdAt: { gte: CUTOFF_15M } }, orderBy: { createdAt: 'desc' } }).catch(() => []),
       prisma.mCXRate.findMany({ where: { createdAt: { gte: CUTOFF_10M } }, orderBy: { createdAt: 'desc' } }).catch(() => []),
       prisma.forexRate.findMany({ where: { createdAt: { gte: CUTOFF_10M } }, orderBy: { createdAt: 'desc' } }).catch(() => []),
     ]);
@@ -249,7 +249,7 @@ router.get('/live', async (req, res) => {
     }
 
     if (lmeRates.length >= 3) {
-      // Admin-pasted LME (12h window)
+      // Admin-pasted LME (15m window)
       // LME change stored as absolute USD/MT — convert to % for display
       const usedMetals = new Set();
       for (const rate of lmeRates) {

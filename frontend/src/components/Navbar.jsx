@@ -68,7 +68,7 @@ export default function Navbar() {
             {user ? (
               <>
                 <span className="hidden sm:block text-xs" style={{ color: 'rgba(255,255,255,0.35)' }}>
-                  {user.phone}
+                  {user.name || user.email || user.phone}
                 </span>
                 <button onClick={logout} style={{
                   fontSize: '12px',
