@@ -46,7 +46,8 @@ MetalXpress is a real-time scrap metal rate platform for Indian traders. It repl
 - **2026-03-20 (session 2)**: Corrected CLAUDE.md — owner is semi-technical; fixed Live Data Sources table (Lead/Tin are DB fallback, not Stooq); fixed Stooq symbol case ni.f → NI.F in docs
 - **2026-03-20 (session 3)**: Major fixes and unified Admin parser — see full details below
 - **2026-03-21 (session 4)**: Auth overhaul, landing page, paywall gate, footer/legal pages — see Session 4 details below
-- **2026-03-21 (session 5)**: Marketplace overhaul (filters, dummy data, buy/sell tags, verified badges), auth integration (phone+email linking), pro test user, listing verification — see Session 5 details below
+- **2026-03-21 (session 5)**: Auth integration, pro test user, alerts fix, initial marketplace filters
+- **2026-03-21 (session 6)**: Complete marketplace overhaul — deal flow with 0.1% commission gate, sell-only listings, card redesign, dropdown fix, listing verification, contact reveal after payment
 
 ## Session 3 Changes (2026-03-20) — Full Detail
 
@@ -274,16 +275,15 @@ Grade names updated to match actual WhatsApp message format (so `normGrade` matc
 - **Forgot password**: Not implemented yet — email+password flow has no password reset
 - **Email verification**: Not implemented — users can register with any email without confirming it
 - **Contact page**: Phone/WhatsApp numbers are placeholder "XXXXX XXXXX" — update with real numbers
-- **Marketplace commission**: 0.1% commission model designed but not implemented — needs Razorpay integration + deal flow UI
+- **Marketplace commission**: 0.1% commission flow working in dev mode (instant payment) — needs Razorpay integration for production
 - **Analytics layer**: Charts, market analysis, Hindi toggle — Phase 2 feature, not yet built
-- **Marketplace Post form**: Still uses old field names (metalType, grade as string) — needs updating to use metalId/gradeId from DB
 
-## Current Status (as of 2026-03-21, session 5)
+## Current Status (as of 2026-03-21, session 6)
 - **Auth**: Email+password + Phone OTP (linkable accounts) + Google OAuth (plug-and-play) — all three working
 - **Subscription**: Pro test user `test@metalxpress.in` / `test1234` — pro plan via PRO_EMAILS env var
 - **Landing**: Hero section for non-logged-in users with feature cards and CTAs
 - **Paywall**: Local rates blurred/gated for non-subscribers with "Sign Up" or "Upgrade to Pro" overlay
-- **Marketplace**: 10 dummy listings, working metal/city filters, BUY/SELL tags, Verified badges, admin verification endpoint
+- **Marketplace**: Sell-only listings, deal flow with 0.1% commission gate, contact reveal after payment, admin verification (pending→verified→rejected), proper card layout (metal badge, grade title, ₹/kg), dark-styled dropdowns, 3-tab UI (Browse/Sell Scrap/My Listings)
 - **Accordion**: All metals default-open, per-metal collapse, Expand/Collapse All button
 - **Footer**: Company + Legal links on all consumer pages
 - **Static pages**: About, Terms, Privacy, Contact — all styled in dark navy glass theme
