@@ -4,7 +4,7 @@ import {
   Lock, Save, ClipboardPaste, ChevronLeft, LogOut,
   CheckCircle, AlertCircle, MapPin, Zap,
 } from 'lucide-react';
-import { adminParsePreview, saveParsedRates, fetchPendingListings, verifyListing } from '../utils/api';
+import { adminParsePreview, saveParsedRates, fetchPendingListings, verifyListing, fetchDisputes, resolveDispute } from '../utils/api';
 
 const ADMIN_PASS_KEY = 'mx_admin_pass';
 
@@ -121,11 +121,11 @@ export default function Admin() {
 // ── Admin Body with Tabs ──────────────────────────────────────────────────────
 function AdminBody() {
   const [adminTab, setAdminTab] = useState('rates');
-  const ADMIN_TABS = [['rates', 'Rate Management'], ['marketplace', 'Marketplace']];
+  const ADMIN_TABS = [['rates', 'Rate Management'], ['marketplace', 'Listings'], ['disputes', 'Disputes']];
 
   return (
     <div style={{ maxWidth: 760, margin: '0 auto', padding: '28px 16px 80px' }}>
-      <div style={{ display: 'flex', gap: 8, marginBottom: 24 }}>
+      <div style={{ display: 'flex', gap: 8, marginBottom: 24, flexWrap: 'wrap' }}>
         {ADMIN_TABS.map(([val, label]) => (
           <button key={val} onClick={() => setAdminTab(val)} style={{
             padding: '8px 18px', borderRadius: 8, fontSize: 13, fontWeight: 700,
@@ -149,15 +149,17 @@ function AdminBody() {
       )}
 
       {adminTab === 'marketplace' && <MarketplaceAdmin />}
+      {adminTab === 'disputes' && <DisputesAdmin />}
     </div>
   );
 }
 
-// ── Marketplace Admin (listing verification) ─────────────────────────────────
+// ── Marketplace Admin (detailed listing verification) ─────────────────────────
 function MarketplaceAdmin() {
   const [listings, setListings] = useState([]);
   const [loading, setLoading] = useState(true);
   const [actionId, setActionId] = useState('');
+  const [expandedId, setExpandedId] = useState(null);
 
   const load = async () => {
     setLoading(true);
@@ -177,14 +179,18 @@ function MarketplaceAdmin() {
     finally { setActionId(''); }
   };
 
+  const cardBg = '#0D1420';
+  const sectionStyle = { background: 'rgba(255,255,255,0.03)', borderRadius: 10, padding: 12, marginTop: 10, border: '1px solid rgba(255,255,255,0.05)' };
+  const kvStyle = { display: 'flex', justifyContent: 'space-between', padding: '4px 0', fontSize: 12, borderBottom: '1px solid rgba(255,255,255,0.04)' };
+  const kvLabel = { color: 'rgba(255,255,255,0.4)' };
+  const kvValue = { color: '#fff', fontWeight: 600, fontFamily: 'monospace' };
+
   return (
     <div>
       <div style={{ marginBottom: 20 }}>
-        <h1 style={{ fontSize: 26, fontWeight: 700, color: '#fff', margin: '0 0 4px' }}>
-          Pending Listings
-        </h1>
+        <h1 style={{ fontSize: 26, fontWeight: 700, color: '#fff', margin: '0 0 4px' }}>Pending Listings</h1>
         <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.35)', margin: 0 }}>
-          Review and verify marketplace listings before they go live
+          Review listing details, seller info, and photos before approving
         </p>
       </div>
 
@@ -195,42 +201,247 @@ function MarketplaceAdmin() {
             <CheckCircle size={32} style={{ color: 'rgba(52,211,153,0.4)', marginBottom: 8 }} />
             <p style={{ color: 'rgba(255,255,255,0.35)', fontSize: 14 }}>No pending listings</p>
           </div>
-        : <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-            {listings.map(l => (
-              <div key={l.id} style={{ background: '#0D1420', borderRadius: 14,
-                border: '1px solid rgba(255,255,255,0.07)', padding: 18 }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 8 }}>
-                  <div>
-                    <div style={{ display: 'flex', gap: 6, marginBottom: 4 }}>
-                      <span style={{ fontSize: 10, fontWeight: 700, padding: '2px 8px', borderRadius: 6,
-                        background: 'rgba(207,181,59,0.15)', color: '#CFB53B' }}>{l.metal?.name}</span>
-                      {l.grade && <span style={{ fontSize: 10, padding: '2px 8px', borderRadius: 6,
-                        background: 'rgba(255,255,255,0.05)', color: 'rgba(255,255,255,0.4)' }}>{l.grade.name}</span>}
+        : <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+            {listings.map(l => {
+              const isExpanded = expandedId === l.id;
+              const imgs = l.imageUrls || [];
+              const seller = l.user || {};
+              const daysSinceJoin = seller.createdAt ? Math.floor((Date.now() - new Date(seller.createdAt)) / 86400000) : null;
+
+              return (
+                <div key={l.id} style={{ background: cardBg, borderRadius: 14,
+                  border: '1px solid rgba(255,255,255,0.07)', overflow: 'hidden' }}>
+
+                  {/* Summary row (always visible) */}
+                  <div style={{ padding: 18, cursor: 'pointer' }} onClick={() => setExpandedId(isExpanded ? null : l.id)}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                      <div>
+                        <div style={{ display: 'flex', gap: 6, marginBottom: 4, flexWrap: 'wrap', alignItems: 'center' }}>
+                          <span style={{ fontSize: 10, fontWeight: 700, padding: '2px 8px', borderRadius: 6,
+                            background: 'rgba(207,181,59,0.15)', color: '#CFB53B' }}>{l.metal?.name}</span>
+                          {l.grade && <span style={{ fontSize: 10, padding: '2px 8px', borderRadius: 6,
+                            background: 'rgba(255,255,255,0.05)', color: 'rgba(255,255,255,0.4)' }}>{l.grade.name}</span>}
+                          {imgs.length > 0 && <span style={{ fontSize: 10, padding: '2px 8px', borderRadius: 6,
+                            background: 'rgba(56,189,248,0.1)', color: '#38bdf8' }}>{imgs.length} photos</span>}
+                          {seller.kycVerified && <span style={{ fontSize: 10, fontWeight: 700, padding: '2px 8px', borderRadius: 6,
+                            background: 'rgba(52,211,153,0.15)', color: '#34d399' }}>KYC ✓</span>}
+                          {seller.phoneVerified && <span style={{ fontSize: 10, padding: '2px 8px', borderRadius: 6,
+                            background: 'rgba(52,211,153,0.08)', color: 'rgba(52,211,153,0.6)' }}>Phone ✓</span>}
+                        </div>
+                        <p style={{ fontSize: 15, fontWeight: 700, color: '#fff', margin: '0 0 2px' }}>
+                          {l.qty} kg · {l.location} {l.price ? `· ₹${l.price}/kg` : '· Negotiable'}
+                        </p>
+                        <p style={{ fontSize: 11, color: 'rgba(255,255,255,0.3)', margin: 0 }}>
+                          by {seller.name || 'N/A'} · {seller.city || 'Unknown city'} · Joined {daysSinceJoin != null ? `${daysSinceJoin}d ago` : 'N/A'}
+                        </p>
+                      </div>
+                      <span style={{ fontSize: 18, color: 'rgba(255,255,255,0.2)', transition: 'transform 0.2s',
+                        transform: isExpanded ? 'rotate(90deg)' : 'rotate(0deg)' }}>▶</span>
                     </div>
-                    <p style={{ fontSize: 14, fontWeight: 700, color: '#fff', margin: '0 0 2px' }}>
-                      {l.qty} kg · {l.location} {l.price ? `· ₹${l.price}/kg` : '· Negotiable'}
+                  </div>
+
+                  {/* Expanded detail */}
+                  {isExpanded && (
+                    <div style={{ padding: '0 18px 18px', borderTop: '1px solid rgba(255,255,255,0.05)' }}>
+
+                      {/* Photos */}
+                      {imgs.length > 0 && (
+                        <div style={{ ...sectionStyle }}>
+                          <p style={{ fontSize: 10, fontWeight: 700, color: 'rgba(255,255,255,0.4)', margin: '0 0 8px', textTransform: 'uppercase', letterSpacing: '0.06em' }}>Photos</p>
+                          <div style={{ display: 'flex', gap: 8, overflowX: 'auto' }}>
+                            {imgs.map((url, i) => (
+                              <a key={i} href={url} target="_blank" rel="noopener noreferrer">
+                                <img src={url} alt={`listing ${i + 1}`}
+                                  style={{ width: 100, height: 100, objectFit: 'cover', borderRadius: 8, border: '1px solid rgba(255,255,255,0.1)' }} />
+                              </a>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Listing details */}
+                      <div style={sectionStyle}>
+                        <p style={{ fontSize: 10, fontWeight: 700, color: 'rgba(255,255,255,0.4)', margin: '0 0 6px', textTransform: 'uppercase', letterSpacing: '0.06em' }}>Listing Details</p>
+                        <div style={kvStyle}><span style={kvLabel}>Metal</span><span style={kvValue}>{l.metal?.name}</span></div>
+                        <div style={kvStyle}><span style={kvLabel}>Grade</span><span style={kvValue}>{l.grade?.name || 'Any'}</span></div>
+                        <div style={kvStyle}><span style={kvLabel}>Quantity</span><span style={kvValue}>{l.qty} {l.unit || 'kg'}</span></div>
+                        <div style={kvStyle}><span style={kvLabel}>Price</span><span style={kvValue}>{l.price ? `₹${l.price}/kg` : 'Negotiable'}</span></div>
+                        {l.price && l.qty && <div style={kvStyle}><span style={kvLabel}>Total Value</span><span style={kvValue}>₹{(l.price * l.qty).toLocaleString('en-IN')}</span></div>}
+                        <div style={kvStyle}><span style={kvLabel}>Location</span><span style={kvValue}>{l.location}</span></div>
+                        <div style={kvStyle}><span style={kvLabel}>Contact</span><span style={kvValue}>{l.contact}</span></div>
+                        <div style={{ ...kvStyle, borderBottom: 'none' }}><span style={kvLabel}>Posted</span><span style={kvValue}>{new Date(l.createdAt).toLocaleString('en-IN')}</span></div>
+                        {l.description && (
+                          <div style={{ marginTop: 8, padding: '8px 10px', borderRadius: 6, background: 'rgba(255,255,255,0.03)', fontSize: 12, color: 'rgba(255,255,255,0.5)', lineHeight: 1.5 }}>
+                            {l.description}
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Seller profile */}
+                      <div style={sectionStyle}>
+                        <p style={{ fontSize: 10, fontWeight: 700, color: 'rgba(255,255,255,0.4)', margin: '0 0 6px', textTransform: 'uppercase', letterSpacing: '0.06em' }}>Seller Profile</p>
+                        <div style={kvStyle}><span style={kvLabel}>Name</span><span style={kvValue}>{seller.name || 'N/A'}</span></div>
+                        <div style={kvStyle}><span style={kvLabel}>Phone</span><span style={kvValue}>{seller.phone || 'N/A'}</span></div>
+                        <div style={kvStyle}><span style={kvLabel}>Email</span><span style={kvValue}>{seller.email || 'N/A'}</span></div>
+                        <div style={kvStyle}><span style={kvLabel}>City</span><span style={kvValue}>{seller.city || 'N/A'}</span></div>
+                        <div style={kvStyle}><span style={kvLabel}>Trader Type</span><span style={kvValue}>{seller.traderType || 'N/A'}</span></div>
+                        <div style={kvStyle}><span style={kvLabel}>Phone Verified</span><span style={{ ...kvValue, color: seller.phoneVerified ? '#34d399' : '#f87171' }}>{seller.phoneVerified ? 'Yes' : 'No'}</span></div>
+                        <div style={{ ...kvStyle, borderBottom: 'none' }}><span style={kvLabel}>KYC Verified</span><span style={{ ...kvValue, color: seller.kycVerified ? '#34d399' : '#f87171' }}>{seller.kycVerified ? 'Yes' : 'No'}</span></div>
+                      </div>
+
+                      {/* Verification checks */}
+                      <div style={{ ...sectionStyle, background: 'rgba(207,181,59,0.04)', border: '1px solid rgba(207,181,59,0.1)' }}>
+                        <p style={{ fontSize: 10, fontWeight: 700, color: '#CFB53B', margin: '0 0 8px', textTransform: 'uppercase', letterSpacing: '0.06em' }}>Verification Checklist</p>
+                        {[
+                          { label: 'Phone verified', ok: seller.phoneVerified },
+                          { label: 'KYC documents', ok: seller.kycVerified },
+                          { label: 'Photos attached', ok: imgs.length > 0 },
+                          { label: 'Description provided', ok: !!l.description },
+                          { label: 'Price set (not negotiable)', ok: !!l.price },
+                          { label: 'Account age > 1 day', ok: daysSinceJoin > 0 },
+                        ].map((check, i) => (
+                          <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '3px 0', fontSize: 12 }}>
+                            <span style={{ color: check.ok ? '#34d399' : '#6b7280' }}>{check.ok ? '✓' : '○'}</span>
+                            <span style={{ color: check.ok ? 'rgba(255,255,255,0.6)' : 'rgba(255,255,255,0.25)' }}>{check.label}</span>
+                          </div>
+                        ))}
+                      </div>
+
+                      {/* Action buttons */}
+                      <div style={{ display: 'flex', gap: 8, marginTop: 14 }}>
+                        <button onClick={() => handleVerify(l.id, 'verified')} disabled={actionId === l.id}
+                          style={{ flex: 1, padding: '12px', borderRadius: 10, fontSize: 13, fontWeight: 700,
+                            background: '#34d399', color: '#000', border: 'none', cursor: 'pointer' }}>
+                          {actionId === l.id ? 'Processing…' : '✓ Approve & Go Live'}
+                        </button>
+                        <button onClick={() => handleVerify(l.id, 'rejected')} disabled={actionId === l.id}
+                          style={{ padding: '12px 20px', borderRadius: 10, fontSize: 13, fontWeight: 700,
+                            background: 'transparent', color: '#f87171', border: '1px solid rgba(248,113,113,0.3)', cursor: 'pointer' }}>
+                          ✗ Reject
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>}
+    </div>
+  );
+}
+
+// ── Disputes Admin ────────────────────────────────────────────────────────────
+function DisputesAdmin() {
+  const [disputes, setDisputes] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [actionId, setActionId] = useState('');
+
+  const load = async () => {
+    setLoading(true);
+    try { setDisputes((await fetchDisputes()).data || []); }
+    catch { setDisputes([]); }
+    finally { setLoading(false); }
+  };
+
+  useEffect(() => { load(); }, []);
+
+  const handleResolve = async (dealId, resolution) => {
+    setActionId(dealId);
+    try {
+      await resolveDispute(dealId, resolution);
+      load();
+    } catch (err) { alert(err.response?.data?.error || 'Failed'); }
+    finally { setActionId(''); }
+  };
+
+  return (
+    <div>
+      <div style={{ marginBottom: 20 }}>
+        <h1 style={{ fontSize: 26, fontWeight: 700, color: '#fff', margin: '0 0 4px' }}>Deal Disputes</h1>
+        <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.35)', margin: 0 }}>
+          Review disputes where commission is held in escrow. Resolve by refunding, completing, or cancelling.
+        </p>
+      </div>
+
+      {loading ? <p style={{ color: 'rgba(255,255,255,0.3)' }}>Loading…</p>
+      : disputes.length === 0
+        ? <div style={{ background: 'rgba(255,255,255,0.03)', borderRadius: 14, padding: 40,
+            textAlign: 'center', border: '1px solid rgba(255,255,255,0.06)' }}>
+            <CheckCircle size={32} style={{ color: 'rgba(52,211,153,0.4)', marginBottom: 8 }} />
+            <p style={{ color: 'rgba(255,255,255,0.35)', fontSize: 14 }}>No open disputes</p>
+          </div>
+        : <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+            {disputes.map(d => {
+              const lastOffer = d.offers?.[d.offers.length - 1];
+              return (
+                <div key={d.id} style={{ background: '#0D1420', borderRadius: 14,
+                  border: '1px solid rgba(248,113,113,0.15)', padding: 18 }}>
+
+                  <div style={{ display: 'flex', gap: 6, marginBottom: 6, flexWrap: 'wrap' }}>
+                    <span style={{ fontSize: 10, fontWeight: 700, padding: '2px 8px', borderRadius: 6,
+                      background: 'rgba(248,113,113,0.15)', color: '#f87171' }}>DISPUTED</span>
+                    <span style={{ fontSize: 10, fontWeight: 700, padding: '2px 8px', borderRadius: 6,
+                      background: 'rgba(207,181,59,0.15)', color: '#CFB53B' }}>{d.listing?.metal?.name}</span>
+                  </div>
+
+                  <p style={{ fontSize: 15, fontWeight: 700, color: '#fff', margin: '0 0 4px' }}>
+                    {d.listing?.grade?.name || d.listing?.metal?.name} · {d.agreedQty ? `${d.agreedQty} kg @ ₹${d.agreedPrice}/kg` : 'N/A'}
+                  </p>
+
+                  {/* Parties */}
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginTop: 10 }}>
+                    <div style={{ background: 'rgba(255,255,255,0.03)', borderRadius: 8, padding: 10 }}>
+                      <p style={{ fontSize: 10, fontWeight: 700, color: 'rgba(255,255,255,0.3)', margin: '0 0 4px', textTransform: 'uppercase' }}>Buyer</p>
+                      <p style={{ fontSize: 13, fontWeight: 600, color: '#fff', margin: '0 0 2px' }}>{d.buyer?.name || 'N/A'}</p>
+                      <p style={{ fontSize: 11, color: 'rgba(255,255,255,0.4)', margin: 0 }}>{d.buyer?.phone || d.buyer?.email || 'No contact'}</p>
+                    </div>
+                    <div style={{ background: 'rgba(255,255,255,0.03)', borderRadius: 8, padding: 10 }}>
+                      <p style={{ fontSize: 10, fontWeight: 700, color: 'rgba(255,255,255,0.3)', margin: '0 0 4px', textTransform: 'uppercase' }}>Seller</p>
+                      <p style={{ fontSize: 13, fontWeight: 600, color: '#fff', margin: '0 0 2px' }}>{d.seller?.name || 'N/A'}</p>
+                      <p style={{ fontSize: 11, color: 'rgba(255,255,255,0.4)', margin: 0 }}>{d.seller?.phone || d.seller?.email || 'No contact'}</p>
+                    </div>
+                  </div>
+
+                  {/* Financials */}
+                  <div style={{ display: 'flex', gap: 16, marginTop: 10, fontSize: 12, color: 'rgba(255,255,255,0.5)' }}>
+                    <span>Deal: ₹{d.dealAmount?.toLocaleString('en-IN') || '—'}</span>
+                    <span>Commission: ₹{d.commission?.toLocaleString('en-IN') || '—'}</span>
+                    <span>Paid: {d.paidAt ? new Date(d.paidAt).toLocaleString('en-IN', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' }) : 'N/A'}</span>
+                  </div>
+
+                  {/* Dispute reason */}
+                  <div style={{ marginTop: 10, background: 'rgba(248,113,113,0.06)', borderRadius: 8, padding: 12,
+                    border: '1px solid rgba(248,113,113,0.1)' }}>
+                    <p style={{ fontSize: 10, fontWeight: 700, color: '#f87171', margin: '0 0 4px', textTransform: 'uppercase' }}>Dispute Reason</p>
+                    <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.6)', margin: 0, fontStyle: 'italic', lineHeight: 1.5 }}>
+                      "{d.disputeReason}"
                     </p>
-                    {l.description && <p style={{ fontSize: 12, color: 'rgba(255,255,255,0.4)', margin: '0 0 4px' }}>{l.description}</p>}
-                    <p style={{ fontSize: 11, color: 'rgba(255,255,255,0.25)', margin: 0 }}>
-                      Seller: {l.user?.name || 'N/A'} · {l.user?.phone || l.user?.email || 'No contact'}
-                      · Contact: {l.contact}
-                    </p>
+                    {d.disputedAt && <p style={{ fontSize: 10, color: 'rgba(255,255,255,0.2)', margin: '6px 0 0' }}>
+                      Filed: {new Date(d.disputedAt).toLocaleString('en-IN')}
+                    </p>}
+                  </div>
+
+                  {/* Resolution actions */}
+                  <div style={{ display: 'flex', gap: 8, marginTop: 14 }}>
+                    <button onClick={() => handleResolve(d.id, 'refund')} disabled={actionId === d.id}
+                      style={{ flex: 1, padding: '10px', borderRadius: 8, fontSize: 12, fontWeight: 700,
+                        background: 'rgba(248,113,113,0.15)', color: '#f87171', border: '1px solid rgba(248,113,113,0.2)', cursor: 'pointer' }}>
+                      Refund & Cancel
+                    </button>
+                    <button onClick={() => handleResolve(d.id, 'completed')} disabled={actionId === d.id}
+                      style={{ flex: 1, padding: '10px', borderRadius: 8, fontSize: 12, fontWeight: 700,
+                        background: '#34d399', color: '#000', border: 'none', cursor: 'pointer' }}>
+                      Mark Completed
+                    </button>
+                    <button onClick={() => handleResolve(d.id, 'cancelled')} disabled={actionId === d.id}
+                      style={{ padding: '10px 14px', borderRadius: 8, fontSize: 12, fontWeight: 700,
+                        background: 'transparent', color: '#6b7280', border: '1px solid rgba(255,255,255,0.1)', cursor: 'pointer' }}>
+                      Cancel
+                    </button>
                   </div>
                 </div>
-                <div style={{ display: 'flex', gap: 8, marginTop: 10 }}>
-                  <button onClick={() => handleVerify(l.id, 'verified')} disabled={actionId === l.id}
-                    style={{ flex: 1, padding: '10px', borderRadius: 8, fontSize: 12, fontWeight: 700,
-                      background: '#34d399', color: '#000', border: 'none', cursor: 'pointer' }}>
-                    ✓ Verify & Go Live
-                  </button>
-                  <button onClick={() => handleVerify(l.id, 'rejected')} disabled={actionId === l.id}
-                    style={{ padding: '10px 16px', borderRadius: 8, fontSize: 12, fontWeight: 700,
-                      background: 'transparent', color: '#f87171', border: '1px solid rgba(248,113,113,0.3)', cursor: 'pointer' }}>
-                    ✗ Reject
-                  </button>
-                </div>
-              </div>
-            ))}
+              );
+            })}
           </div>}
     </div>
   );

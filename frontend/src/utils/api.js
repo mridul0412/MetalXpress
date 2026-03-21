@@ -81,11 +81,14 @@ export const rejectDeal = (dealId) => api.post(`/marketplace/deals/${dealId}/rej
 export const payDeal = (dealId) => api.post(`/marketplace/deals/${dealId}/pay`);
 export const fetchMyDeals = (role) => api.get('/marketplace/my-deals', { params: { role } });
 export const completeDeal = (dealId) => api.patch(`/marketplace/deals/${dealId}/complete`);
+export const disputeDeal = (dealId, reason) => api.post(`/marketplace/deals/${dealId}/dispute`, { reason });
 export const fetchDealNotifications = () => api.get('/marketplace/notifications');
 
 // Admin marketplace
 export const fetchPendingListings = () => api.get('/marketplace/pending', { headers: adminHeaders() });
 export const verifyListing = (id, status) => api.patch(`/marketplace/listings/${id}/verify`, { status }, { headers: adminHeaders() });
+export const fetchDisputes = () => api.get('/marketplace/disputes', { headers: adminHeaders() });
+export const resolveDispute = (dealId, resolution) => api.patch(`/marketplace/deals/${dealId}/resolve-dispute`, { resolution }, { headers: adminHeaders() });
 
 // Alerts
 export const fetchAlerts = () => api.get('/alerts');

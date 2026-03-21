@@ -3,6 +3,8 @@ import { fetchAlerts, createAlert, deleteAlert, fetchMetals, fetchCities } from 
 import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 
+const optStyle = { background: '#0D1420', color: '#fff' };
+
 export default function Alerts() {
   const { user, loading: authLoading } = useAuth();
   const navigate = useNavigate();
@@ -92,9 +94,10 @@ export default function Alerts() {
                   onChange={e => { setSelectedMetalId(e.target.value); setForm({...form, gradeId: ''}); }}
                   className="input-field text-xs"
                   required
+                  style={{ background: 'rgba(255,255,255,0.05)', color: '#fff' }}
                 >
-                  <option value="">Select metal</option>
-                  {metals.map(m => <option key={m.id} value={m.id}>{m.emoji} {m.name}</option>)}
+                  <option value="" style={optStyle}>Select metal</option>
+                  {metals.map(m => <option key={m.id} value={m.id} style={optStyle}>{m.emoji} {m.name}</option>)}
                 </select>
               </div>
 
@@ -106,9 +109,10 @@ export default function Alerts() {
                   className="input-field text-xs"
                   required
                   disabled={!selectedMetal}
+                  style={{ background: 'rgba(255,255,255,0.05)', color: '#fff' }}
                 >
-                  <option value="">Select grade</option>
-                  {selectedMetal?.grades?.map(g => <option key={g.id} value={g.id}>{g.name}</option>)}
+                  <option value="" style={optStyle}>Select grade</option>
+                  {selectedMetal?.grades?.map(g => <option key={g.id} value={g.id} style={optStyle}>{g.name}</option>)}
                 </select>
               </div>
 
@@ -119,10 +123,11 @@ export default function Alerts() {
                   onChange={e => setForm({...form, hubId: e.target.value})}
                   className="input-field text-xs"
                   required
+                  style={{ background: 'rgba(255,255,255,0.05)', color: '#fff' }}
                 >
-                  <option value="">Select hub</option>
+                  <option value="" style={optStyle}>Select hub</option>
                   {cities.flatMap(c => c.hubs?.map(h => (
-                    <option key={h.id} value={h.id}>{c.name} — {h.name}</option>
+                    <option key={h.id} value={h.id} style={optStyle}>{c.name} — {h.name}</option>
                   )) || [])}
                 </select>
               </div>
@@ -134,9 +139,10 @@ export default function Alerts() {
                     value={form.direction}
                     onChange={e => setForm({...form, direction: e.target.value})}
                     className="input-field text-xs"
+                    style={{ background: 'rgba(255,255,255,0.05)', color: '#fff' }}
                   >
-                    <option value="above">Above ▲</option>
-                    <option value="below">Below ▼</option>
+                    <option value="above" style={optStyle}>Above ▲</option>
+                    <option value="below" style={optStyle}>Below ▼</option>
                   </select>
                 </div>
                 <div>

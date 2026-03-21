@@ -7,7 +7,7 @@ import {
 import {
   fetchListings, fetchMyListings, createListing, createDeal, counterOffer,
   acceptOffer, rejectDeal, payDeal, fetchMyDeals, fetchDealDetail,
-  completeDeal, deleteListing, fetchMetals, fetchCities,
+  completeDeal, disputeDeal, deleteListing, fetchMetals, fetchCities,
 } from '../utils/api';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
@@ -32,6 +32,7 @@ const fmt = n => n?.toLocaleString('en-IN') ?? '—';
 const STATUS_COLORS = {
   negotiating: '#CFB53B', agreed: '#34d399', connected: '#38bdf8',
   completed: '#22c55e', cancelled: '#6b7280', expired: '#6b7280', paid: '#38bdf8',
+  disputed: '#f87171',
 };
 
 /* ══════════════════════════════════════════════════════════════════════ */
@@ -120,7 +121,7 @@ export default function Marketplace() {
         ? <PostForm user={user} onSuccess={() => { setTab('my-listings'); loadMyListings(); }} />
         : <LoginPrompt navigate={navigate} />)}
 
-      {tab === 'my-listings' && <MyListingsTab listings={myListings} onRefresh={loadMyListings} />}
+      {tab === 'my-listings' && <MyListingsTab listings={myListings} onRefresh={loadMyListings} onBrowseRefresh={load} />}
 
       {tab === 'my-deals' && <MyDealsTab deals={deals} user={user}
         onRefresh={loadDeals} onViewDeal={setActiveDeal} />}
@@ -195,6 +196,23 @@ function ListingCard({ listing: l, onAction, actionLabel, showStatus, onDelete }
 
       <h3 style={{ fontSize: 17, fontWeight: 700, color: '#fff', margin: '0 0 4px' }}>{gradeName}</h3>
       {l.sellerName && <p style={{ fontSize: 11, color: 'rgba(255,255,255,0.3)', margin: '0 0 8px' }}>by {l.sellerName}</p>}
+
+      {/* Image thumbnails */}
+      {l.imageUrls?.length > 0 && (
+        <div style={{ display: 'flex', gap: 6, marginBottom: 10, overflowX: 'auto' }}>
+          {l.imageUrls.slice(0, 3).map((url, i) => (
+            <img key={i} src={url} alt={`${gradeName} ${i + 1}`}
+              style={{ width: 72, height: 72, objectFit: 'cover', borderRadius: 8, border: '1px solid rgba(255,255,255,0.1)' }} />
+          ))}
+          {l.imageUrls.length > 3 && (
+            <div style={{ width: 72, height: 72, borderRadius: 8, background: 'rgba(255,255,255,0.05)',
+              display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, color: 'rgba(255,255,255,0.3)' }}>
+              +{l.imageUrls.length - 3}
+            </div>
+          )}
+        </div>
+      )}
+
       {l.description && <p style={{ fontSize: 12, color: 'rgba(255,255,255,0.5)', margin: '0 0 10px', lineHeight: 1.5 }}>
         {l.description.length > 100 ? l.description.slice(0, 100) + '…' : l.description}</p>}
 
@@ -320,6 +338,8 @@ function DealDetailPanel({ dealId, user, onClose }) {
   const [showCounter, setShowCounter] = useState(false);
   const [actionLoading, setActionLoading] = useState('');
   const [error, setError] = useState('');
+  const [showDispute, setShowDispute] = useState(false);
+  const [disputeReason, setDisputeReason] = useState('');
 
   const loadDeal = useCallback(async () => {
     try {
@@ -366,6 +386,15 @@ function DealDetailPanel({ dealId, user, onClose }) {
         await payDeal(deal.id);
       } else if (action === 'complete') {
         await completeDeal(deal.id);
+      } else if (action === 'dispute') {
+        if (!disputeReason || disputeReason.trim().length < 10) {
+          setError('Please describe the issue in detail (at least 10 characters)');
+          setActionLoading('');
+          return;
+        }
+        await disputeDeal(deal.id, disputeReason);
+        setShowDispute(false);
+        setDisputeReason('');
       }
       await loadDeal();
     } catch (err) {
@@ -468,19 +497,36 @@ function DealDetailPanel({ dealId, user, onClose }) {
           {/* Counter-offer form */}
           {showCounter && (
             <div>
+              <p style={{ fontSize: 11, color: 'rgba(255,255,255,0.3)', margin: '0 0 8px' }}>
+                Edit both price and quantity to counter-offer:
+              </p>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginBottom: 8 }}>
-                <input type="number" value={counterPrice} onChange={e => setCounterPrice(e.target.value)}
-                  placeholder="Your price ₹/kg" style={{ ...inputStyle, padding: '10px 12px' }} />
-                <input type="number" value={counterQty} onChange={e => setCounterQty(e.target.value)}
-                  placeholder={`Qty (${lastOffer?.qty || ''} kg)`} style={{ ...inputStyle, padding: '10px 12px' }} />
+                <div>
+                  <label style={{ ...labelStyle, marginBottom: 4 }}>Price (₹/kg) *</label>
+                  <input type="number" value={counterPrice} onChange={e => setCounterPrice(e.target.value)}
+                    placeholder={lastOffer?.pricePerKg ? String(lastOffer.pricePerKg) : 'Price'}
+                    style={{ ...inputStyle, padding: '10px 12px' }} />
+                </div>
+                <div>
+                  <label style={{ ...labelStyle, marginBottom: 4 }}>Quantity (kg)</label>
+                  <input type="number" value={counterQty} onChange={e => setCounterQty(e.target.value)}
+                    placeholder={lastOffer?.qty ? String(lastOffer.qty) : 'Qty'}
+                    style={{ ...inputStyle, padding: '10px 12px' }} />
+                </div>
               </div>
               <input value={counterMsg} onChange={e => setCounterMsg(e.target.value)}
                 placeholder="Message (optional)" style={{ ...inputStyle, padding: '10px 12px', marginBottom: 8 }} />
+              {counterPrice && (counterQty || lastOffer?.qty) && (
+                <div style={{ fontSize: 11, color: 'rgba(207,181,59,0.6)', marginBottom: 8 }}>
+                  New deal value: ₹{fmt(parseFloat(counterPrice) * parseFloat(counterQty || lastOffer?.qty))}
+                  {' · '}Commission: ₹{fmt(Math.max(Math.ceil(parseFloat(counterPrice) * parseFloat(counterQty || lastOffer?.qty) * 0.001), 1))}
+                </div>
+              )}
               <div style={{ display: 'flex', gap: 8 }}>
                 <button onClick={() => handleAction('counter')} disabled={!!actionLoading}
                   style={{ flex: 1, padding: '12px', borderRadius: 10, fontSize: 13, fontWeight: 700,
                     background: '#CFB53B', color: '#000', border: 'none', cursor: 'pointer' }}>
-                  {actionLoading === 'counter' ? 'Sending…' : 'Send Counter'}
+                  {actionLoading === 'counter' ? 'Sending…' : 'Send Counter Offer'}
                 </button>
                 <button onClick={() => setShowCounter(false)}
                   style={{ padding: '12px 16px', borderRadius: 10, fontSize: 13,
@@ -556,12 +602,64 @@ function DealDetailPanel({ dealId, user, onClose }) {
                 )}
               </div>
               {deal.status === 'connected' && (
-                <button onClick={() => handleAction('complete')} disabled={!!actionLoading}
-                  style={{ width: '100%', padding: '12px', borderRadius: 10, fontSize: 13, fontWeight: 700,
-                    background: 'rgba(34,197,94,0.15)', color: '#22c55e', border: '1px solid rgba(34,197,94,0.2)', cursor: 'pointer' }}>
-                  {actionLoading === 'complete' ? 'Completing…' : 'Mark Deal as Completed'}
-                </button>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                  <button onClick={() => handleAction('complete')} disabled={!!actionLoading}
+                    style={{ width: '100%', padding: '12px', borderRadius: 10, fontSize: 13, fontWeight: 700,
+                      background: 'rgba(34,197,94,0.15)', color: '#22c55e', border: '1px solid rgba(34,197,94,0.2)', cursor: 'pointer' }}>
+                    {actionLoading === 'complete' ? 'Completing…' : 'Mark Deal as Completed'}
+                  </button>
+                  {!showDispute ? (
+                    <button onClick={() => setShowDispute(true)}
+                      style={{ width: '100%', padding: '10px', borderRadius: 10, fontSize: 12, fontWeight: 600,
+                        background: 'transparent', color: '#f87171', border: '1px solid rgba(248,113,113,0.2)', cursor: 'pointer' }}>
+                      Report Issue / Raise Dispute
+                    </button>
+                  ) : (
+                    <div style={{ background: 'rgba(248,113,113,0.06)', borderRadius: 10, padding: 14,
+                      border: '1px solid rgba(248,113,113,0.15)' }}>
+                      <p style={{ fontSize: 12, fontWeight: 700, color: '#f87171', margin: '0 0 8px' }}>
+                        Raise a Dispute
+                      </p>
+                      <p style={{ fontSize: 11, color: 'rgba(255,255,255,0.35)', margin: '0 0 10px' }}>
+                        Commission is held in escrow. Our team will review and resolve within 48 hours.
+                      </p>
+                      <textarea value={disputeReason} onChange={e => setDisputeReason(e.target.value)}
+                        placeholder="Describe the issue: e.g., seller not responding, material quality mismatch, deal done outside app…"
+                        style={{ ...inputStyle, minHeight: 70, resize: 'vertical', fontSize: 12, marginBottom: 8 }} />
+                      <div style={{ display: 'flex', gap: 8 }}>
+                        <button onClick={() => handleAction('dispute')} disabled={!!actionLoading}
+                          style={{ flex: 1, padding: '10px', borderRadius: 8, fontSize: 12, fontWeight: 700,
+                            background: '#f87171', color: '#000', border: 'none', cursor: 'pointer' }}>
+                          {actionLoading === 'dispute' ? 'Submitting…' : 'Submit Dispute'}
+                        </button>
+                        <button onClick={() => { setShowDispute(false); setDisputeReason(''); }}
+                          style={{ padding: '10px 16px', borderRadius: 8, fontSize: 12,
+                            background: 'transparent', color: '#666', border: '1px solid rgba(255,255,255,0.1)', cursor: 'pointer' }}>
+                          Cancel
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                </div>
               )}
+            </div>
+          )}
+
+          {/* Disputed */}
+          {deal.status === 'disputed' && (
+            <div style={{ background: 'rgba(248,113,113,0.06)', borderRadius: 10, padding: 14,
+              border: '1px solid rgba(248,113,113,0.15)' }}>
+              <p style={{ fontSize: 13, fontWeight: 700, color: '#f87171', margin: '0 0 6px' }}>
+                Dispute Raised
+              </p>
+              {deal.disputeReason && (
+                <p style={{ fontSize: 12, color: 'rgba(255,255,255,0.5)', margin: '0 0 6px', fontStyle: 'italic' }}>
+                  "{deal.disputeReason}"
+                </p>
+              )}
+              <p style={{ fontSize: 11, color: 'rgba(255,255,255,0.3)', margin: 0 }}>
+                Commission is held in escrow. Our team is reviewing — expect resolution within 48 hours.
+              </p>
             </div>
           )}
 
@@ -635,7 +733,7 @@ function MyDealsTab({ deals, user, onRefresh, onViewDeal }) {
 }
 
 /* ── My Listings Tab ──────────────────────────────────────────────── */
-function MyListingsTab({ listings, onRefresh }) {
+function MyListingsTab({ listings, onRefresh, onBrowseRefresh }) {
   const [deleting, setDeleting] = useState(null);
 
   const handleDelete = async (id) => {
@@ -644,6 +742,7 @@ function MyListingsTab({ listings, onRefresh }) {
     try {
       await deleteListing(id);
       onRefresh();
+      if (onBrowseRefresh) onBrowseRefresh();
     } catch { alert('Failed to delete'); }
     finally { setDeleting(null); }
   };
@@ -701,6 +800,8 @@ function PostForm({ user, onSuccess }) {
   const [location, setLocation] = useState('');
   const [contact, setContact] = useState('');
   const [description, setDescription] = useState('');
+  const [imageUrls, setImageUrls] = useState([]);
+  const [imageInput, setImageInput] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
 
@@ -715,7 +816,7 @@ function PostForm({ user, onSuccess }) {
     if (!metalId || !qty || !location || !contact) return setError('Metal, quantity, location, and contact are required');
     setSubmitting(true); setError('');
     try {
-      await createListing({ metalId, gradeId: gradeId || undefined, qty, price: price || undefined, location, contact, description: description || undefined });
+      await createListing({ metalId, gradeId: gradeId || undefined, qty, price: price || undefined, location, contact, description: description || undefined, images: imageUrls.length > 0 ? imageUrls : undefined });
       onSuccess();
     } catch (err) {
       setError(err.response?.data?.error || 'Failed to publish');
@@ -773,6 +874,43 @@ function PostForm({ user, onSuccess }) {
         <textarea value={description} onChange={e => setDescription(e.target.value)}
           placeholder="Condition, origin, availability, minimum order…"
           style={{ ...inputStyle, minHeight: 80, resize: 'vertical' }} />
+      </div>
+
+      {/* Image URLs */}
+      <div style={{ marginBottom: 16 }}>
+        <label style={labelStyle}>Photos (up to 5 image URLs)</label>
+        <p style={{ fontSize: 10, color: 'rgba(255,255,255,0.25)', margin: '0 0 8px' }}>
+          Upload photos to Google Drive / Imgur and paste the direct image link. Photos increase buyer trust significantly.
+        </p>
+        {imageUrls.map((url, i) => (
+          <div key={i} style={{ display: 'flex', gap: 8, marginBottom: 6, alignItems: 'center' }}>
+            <img src={url} alt={`img ${i + 1}`} style={{ width: 40, height: 40, objectFit: 'cover', borderRadius: 6, border: '1px solid rgba(255,255,255,0.1)' }}
+              onError={e => { e.target.style.display = 'none'; }} />
+            <span style={{ flex: 1, fontSize: 11, color: 'rgba(255,255,255,0.4)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{url}</span>
+            <button onClick={() => setImageUrls(imageUrls.filter((_, j) => j !== i))}
+              style={{ padding: '4px 8px', borderRadius: 6, fontSize: 11, background: 'transparent',
+                color: '#f87171', border: '1px solid rgba(248,113,113,0.2)', cursor: 'pointer' }}>✕</button>
+          </div>
+        ))}
+        {imageUrls.length < 5 && (
+          <div style={{ display: 'flex', gap: 8 }}>
+            <input value={imageInput} onChange={e => setImageInput(e.target.value)}
+              placeholder="Paste image URL (https://...)" style={{ ...inputStyle, flex: 1, padding: '8px 12px', fontSize: 12 }}
+              onKeyDown={e => {
+                if (e.key === 'Enter' && imageInput.trim()) {
+                  e.preventDefault();
+                  setImageUrls([...imageUrls, imageInput.trim()]);
+                  setImageInput('');
+                }
+              }} />
+            <button onClick={() => { if (imageInput.trim()) { setImageUrls([...imageUrls, imageInput.trim()]); setImageInput(''); } }}
+              disabled={!imageInput.trim()}
+              style={{ padding: '8px 14px', borderRadius: 8, fontSize: 12, fontWeight: 700,
+                background: imageInput.trim() ? '#CFB53B' : 'rgba(255,255,255,0.05)',
+                color: imageInput.trim() ? '#000' : 'rgba(255,255,255,0.2)',
+                border: 'none', cursor: imageInput.trim() ? 'pointer' : 'default' }}>Add</button>
+          </div>
+        )}
       </div>
 
       {error && <p style={{ color: '#f87171', fontSize: 12, marginBottom: 12 }}>{error}</p>}

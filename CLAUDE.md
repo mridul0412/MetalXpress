@@ -49,6 +49,7 @@ MetalXpress is a real-time scrap metal rate platform for Indian traders. It repl
 - **2026-03-21 (session 5)**: Auth integration, pro test user, alerts fix, initial marketplace filters
 - **2026-03-21 (session 6)**: Complete marketplace overhaul — deal flow with 0.1% commission gate, sell-only listings, card redesign, dropdown fix, listing verification, contact reveal after payment
 - **2026-03-21 (session 7)**: Negotiation-first deal flow redesign, Profile page, Admin marketplace panel — see Session 7 details below
+- **2026-03-21 (session 8)**: Auth unification, dispute flow, image support, admin verification overhaul — see Session 8 details below
 
 ## Session 3 Changes (2026-03-20) — Full Detail
 
@@ -278,6 +279,9 @@ Grade names updated to match actual WhatsApp message format (so `normGrade` matc
 - **Contact page**: Phone/WhatsApp numbers are placeholder "XXXXX XXXXX" — update with real numbers
 - **Marketplace commission**: 0.1% negotiation-first flow working in dev mode (instant payment) — needs Razorpay integration for production
 - **Deal notifications**: Polling-based (30s/15s intervals) — consider WebSocket or SSE for real-time updates
+- **KYC verification**: Schema field `kycVerified` exists but no upload/verification flow — needs document upload (Aadhaar/PAN) + admin review
+- **Image uploads**: Currently URL-based (paste links from Imgur/Google Drive) — needs S3/Cloudinary file upload for production
+- **Dispute SLA**: 48-hour resolution promise is manual (admin reviews) — needs notification to admin when dispute filed
 - **Analytics layer**: Charts, market analysis, Hindi toggle — Phase 2 feature, not yet built
 
 ## Session 7 Changes (2026-03-21) — Full Detail
@@ -339,13 +343,76 @@ Grade names updated to match actual WhatsApp message format (so `normGrade` matc
 ### Navbar Update
 - Username now links to `/profile` page
 
-## Current Status (as of 2026-03-21, session 7)
-- **Auth**: Email+password + Phone OTP (linkable accounts) + Google OAuth (plug-and-play) — all three working
+## Session 8 Changes (2026-03-21) — Full Detail
+
+### Auth Unification — Email + Phone Required at Signup
+- **Problem**: Users could create duplicate accounts via email-only and phone-only signup
+- **Solution**: Signup now requires BOTH email AND phone, with mandatory OTP verification
+- **Two-step flow**: Step 1 (details: name, email, phone, password, trader type) → Step 2 (OTP verification)
+- **Backend `/register`**: Now requires `otp` field — verifies OTP before creating account, returns error if missing
+- **Signup.jsx rewrite**: Two-step form with step indicator, edit button to go back, resend OTP timer
+- **Login unchanged**: Still supports email+password OR phone OTP for returning users
+
+### Deal Dispute/Cancellation Protection
+- **Problem**: After paying commission and getting contacts, parties could do the deal outside the app and claim "deal cancelled"
+- **Solution**: Escrow-style dispute mechanism with admin resolution
+- **New deal status**: `disputed` — commission held in escrow until admin resolves
+- **Schema fields**: `disputeReason String? @db.Text`, `disputedAt DateTime?` on Deal model
+- **Backend endpoints**:
+  - `POST /deals/:id/dispute` — either party can raise dispute on connected/completed deals (requires 10+ char reason)
+  - `GET /marketplace/disputes` — admin endpoint, lists all disputed deals with full party details
+  - `PATCH /deals/:id/resolve-dispute` — admin resolves: `refund` (cancel + refund commission), `completed` (force complete), `cancelled`
+- **Frontend**: "Report Issue / Raise Dispute" button on connected deals, textarea for reason, escrow messaging
+- **Disputed state display**: Red banner showing dispute reason and "reviewing within 48 hours" message
+
+### Image Support for Listings
+- **Schema**: `images String? @db.Text` — JSON array of image URLs (max 5)
+- **Backend**: POST `/listings` accepts `images` array, validates max 5, stores as JSON string
+- **Browse response**: `imageUrls` field parsed from JSON and returned alongside listing data
+- **Listing cards**: Show up to 3 thumbnail images (72x72) with "+N" overflow indicator
+- **PostForm**: Image URL input with Add button, enter-to-add, preview thumbnails, remove buttons
+- **Note**: Uses URL-based images (paste from Google Drive/Imgur) — file upload to S3 is Phase 3
+
+### Admin Detailed Listing Verification
+- **Problem**: Basic approve/reject buttons with minimal info — admin couldn't make informed decisions
+- **Solution**: Expandable card with full listing details, seller profile, photos, and verification checklist
+- **Expandable cards**: Click to expand detailed view, chevron rotation animation
+- **Sections in expanded view**:
+  1. **Photos**: Scrollable image gallery with click-to-open-in-new-tab
+  2. **Listing Details**: Key-value pairs (metal, grade, qty, price, total value, location, contact, posted date, description)
+  3. **Seller Profile**: Name, phone, email, city, trader type, phone verified, KYC verified status
+  4. **Verification Checklist**: 6 checks with ✓/○ indicators (phone verified, KYC, photos, description, price set, account age)
+- **Pending endpoint enhanced**: Now returns full user profile (`kycVerified`, `phoneVerified`, `city`, `traderType`, `createdAt`)
+
+### Admin Disputes Tab
+- **New tab**: "Disputes" in admin navigation alongside "Rate Management" and "Listings"
+- **Dispute cards**: Show deal metal/grade, agreed terms, buyer+seller contact details, financials (deal amount, commission, paid date)
+- **Dispute reason**: Highlighted red box with quoted text and filing date
+- **Resolution buttons**: "Refund & Cancel", "Mark Completed", "Cancel" — admin picks appropriate resolution
+
+### Alerts Dropdown Fix
+- **Problem**: Browser `<option>` elements don't inherit dark theme — showed white text on white/system background
+- **Fix**: Added explicit `style={{ background: '#0D1420', color: '#fff' }}` to all `<select>` and `<option>` elements in Alerts.jsx
+
+### Listing Deletion Cross-Tab Refresh
+- **Problem**: Deleting listing from "My Listings" tab didn't update Browse tab listing cache
+- **Fix**: `MyListingsTab` now accepts `onBrowseRefresh` callback prop, calls it after successful deletion
+
+### Counter-Offer UX Improvements
+- Added labels ("Price (₹/kg) *" and "Quantity (kg)") to counter-offer form inputs
+- Pre-filled placeholders from last offer values
+- Live deal value + commission preview below inputs
+- Instructional text: "Edit both price and quantity to counter-offer"
+
+## Current Status (as of 2026-03-21, session 8)
+- **Auth**: Unified signup (email+phone+OTP mandatory), email+password login, phone OTP login, Google OAuth — prevents duplicate accounts
 - **Subscription**: Pro test user `test@metalxpress.in` / `test1234` — pro plan via PRO_EMAILS env var
 - **Landing**: Hero section for non-logged-in users with feature cards and CTAs
 - **Paywall**: Local rates blurred/gated for non-subscribers with "Sign Up" or "Upgrade to Pro" overlay
-- **Marketplace**: Negotiation-first deal flow (offer→negotiate→agree→pay→connect), 0.1% commission on agreed value, chat-style offer thread, 4-tab UI (Browse/Sell Scrap/My Listings/My Deals), admin verification panel, lazy deal expiry (7d)
+- **Marketplace**: Negotiation-first deal flow, 0.1% commission on agreed value, chat-style offer thread, image support on listings, dispute/escrow mechanism, 4-tab UI (Browse/Sell Scrap/My Listings/My Deals)
+- **Disputes**: Full dispute lifecycle — raise dispute → admin reviews → refund/complete/cancel resolution
 - **Profile**: `/profile` page with subscription status, personal info form, trader type, save + sign out
+- **Admin**: 3-tab admin (Rate Management / Listings / Disputes), detailed listing verification with seller profile + checklist, dispute resolution panel
 - **Accordion**: All metals default-open, per-metal collapse, Expand/Collapse All button
 - **Footer**: Company + Legal links on all consumer pages
 - **Static pages**: About, Terms, Privacy, Contact — all styled in dark navy glass theme

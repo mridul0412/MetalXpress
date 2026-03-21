@@ -11,8 +11,10 @@ model User {
   id           String      @id @default(cuid())
   phone        String?     @unique
   email        String?     @unique
-  passwordHash String?
-  name         String?
+  passwordHash  String?
+  phoneVerified Boolean     @default(false)
+  kycVerified   Boolean     @default(false)
+  name          String?
   city         String?
   traderType   TraderType  @default(CHECKING_RATES)
   createdAt    DateTime    @default(now())
@@ -164,6 +166,7 @@ model Listing {
   location    String
   price       Float?
   description String?  @db.Text
+  images      String?  @db.Text   // JSON array of image URLs: ["url1","url2"]
   contact     String
   expiresAt   DateTime
   createdAt   DateTime @default(now())
@@ -184,13 +187,15 @@ model Deal {
   agreedQty   Float?
   dealAmount  Float?    // agreedPrice × agreedQty, set on agreement
   commission  Float?    // 0.1% of dealAmount, set on agreement
-  status      String    @default("negotiating") // negotiating | agreed | paid | connected | completed | cancelled | expired
-  offers      Offer[]
-  lastOfferAt DateTime?
-  expiresAt   DateTime?
-  paidAt      DateTime?
-  completedAt DateTime?
-  createdAt   DateTime  @default(now())
+  status        String    @default("negotiating") // negotiating | agreed | paid | connected | completed | cancelled | expired | disputed
+  offers        Offer[]
+  lastOfferAt   DateTime?
+  expiresAt     DateTime?
+  paidAt        DateTime?
+  completedAt   DateTime?
+  disputeReason String?   @db.Text
+  disputedAt    DateTime?
+  createdAt     DateTime  @default(now())
 }
 
 model Offer {

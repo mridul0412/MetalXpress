@@ -49,6 +49,7 @@ router.get('/listings', async (req, res) => {
       contact: undefined, // strip contact from browse response
       sellerName: l.user?.name || 'Anonymous',
       sellerCity: l.user?.city || l.location,
+      imageUrls: l.images ? JSON.parse(l.images) : [],
     }));
 
     res.json({ listings: sanitized, total, page: parseInt(page), totalPages: Math.ceil(total / parseInt(limit)) });
@@ -75,10 +76,18 @@ router.get('/my-listings', authMiddleware, async (req, res) => {
 // POST /api/marketplace/listings — create new listing (goes to pending)
 router.post('/listings', authMiddleware, async (req, res) => {
   try {
-    const { metalId, gradeId, qty, unit, location, price, description, contact } = req.body;
+    const { metalId, gradeId, qty, unit, location, price, description, contact, images } = req.body;
 
     if (!metalId || !qty || !location || !contact) {
       return res.status(400).json({ error: 'metalId, qty, location, contact required' });
+    }
+
+    // Validate images array (URLs stored as JSON string)
+    let imagesJson = null;
+    if (images) {
+      const arr = Array.isArray(images) ? images : [];
+      if (arr.length > 5) return res.status(400).json({ error: 'Maximum 5 images allowed' });
+      imagesJson = arr.length > 0 ? JSON.stringify(arr) : null;
     }
 
     const expiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000); // 30 days
@@ -93,6 +102,7 @@ router.post('/listings', authMiddleware, async (req, res) => {
         location,
         price: price ? parseFloat(price) : null,
         description: description || null,
+        images: imagesJson,
         contact,
         expiresAt,
         status: 'pending',
@@ -164,11 +174,20 @@ router.get('/pending', async (req, res) => {
 
     const listings = await prisma.listing.findMany({
       where: { status: 'pending', isActive: true },
-      include: { metal: true, grade: true, user: { select: { name: true, phone: true, email: true } } },
+      include: {
+        metal: true, grade: true,
+        user: { select: { id: true, name: true, phone: true, email: true, kycVerified: true, phoneVerified: true, city: true, traderType: true, createdAt: true } },
+      },
       orderBy: { createdAt: 'desc' },
     });
 
-    res.json(listings);
+    // Parse images for admin view
+    const enriched = listings.map(l => ({
+      ...l,
+      imageUrls: l.images ? JSON.parse(l.images) : [],
+    }));
+
+    res.json(enriched);
   } catch (err) {
     res.status(500).json({ error: 'Failed to fetch pending listings' });
   }
@@ -523,6 +542,104 @@ router.get('/notifications', authMiddleware, async (req, res) => {
     });
   } catch (err) {
     res.status(500).json({ error: 'Failed to fetch notifications' });
+  }
+});
+
+// POST /api/marketplace/deals/:id/dispute — raise a dispute on a connected deal
+router.post('/deals/:id/dispute', authMiddleware, async (req, res) => {
+  try {
+    const deal = await prisma.deal.findUnique({ where: { id: req.params.id } });
+    if (!deal) return res.status(404).json({ error: 'Deal not found' });
+    if (deal.buyerId !== req.user.userId && deal.sellerId !== req.user.userId) {
+      return res.status(403).json({ error: 'Not your deal' });
+    }
+    if (!['connected', 'completed'].includes(deal.status)) {
+      return res.status(400).json({ error: 'Can only dispute connected or completed deals' });
+    }
+
+    const { reason } = req.body;
+    if (!reason || reason.trim().length < 10) {
+      return res.status(400).json({ error: 'Please provide a detailed reason (at least 10 characters)' });
+    }
+
+    const updated = await prisma.deal.update({
+      where: { id: req.params.id },
+      data: {
+        status: 'disputed',
+        disputeReason: reason.trim(),
+        disputedAt: new Date(),
+      },
+      include: DEAL_INCLUDE,
+    });
+
+    res.json({
+      deal: updated,
+      message: 'Dispute raised. Our team will review within 48 hours. Commission is held in escrow until resolved.',
+    });
+  } catch (err) {
+    console.error('/api/marketplace/deals/dispute error:', err);
+    res.status(500).json({ error: 'Failed to raise dispute' });
+  }
+});
+
+// GET /api/marketplace/disputes — admin: get all disputed deals
+router.get('/disputes', async (req, res) => {
+  try {
+    const adminPass = req.headers['x-admin-password'];
+    if (adminPass !== process.env.ADMIN_PASSWORD) {
+      return res.status(403).json({ error: 'Admin access required' });
+    }
+
+    const deals = await prisma.deal.findMany({
+      where: { status: 'disputed' },
+      include: {
+        ...DEAL_INCLUDE,
+        buyer: { select: { id: true, name: true, city: true, phone: true, email: true } },
+        seller: { select: { id: true, name: true, city: true, phone: true, email: true } },
+      },
+      orderBy: { disputedAt: 'desc' },
+    });
+
+    res.json(deals);
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to fetch disputes' });
+  }
+});
+
+// PATCH /api/marketplace/deals/:id/resolve-dispute — admin resolves a dispute
+router.patch('/deals/:id/resolve-dispute', async (req, res) => {
+  try {
+    const adminPass = req.headers['x-admin-password'];
+    if (adminPass !== process.env.ADMIN_PASSWORD) {
+      return res.status(403).json({ error: 'Admin access required' });
+    }
+
+    const { resolution } = req.body; // 'refund' | 'completed' | 'cancelled'
+    if (!['refund', 'completed', 'cancelled'].includes(resolution)) {
+      return res.status(400).json({ error: 'Resolution must be refund, completed, or cancelled' });
+    }
+
+    const deal = await prisma.deal.findUnique({ where: { id: req.params.id } });
+    if (!deal) return res.status(404).json({ error: 'Deal not found' });
+    if (deal.status !== 'disputed') return res.status(400).json({ error: 'Deal is not in disputed state' });
+
+    const newStatus = resolution === 'refund' ? 'cancelled' : resolution;
+    const updated = await prisma.deal.update({
+      where: { id: req.params.id },
+      data: { status: newStatus, ...(resolution === 'completed' ? { completedAt: new Date() } : {}) },
+      include: DEAL_INCLUDE,
+    });
+
+    res.json({
+      deal: updated,
+      message: resolution === 'refund'
+        ? 'Dispute resolved: commission refunded, deal cancelled.'
+        : resolution === 'completed'
+        ? 'Dispute resolved: deal marked as completed.'
+        : 'Dispute resolved: deal cancelled.',
+    });
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to resolve dispute' });
   }
 });
 

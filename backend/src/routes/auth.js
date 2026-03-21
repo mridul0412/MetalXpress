@@ -76,10 +76,11 @@ router.post('/verify-otp', async (req, res) => {
     let user = await prisma.user.findUnique({ where: { phone: cleanPhone } });
 
     if (user) {
-      // Update profile fields if provided
+      // Update profile fields if provided + mark phone as verified
       user = await prisma.user.update({
         where: { id: user.id },
         data: {
+          phoneVerified: true,
           ...(name && { name }),
           ...(city && { city }),
           ...(traderType && { traderType }),
@@ -90,6 +91,7 @@ router.post('/verify-otp', async (req, res) => {
       user = await prisma.user.create({
         data: {
           phone: cleanPhone,
+          phoneVerified: true,
           name: name || null,
           city: city || null,
           traderType: traderType || 'CHECKING_RATES',
@@ -195,30 +197,46 @@ router.get('/subscription', async (req, res) => {
 
 // ── Email + Password Auth ────────────────────────────────────────────────────
 
-// POST /api/auth/register — email+password signup
+// POST /api/auth/register — email+password+phone signup (OTP required)
 router.post('/register', async (req, res) => {
   try {
-    const { email, password, name, traderType, city, phone } = req.body;
+    const { email, password, name, traderType, city, phone, otp } = req.body;
     if (!email || !password) return res.status(400).json({ error: 'Email and password required' });
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return res.status(400).json({ error: 'Invalid email format' });
     if (password.length < 6) return res.status(400).json({ error: 'Password must be at least 6 characters' });
 
+    const cleanPhone = phone ? phone.replace(/\s/g, '') : null;
+    if (!cleanPhone) return res.status(400).json({ error: 'Phone number required for verification' });
+
+    // Verify OTP if provided (required for new registration)
+    if (otp) {
+      const session = await prisma.oTPSession.findFirst({
+        where: { phone: cleanPhone, used: false, expiresAt: { gt: new Date() } },
+        orderBy: { createdAt: 'desc' },
+      });
+      if (!session) return res.status(400).json({ error: 'OTP expired or not found. Request a new one.' });
+      if (session.otp !== otp) return res.status(400).json({ error: 'Invalid OTP' });
+      // Mark OTP as used
+      await prisma.oTPSession.update({ where: { id: session.id }, data: { used: true } });
+    } else {
+      return res.status(400).json({ error: 'Phone OTP verification required to create an account' });
+    }
+
+    // Check email uniqueness
     const existing = await prisma.user.findUnique({ where: { email: email.toLowerCase().trim() } });
     if (existing) return res.status(409).json({ error: 'An account with this email already exists' });
 
-    // If phone provided, check it's not already taken
-    const cleanPhone = phone ? phone.replace(/\s/g, '') : null;
-    if (cleanPhone) {
-      const phoneUser = await prisma.user.findUnique({ where: { phone: cleanPhone } });
-      if (phoneUser) return res.status(409).json({ error: 'This phone number is already registered' });
-    }
+    // Check phone uniqueness
+    const phoneUser = await prisma.user.findUnique({ where: { phone: cleanPhone } });
+    if (phoneUser) return res.status(409).json({ error: 'This phone number is already registered' });
 
     const passwordHash = await bcrypt.hash(password, BCRYPT_ROUNDS);
     const user = await prisma.user.create({
       data: {
         email: email.toLowerCase().trim(),
         passwordHash,
-        phone: cleanPhone || null,
+        phone: cleanPhone,
+        phoneVerified: true,
         name: name || null,
         city: city || null,
         traderType: traderType || 'CHECKING_RATES',

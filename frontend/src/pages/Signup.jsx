@@ -1,8 +1,8 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Shield, Mail, Lock, User, Eye, EyeOff, ArrowRight, Smartphone } from 'lucide-react';
-import { registerEmail } from '../utils/api';
+import { Shield, Mail, Lock, User, Eye, EyeOff, ArrowRight, Smartphone, CheckCircle } from 'lucide-react';
+import { registerEmail, requestOTP, verifyOTP as verifyOTPApi } from '../utils/api';
 import { useAuth } from '../context/AuthContext';
 
 const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID;
@@ -33,31 +33,66 @@ const inputStyle = {
 };
 
 export default function Signup() {
+  // Step: 'details' → 'otp' → done
+  const [step, setStep] = useState('details');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [name, setName] = useState('');
+  const [phone, setPhone] = useState('');
+  const [otp, setOtp] = useState('');
   const [traderType, setTraderType] = useState('CHECKING_RATES');
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [otpSent, setOtpSent] = useState(false);
   const navigate = useNavigate();
   const { login } = useAuth();
 
   const googleAvailable = GOOGLE_CLIENT_ID && GOOGLE_CLIENT_ID !== 'undefined' && GOOGLE_CLIENT_ID.length > 8;
 
-  const handleSubmit = async (e) => {
+  // Step 1: Validate details and send OTP
+  const handleDetailsSubmit = async (e) => {
     e.preventDefault();
     if (password !== confirmPassword) { setError('Passwords do not match'); return; }
     if (password.length < 6) { setError('Password must be at least 6 characters'); return; }
+    if (!phone || phone.replace(/\s/g, '').length < 10) { setError('Valid phone number required for verification'); return; }
     setLoading(true); setError('');
     try {
-      const res = await registerEmail({ email, password, name: name || undefined, traderType });
+      await requestOTP(phone);
+      setOtpSent(true);
+      setStep('otp');
+    } catch (err) {
+      setError(err.response?.data?.error || 'Failed to send OTP. Try again.');
+    } finally { setLoading(false); }
+  };
+
+  // Step 2: Verify OTP then register
+  const handleOTPVerify = async (e) => {
+    e.preventDefault();
+    if (otp.length < 4) return;
+    setLoading(true); setError('');
+    try {
+      // Register with email + password + phone (backend verifies OTP)
+      const res = await registerEmail({
+        email, password, name: name || undefined, traderType,
+        phone: phone.replace(/\s/g, ''),
+        otp, // backend will verify OTP before creating account
+      });
       login(res.data.token, res.data.user);
       navigate('/');
     } catch (err) {
-      setError(err.response?.data?.error || 'Registration failed. Try again.');
+      setError(err.response?.data?.error || 'Registration failed. Check OTP and try again.');
     } finally { setLoading(false); }
+  };
+
+  const handleResendOTP = async () => {
+    setLoading(true); setError('');
+    try {
+      await requestOTP(phone);
+      setError(''); // clear any previous error
+    } catch { setError('Failed to resend OTP'); }
+    finally { setLoading(false); }
   };
 
   return (
@@ -89,14 +124,34 @@ export default function Signup() {
             display: 'flex', alignItems: 'center', justifyContent: 'center',
             boxShadow: '0 8px 24px rgba(207,181,59,0.3)',
           }}>
-            <Shield size={24} color="#000" strokeWidth={2.5} />
+            {step === 'otp' ? <Smartphone size={24} color="#000" strokeWidth={2.5} /> : <Shield size={24} color="#000" strokeWidth={2.5} />}
           </div>
           <h1 style={{ fontSize: 22, fontWeight: 700, color: '#fff', margin: '0 0 4px' }}>
-            Create Your Account
+            {step === 'otp' ? 'Verify Your Phone' : 'Create Your Account'}
           </h1>
           <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.4)', margin: 0 }}>
-            Join India's scrap metal rate platform
+            {step === 'otp' ? `OTP sent to ${phone}` : 'Both email & phone required for security'}
           </p>
+        </div>
+
+        {/* Step indicator */}
+        <div style={{ display: 'flex', gap: 8, marginBottom: 20, justifyContent: 'center' }}>
+          {['Details', 'Verify Phone'].map((label, i) => (
+            <div key={label} style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+              <div style={{
+                width: 24, height: 24, borderRadius: '50%', fontSize: 11, fontWeight: 700,
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                background: (i === 0 && step === 'details') || (i === 1 && step === 'otp')
+                  ? '#CFB53B' : i === 0 && step === 'otp' ? '#34d399' : 'rgba(255,255,255,0.1)',
+                color: (i === 0 && step === 'details') || (i === 1 && step === 'otp') ? '#000'
+                  : i === 0 && step === 'otp' ? '#000' : 'rgba(255,255,255,0.3)',
+              }}>
+                {i === 0 && step === 'otp' ? <CheckCircle size={14} /> : i + 1}
+              </div>
+              <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.4)' }}>{label}</span>
+              {i === 0 && <div style={{ width: 24, height: 1, background: 'rgba(255,255,255,0.1)' }} />}
+            </div>
+          ))}
         </div>
 
         {/* Error */}
@@ -110,133 +165,188 @@ export default function Signup() {
           )}
         </AnimatePresence>
 
-        {/* Google OAuth */}
-        <div style={{ marginBottom: 16 }}>
-          {googleAvailable ? (
-            <a href="/api/auth/google" style={{
-              display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10,
-              padding: '12px 20px', borderRadius: 12, fontWeight: 700, fontSize: 13,
-              background: '#fff', color: '#1a1a1a', textDecoration: 'none', width: '100%', boxSizing: 'border-box',
-            }}>
-              <GoogleIcon /> Sign up with Google
-            </a>
-          ) : (
-            <div style={{
-              display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10,
-              padding: '12px 20px', borderRadius: 12, fontWeight: 700, fontSize: 13,
-              background: 'rgba(255,255,255,0.07)', color: 'rgba(255,255,255,0.3)',
-              border: '1px solid rgba(255,255,255,0.1)', cursor: 'not-allowed',
-            }}>
-              <GoogleIcon /> Sign up with Google
-              <span style={{ fontSize: 9, background: 'rgba(255,255,255,0.1)', padding: '2px 6px', borderRadius: 4 }}>Soon</span>
+        {/* ── Step 1: Details ── */}
+        {step === 'details' && (
+          <>
+            {/* Google OAuth */}
+            <div style={{ marginBottom: 16 }}>
+              {googleAvailable ? (
+                <a href="/api/auth/google" style={{
+                  display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10,
+                  padding: '12px 20px', borderRadius: 12, fontWeight: 700, fontSize: 13,
+                  background: '#fff', color: '#1a1a1a', textDecoration: 'none', width: '100%', boxSizing: 'border-box',
+                }}>
+                  <GoogleIcon /> Sign up with Google
+                </a>
+              ) : (
+                <div style={{
+                  display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10,
+                  padding: '12px 20px', borderRadius: 12, fontWeight: 700, fontSize: 13,
+                  background: 'rgba(255,255,255,0.07)', color: 'rgba(255,255,255,0.3)',
+                  border: '1px solid rgba(255,255,255,0.1)', cursor: 'not-allowed',
+                }}>
+                  <GoogleIcon /> Sign up with Google
+                  <span style={{ fontSize: 9, background: 'rgba(255,255,255,0.1)', padding: '2px 6px', borderRadius: 4 }}>Soon</span>
+                </div>
+              )}
             </div>
-          )}
-        </div>
 
-        {/* Divider */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 12, margin: '0 0 16px' }}>
-          <div style={{ flex: 1, height: 1, background: 'rgba(255,255,255,0.08)' }} />
-          <span style={{ fontSize: 10, color: 'rgba(255,255,255,0.3)', fontWeight: 600 }}>OR</span>
-          <div style={{ flex: 1, height: 1, background: 'rgba(255,255,255,0.08)' }} />
-        </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12, margin: '0 0 16px' }}>
+              <div style={{ flex: 1, height: 1, background: 'rgba(255,255,255,0.08)' }} />
+              <span style={{ fontSize: 10, color: 'rgba(255,255,255,0.3)', fontWeight: 600 }}>OR</span>
+              <div style={{ flex: 1, height: 1, background: 'rgba(255,255,255,0.08)' }} />
+            </div>
 
-        {/* Form */}
-        <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-          {/* Name */}
-          <div style={{ position: 'relative' }}>
-            <User size={15} color="rgba(255,255,255,0.3)" style={{
-              position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }} />
-            <input type="text" value={name} onChange={e => setName(e.target.value)}
-              placeholder="Full Name" style={{ ...inputStyle, paddingLeft: 42 }}
-              onFocus={e => e.target.style.borderColor = '#CFB53B'}
-              onBlur={e => e.target.style.borderColor = 'rgba(255,255,255,0.1)'} />
-          </div>
+            <form onSubmit={handleDetailsSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+              {/* Name */}
+              <div style={{ position: 'relative' }}>
+                <User size={15} color="rgba(255,255,255,0.3)" style={{
+                  position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }} />
+                <input type="text" value={name} onChange={e => setName(e.target.value)}
+                  placeholder="Full Name" style={{ ...inputStyle, paddingLeft: 42 }}
+                  onFocus={e => e.target.style.borderColor = '#CFB53B'}
+                  onBlur={e => e.target.style.borderColor = 'rgba(255,255,255,0.1)'} />
+              </div>
 
-          {/* Email */}
-          <div style={{ position: 'relative' }}>
-            <Mail size={15} color="rgba(255,255,255,0.3)" style={{
-              position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }} />
-            <input type="email" value={email} onChange={e => setEmail(e.target.value)}
-              placeholder="Email Address" required style={{ ...inputStyle, paddingLeft: 42 }}
-              onFocus={e => e.target.style.borderColor = '#CFB53B'}
-              onBlur={e => e.target.style.borderColor = 'rgba(255,255,255,0.1)'} />
-          </div>
+              {/* Email */}
+              <div style={{ position: 'relative' }}>
+                <Mail size={15} color="rgba(255,255,255,0.3)" style={{
+                  position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }} />
+                <input type="email" value={email} onChange={e => setEmail(e.target.value)}
+                  placeholder="Email Address *" required style={{ ...inputStyle, paddingLeft: 42 }}
+                  onFocus={e => e.target.style.borderColor = '#CFB53B'}
+                  onBlur={e => e.target.style.borderColor = 'rgba(255,255,255,0.1)'} />
+              </div>
 
-          {/* Password */}
-          <div style={{ position: 'relative' }}>
-            <Lock size={15} color="rgba(255,255,255,0.3)" style={{
-              position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }} />
-            <input type={showPassword ? 'text' : 'password'} value={password}
-              onChange={e => setPassword(e.target.value)}
-              placeholder="Password (min 6 chars)" required
-              style={{ ...inputStyle, paddingLeft: 42, paddingRight: 42 }}
-              onFocus={e => e.target.style.borderColor = '#CFB53B'}
-              onBlur={e => e.target.style.borderColor = 'rgba(255,255,255,0.1)'} />
-            <button type="button" onClick={() => setShowPassword(!showPassword)}
-              style={{ position: 'absolute', right: 14, top: '50%', transform: 'translateY(-50%)',
-                background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}>
-              {showPassword ? <EyeOff size={15} color="rgba(255,255,255,0.3)" /> : <Eye size={15} color="rgba(255,255,255,0.3)" />}
+              {/* Phone */}
+              <div style={{ position: 'relative' }}>
+                <Smartphone size={15} color="rgba(255,255,255,0.3)" style={{
+                  position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }} />
+                <input type="tel" value={phone} onChange={e => setPhone(e.target.value)}
+                  placeholder="Phone Number * (for OTP verification)" required
+                  style={{ ...inputStyle, paddingLeft: 42 }}
+                  onFocus={e => e.target.style.borderColor = '#CFB53B'}
+                  onBlur={e => e.target.style.borderColor = 'rgba(255,255,255,0.1)'} />
+              </div>
+
+              {/* Password */}
+              <div style={{ position: 'relative' }}>
+                <Lock size={15} color="rgba(255,255,255,0.3)" style={{
+                  position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }} />
+                <input type={showPassword ? 'text' : 'password'} value={password}
+                  onChange={e => setPassword(e.target.value)}
+                  placeholder="Password (min 6 chars) *" required
+                  style={{ ...inputStyle, paddingLeft: 42, paddingRight: 42 }}
+                  onFocus={e => e.target.style.borderColor = '#CFB53B'}
+                  onBlur={e => e.target.style.borderColor = 'rgba(255,255,255,0.1)'} />
+                <button type="button" onClick={() => setShowPassword(!showPassword)}
+                  style={{ position: 'absolute', right: 14, top: '50%', transform: 'translateY(-50%)',
+                    background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}>
+                  {showPassword ? <EyeOff size={15} color="rgba(255,255,255,0.3)" /> : <Eye size={15} color="rgba(255,255,255,0.3)" />}
+                </button>
+              </div>
+
+              {/* Confirm Password */}
+              <div style={{ position: 'relative' }}>
+                <Lock size={15} color="rgba(255,255,255,0.3)" style={{
+                  position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }} />
+                <input type={showPassword ? 'text' : 'password'} value={confirmPassword}
+                  onChange={e => setConfirmPassword(e.target.value)}
+                  placeholder="Confirm Password *" required
+                  style={{ ...inputStyle, paddingLeft: 42 }}
+                  onFocus={e => e.target.style.borderColor = '#CFB53B'}
+                  onBlur={e => e.target.style.borderColor = 'rgba(255,255,255,0.1)'} />
+              </div>
+
+              {/* Trader type */}
+              <div>
+                <label style={{ fontSize: 10, fontWeight: 700, textTransform: 'uppercase',
+                  letterSpacing: '0.08em', color: 'rgba(255,255,255,0.35)', display: 'block', marginBottom: 8 }}>
+                  I am a
+                </label>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 6 }}>
+                  {TRADER_TYPES.map(t => {
+                    const active = traderType === t.value;
+                    return (
+                      <button key={t.value} type="button" onClick={() => setTraderType(t.value)}
+                        style={{
+                          padding: '8px 10px', borderRadius: 8, textAlign: 'left', cursor: 'pointer',
+                          background: active ? 'rgba(207,181,59,0.12)' : 'rgba(255,255,255,0.04)',
+                          border: `1px solid ${active ? 'rgba(207,181,59,0.5)' : 'rgba(255,255,255,0.08)'}`,
+                        }}>
+                        <p style={{ fontSize: 11, fontWeight: 700, color: active ? '#CFB53B' : '#fff', margin: '0 0 1px' }}>{t.label}</p>
+                        <p style={{ fontSize: 9, color: 'rgba(255,255,255,0.3)', margin: 0 }}>{t.desc}</p>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              <button type="submit" disabled={loading || !email || password.length < 6 || !phone}
+                style={{
+                  width: '100%', padding: '13px', borderRadius: 12, fontWeight: 700, fontSize: 14,
+                  background: '#CFB53B', color: '#000', border: 'none', cursor: 'pointer',
+                  boxShadow: '0 4px 16px rgba(207,181,59,0.25)',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+                  opacity: (loading || !email || password.length < 6 || !phone) ? 0.5 : 1,
+                }}>
+                {loading ? 'Sending OTP...' : 'Verify Phone & Create Account'}
+                {!loading && <ArrowRight size={16} />}
+              </button>
+            </form>
+          </>
+        )}
+
+        {/* ── Step 2: OTP Verification ── */}
+        {step === 'otp' && (
+          <form onSubmit={handleOTPVerify} style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+            {/* Summary of details */}
+            <div style={{ background: 'rgba(255,255,255,0.03)', borderRadius: 10, padding: 14,
+              border: '1px solid rgba(255,255,255,0.06)', marginBottom: 4 }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <div>
+                  <p style={{ fontSize: 12, color: 'rgba(255,255,255,0.5)', margin: '0 0 2px' }}>{email}</p>
+                  <p style={{ fontSize: 12, color: 'rgba(255,255,255,0.5)', margin: 0 }}>{phone}</p>
+                </div>
+                <button type="button" onClick={() => { setStep('details'); setOtp(''); setError(''); }}
+                  style={{ fontSize: 11, color: '#CFB53B', background: 'none', border: 'none', cursor: 'pointer', fontWeight: 600 }}>
+                  Edit
+                </button>
+              </div>
+            </div>
+
+            <div>
+              <label style={{ fontSize: 10, fontWeight: 700, textTransform: 'uppercase',
+                letterSpacing: '0.08em', color: 'rgba(255,255,255,0.35)', display: 'block', marginBottom: 8 }}>
+                Enter OTP sent to your phone
+              </label>
+              <input type="text" value={otp} onChange={e => setOtp(e.target.value)}
+                placeholder="1234" maxLength={4} required autoFocus
+                style={{ ...inputStyle, fontSize: 28, fontWeight: 700, textAlign: 'center',
+                  letterSpacing: '0.5em', fontFamily: 'monospace' }}
+                onFocus={e => e.target.style.borderColor = '#CFB53B'}
+                onBlur={e => e.target.style.borderColor = 'rgba(255,255,255,0.1)'} />
+            </div>
+
+            <button type="submit" disabled={loading || otp.length < 4}
+              style={{ width: '100%', padding: '13px', borderRadius: 12, fontWeight: 700, fontSize: 14,
+                background: '#CFB53B', color: '#000', border: 'none', cursor: 'pointer',
+                opacity: (loading || otp.length < 4) ? 0.5 : 1 }}>
+              {loading ? 'Creating Account...' : 'Verify & Create Account'}
             </button>
-          </div>
 
-          {/* Confirm Password */}
-          <div style={{ position: 'relative' }}>
-            <Lock size={15} color="rgba(255,255,255,0.3)" style={{
-              position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }} />
-            <input type={showPassword ? 'text' : 'password'} value={confirmPassword}
-              onChange={e => setConfirmPassword(e.target.value)}
-              placeholder="Confirm Password" required
-              style={{ ...inputStyle, paddingLeft: 42 }}
-              onFocus={e => e.target.style.borderColor = '#CFB53B'}
-              onBlur={e => e.target.style.borderColor = 'rgba(255,255,255,0.1)'} />
-          </div>
-
-          {/* Trader type */}
-          <div>
-            <label style={{ fontSize: 10, fontWeight: 700, textTransform: 'uppercase',
-              letterSpacing: '0.08em', color: 'rgba(255,255,255,0.35)', display: 'block', marginBottom: 8 }}>
-              I am a
-            </label>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 6 }}>
-              {TRADER_TYPES.map(t => {
-                const active = traderType === t.value;
-                return (
-                  <button key={t.value} type="button" onClick={() => setTraderType(t.value)}
-                    style={{
-                      padding: '8px 10px', borderRadius: 8, textAlign: 'left', cursor: 'pointer',
-                      background: active ? 'rgba(207,181,59,0.12)' : 'rgba(255,255,255,0.04)',
-                      border: `1px solid ${active ? 'rgba(207,181,59,0.5)' : 'rgba(255,255,255,0.08)'}`,
-                    }}>
-                    <p style={{ fontSize: 11, fontWeight: 700, color: active ? '#CFB53B' : '#fff', margin: '0 0 1px' }}>{t.label}</p>
-                    <p style={{ fontSize: 9, color: 'rgba(255,255,255,0.3)', margin: 0 }}>{t.desc}</p>
-                  </button>
-                );
-              })}
+            <div style={{ display: 'flex', justifyContent: 'center', gap: 16 }}>
+              <button type="button" onClick={handleResendOTP} disabled={loading}
+                style={{ fontSize: 12, color: '#CFB53B', background: 'none', border: 'none', cursor: 'pointer' }}>
+                Resend OTP
+              </button>
             </div>
-          </div>
 
-          <button type="submit" disabled={loading || !email || password.length < 6}
-            style={{
-              width: '100%', padding: '13px', borderRadius: 12, fontWeight: 700, fontSize: 14,
-              background: '#CFB53B', color: '#000', border: 'none', cursor: 'pointer',
-              boxShadow: '0 4px 16px rgba(207,181,59,0.25)',
-              display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
-              opacity: (loading || !email || password.length < 6) ? 0.5 : 1,
-            }}>
-            {loading ? 'Creating Account...' : 'Create Account'}
-            {!loading && <ArrowRight size={16} />}
-          </button>
-        </form>
-
-        {/* Phone OTP link */}
-        <div style={{ textAlign: 'center', marginTop: 14 }}>
-          <Link to="/login?method=phone" style={{
-            fontSize: 12, color: 'rgba(255,255,255,0.4)', textDecoration: 'none',
-            display: 'inline-flex', alignItems: 'center', gap: 4,
-          }}>
-            <Smartphone size={12} /> Sign up with Phone OTP instead
-          </Link>
-        </div>
+            <p style={{ textAlign: 'center', fontSize: 11, color: 'rgba(255,255,255,0.25)', margin: 0 }}>
+              Dev mode: use 1234
+            </p>
+          </form>
+        )}
 
         {/* Login link */}
         <p style={{ textAlign: 'center', fontSize: 12, color: 'rgba(255,255,255,0.35)', marginTop: 14, marginBottom: 0 }}>
