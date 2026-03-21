@@ -2,12 +2,13 @@ import { useState, useEffect, useCallback } from 'react';
 import {
   MapPin, Weight, Plus, ShieldCheck, X, ArrowRight, Package,
   Clock, CheckCircle, AlertCircle, Trash2, MessageSquare, Send,
-  ChevronRight, DollarSign, Handshake,
+  ChevronRight, DollarSign, Handshake, Camera, Image as ImageIcon,
 } from 'lucide-react';
 import {
   fetchListings, fetchMyListings, createListing, createDeal, counterOffer,
   acceptOffer, rejectDeal, payDeal, fetchMyDeals, fetchDealDetail,
   completeDeal, disputeDeal, deleteListing, fetchMetals, fetchCities,
+  uploadMedia,
 } from '../utils/api';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
@@ -155,12 +156,32 @@ function BrowseTab({ listings, loading, filterMetal, setFilterMetal, filterCity,
           placeholder="Filter by city…" style={inputStyle} />
       </div>
 
-      {loading ? <p style={{ color: 'rgba(255,255,255,0.3)', textAlign: 'center', padding: 40 }}>Loading…</p>
+      {!user ? (
+        <div style={{ textAlign: 'center', padding: '60px 20px' }}>
+          <Package size={48} style={{ color: 'rgba(207,181,59,0.2)', marginBottom: 16 }} />
+          <h3 style={{ fontSize: 18, fontWeight: 700, color: '#fff', margin: '0 0 8px' }}>
+            Browse Scrap Metal Listings
+          </h3>
+          <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: 14, marginBottom: 20, maxWidth: 340, marginInline: 'auto' }}>
+            Sign up or login to view listings, make offers, and connect with verified traders across India.
+          </p>
+          <div style={{ display: 'flex', gap: 12, justifyContent: 'center', flexWrap: 'wrap' }}>
+            <button onClick={() => navigate('/signup')} style={{
+              padding: '12px 32px', borderRadius: 10, fontSize: 14, fontWeight: 700,
+              background: '#CFB53B', color: '#000', border: 'none', cursor: 'pointer',
+            }}>Sign Up Free</button>
+            <button onClick={() => navigate('/login')} style={{
+              padding: '12px 32px', borderRadius: 10, fontSize: 14, fontWeight: 700,
+              background: 'transparent', color: '#CFB53B', border: '1px solid rgba(207,181,59,0.4)', cursor: 'pointer',
+            }}>Login</button>
+          </div>
+        </div>
+      ) : loading ? <p style={{ color: 'rgba(255,255,255,0.3)', textAlign: 'center', padding: 40 }}>Loading…</p>
       : listings.length === 0
-        ? <p style={{ color: 'rgba(255,255,255,0.3)', textAlign: 'center', padding: 40 }}>No listings found</p>
+        ? <p style={{ color: 'rgba(255,255,255,0.3)', textAlign: 'center', padding: 40 }}>No listings found. Be the first to post!</p>
         : <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: 16 }}>
             {listings.map(l => <ListingCard key={l.id} listing={l}
-              onAction={() => user ? onMakeOffer(l) : navigate('/login')}
+              onAction={() => onMakeOffer(l)}
               actionLabel="Make Offer" />)}
           </div>}
     </div>
@@ -200,10 +221,13 @@ function ListingCard({ listing: l, onAction, actionLabel, showStatus, onDelete }
       {/* Image thumbnails */}
       {l.imageUrls?.length > 0 && (
         <div style={{ display: 'flex', gap: 6, marginBottom: 10, overflowX: 'auto' }}>
-          {l.imageUrls.slice(0, 3).map((url, i) => (
-            <img key={i} src={url} alt={`${gradeName} ${i + 1}`}
-              style={{ width: 72, height: 72, objectFit: 'cover', borderRadius: 8, border: '1px solid rgba(255,255,255,0.1)' }} />
-          ))}
+          {l.imageUrls.slice(0, 3).map((url, i) => {
+            const src = url.startsWith('/uploads/') ? `${import.meta.env.VITE_API_URL?.replace('/api', '') || 'http://localhost:3001'}${url}` : url;
+            return url.match(/\.(mp4|mov|webm)$/i)
+              ? <video key={i} src={src} style={{ width: 72, height: 72, objectFit: 'cover', borderRadius: 8, border: '1px solid rgba(255,255,255,0.1)' }} />
+              : <img key={i} src={src} alt={`${gradeName} ${i + 1}`}
+                  style={{ width: 72, height: 72, objectFit: 'cover', borderRadius: 8, border: '1px solid rgba(255,255,255,0.1)' }} />;
+          })}
           {l.imageUrls.length > 3 && (
             <div style={{ width: 72, height: 72, borderRadius: 8, background: 'rgba(255,255,255,0.05)',
               display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, color: 'rgba(255,255,255,0.3)' }}>
@@ -242,7 +266,7 @@ function ListingCard({ listing: l, onAction, actionLabel, showStatus, onDelete }
 /* ── Offer Modal (Make Offer) ─────────────────────────────────────── */
 function OfferModal({ listing: l, onClose, onSuccess }) {
   const [price, setPrice] = useState(l.price || '');
-  const [qty, setQty] = useState(l.qty || '');
+  const qty = l.qty; // qty comes from the listing, buyer can't change it
   const [message, setMessage] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
@@ -251,7 +275,7 @@ function OfferModal({ listing: l, onClose, onSuccess }) {
   const commission = Math.max(Math.ceil(totalVal * 0.001), 1);
 
   const handleSubmit = async () => {
-    if (!price || !qty) return setError('Price and quantity required');
+    if (!price) return setError('Please enter your offer price');
     setSubmitting(true); setError('');
     try {
       const res = await createDeal({ listingId: l.id, pricePerKg: parseFloat(price), qty: parseFloat(qty), message });
@@ -282,16 +306,13 @@ function OfferModal({ listing: l, onClose, onSuccess }) {
         </div>
 
         {/* Offer form */}
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 12 }}>
-          <div>
-            <label style={labelStyle}>Your Offer (₹/kg) *</label>
-            <input type="number" value={price} onChange={e => setPrice(e.target.value)}
-              placeholder={l.price ? String(l.price) : 'Enter price'} style={inputStyle} />
-          </div>
-          <div>
-            <label style={labelStyle}>Quantity (kg) *</label>
-            <input type="number" value={qty} onChange={e => setQty(e.target.value)} style={inputStyle} />
-          </div>
+        <div style={{ marginBottom: 12 }}>
+          <label style={labelStyle}>Your Offer (₹/kg) *</label>
+          <input type="number" value={price} onChange={e => setPrice(e.target.value)}
+            placeholder={l.price ? String(l.price) : 'Enter price'} style={inputStyle} />
+          <p style={{ fontSize: 11, color: 'rgba(255,255,255,0.25)', margin: '6px 0 0' }}>
+            Quantity: <strong style={{ color: 'rgba(255,255,255,0.5)' }}>{fmt(l.qty)} kg</strong> (as listed by seller)
+          </p>
         </div>
         <div style={{ marginBottom: 16 }}>
           <label style={labelStyle}>Message (optional)</label>
@@ -800,8 +821,8 @@ function PostForm({ user, onSuccess }) {
   const [location, setLocation] = useState('');
   const [contact, setContact] = useState('');
   const [description, setDescription] = useState('');
-  const [imageUrls, setImageUrls] = useState([]);
-  const [imageInput, setImageInput] = useState('');
+  const [imageUrls, setImageUrls] = useState([]); // uploaded file paths
+  const [uploading, setUploading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
 
@@ -876,40 +897,61 @@ function PostForm({ user, onSuccess }) {
           style={{ ...inputStyle, minHeight: 80, resize: 'vertical' }} />
       </div>
 
-      {/* Image URLs */}
+      {/* Photo/Video Upload */}
       <div style={{ marginBottom: 16 }}>
-        <label style={labelStyle}>Photos (up to 5 image URLs)</label>
+        <label style={labelStyle}>Photos / Videos (up to 5)</label>
         <p style={{ fontSize: 10, color: 'rgba(255,255,255,0.25)', margin: '0 0 8px' }}>
-          Upload photos to Google Drive / Imgur and paste the direct image link. Photos increase buyer trust significantly.
+          Add clear photos of your scrap material. Photos significantly increase buyer trust and faster deal closure.
         </p>
-        {imageUrls.map((url, i) => (
-          <div key={i} style={{ display: 'flex', gap: 8, marginBottom: 6, alignItems: 'center' }}>
-            <img src={url} alt={`img ${i + 1}`} style={{ width: 40, height: 40, objectFit: 'cover', borderRadius: 6, border: '1px solid rgba(255,255,255,0.1)' }}
-              onError={e => { e.target.style.display = 'none'; }} />
-            <span style={{ flex: 1, fontSize: 11, color: 'rgba(255,255,255,0.4)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{url}</span>
-            <button onClick={() => setImageUrls(imageUrls.filter((_, j) => j !== i))}
-              style={{ padding: '4px 8px', borderRadius: 6, fontSize: 11, background: 'transparent',
-                color: '#f87171', border: '1px solid rgba(248,113,113,0.2)', cursor: 'pointer' }}>✕</button>
+        {/* Preview thumbnails */}
+        {imageUrls.length > 0 && (
+          <div style={{ display: 'flex', gap: 8, marginBottom: 10, flexWrap: 'wrap' }}>
+            {imageUrls.map((url, i) => (
+              <div key={i} style={{ position: 'relative' }}>
+                {url.match(/\.(mp4|mov|webm)$/i) ? (
+                  <video src={`${import.meta.env.VITE_API_URL?.replace('/api', '') || 'http://localhost:3001'}${url}`}
+                    style={{ width: 72, height: 72, objectFit: 'cover', borderRadius: 8, border: '1px solid rgba(255,255,255,0.1)' }} />
+                ) : (
+                  <img src={`${import.meta.env.VITE_API_URL?.replace('/api', '') || 'http://localhost:3001'}${url}`}
+                    alt={`upload ${i + 1}`}
+                    style={{ width: 72, height: 72, objectFit: 'cover', borderRadius: 8, border: '1px solid rgba(255,255,255,0.1)' }} />
+                )}
+                <button onClick={() => setImageUrls(imageUrls.filter((_, j) => j !== i))}
+                  style={{ position: 'absolute', top: -4, right: -4, width: 20, height: 20, borderRadius: '50%',
+                    background: '#f87171', color: '#fff', border: 'none', cursor: 'pointer', fontSize: 10,
+                    display: 'flex', alignItems: 'center', justifyContent: 'center' }}>✕</button>
+              </div>
+            ))}
           </div>
-        ))}
+        )}
         {imageUrls.length < 5 && (
-          <div style={{ display: 'flex', gap: 8 }}>
-            <input value={imageInput} onChange={e => setImageInput(e.target.value)}
-              placeholder="Paste image URL (https://...)" style={{ ...inputStyle, flex: 1, padding: '8px 12px', fontSize: 12 }}
-              onKeyDown={e => {
-                if (e.key === 'Enter' && imageInput.trim()) {
-                  e.preventDefault();
-                  setImageUrls([...imageUrls, imageInput.trim()]);
-                  setImageInput('');
-                }
+          <label style={{
+            display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+            padding: '16px 20px', borderRadius: 10, cursor: uploading ? 'wait' : 'pointer',
+            border: '2px dashed rgba(207,181,59,0.3)', background: 'rgba(207,181,59,0.05)',
+            transition: 'all 0.15s',
+          }}>
+            <input type="file" accept="image/*,video/mp4,video/mov,video/webm" multiple
+              style={{ display: 'none' }}
+              disabled={uploading}
+              onChange={async (e) => {
+                const files = Array.from(e.target.files || []);
+                if (files.length === 0) return;
+                const remaining = 5 - imageUrls.length;
+                const toUpload = files.slice(0, remaining);
+                setUploading(true); setError('');
+                try {
+                  const res = await uploadMedia(toUpload);
+                  setImageUrls(prev => [...prev, ...(res.data.urls || [])]);
+                } catch (err) {
+                  setError(err.response?.data?.error || 'Upload failed. Max 5MB per file.');
+                } finally { setUploading(false); e.target.value = ''; }
               }} />
-            <button onClick={() => { if (imageInput.trim()) { setImageUrls([...imageUrls, imageInput.trim()]); setImageInput(''); } }}
-              disabled={!imageInput.trim()}
-              style={{ padding: '8px 14px', borderRadius: 8, fontSize: 12, fontWeight: 700,
-                background: imageInput.trim() ? '#CFB53B' : 'rgba(255,255,255,0.05)',
-                color: imageInput.trim() ? '#000' : 'rgba(255,255,255,0.2)',
-                border: 'none', cursor: imageInput.trim() ? 'pointer' : 'default' }}>Add</button>
-          </div>
+            <Camera size={18} color="#CFB53B" />
+            <span style={{ fontSize: 13, fontWeight: 600, color: '#CFB53B' }}>
+              {uploading ? 'Uploading…' : `Add Photos${imageUrls.length > 0 ? ` (${5 - imageUrls.length} left)` : ''}`}
+            </span>
+          </label>
         )}
       </div>
 

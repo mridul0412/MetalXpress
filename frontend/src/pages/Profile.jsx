@@ -21,7 +21,7 @@ export default function Profile() {
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
   const [city, setCity] = useState('');
-  const [traderType, setTraderType] = useState('');
+  const [traderTypes, setTraderTypes] = useState([]);
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
@@ -33,13 +33,20 @@ export default function Profile() {
     setEmail(user.email || '');
     setPhone(user.phone || '');
     setCity(user.city || '');
-    setTraderType(user.traderType || 'CHECKING_RATES');
+    // Map enum back to multi-select: BOTH → [BUYER, SELLER]
+    const tt = user.traderType || 'CHECKING_RATES';
+    if (tt === 'BOTH') setTraderTypes(['BUYER', 'SELLER']);
+    else setTraderTypes([tt]);
   }, [user, authLoading]);
 
   const handleSave = async () => {
     setSaving(true); setError(''); setMessage('');
     try {
-      await updateProfile({ name, email: email || undefined, phone: phone || undefined, city, traderType });
+      // Map multi-select to enum
+      const hasBuyer = traderTypes.includes('BUYER');
+      const hasSeller = traderTypes.includes('SELLER');
+      const mappedType = (hasBuyer && hasSeller) ? 'BOTH' : hasBuyer ? 'BUYER' : hasSeller ? 'SELLER' : 'CHECKING_RATES';
+      await updateProfile({ name, email: email || undefined, phone: phone || undefined, city, traderType: mappedType });
       setMessage('Profile updated!');
       setTimeout(() => setMessage(''), 3000);
     } catch (err) {
@@ -57,8 +64,7 @@ export default function Profile() {
   const TRADER_TYPES = [
     { value: 'BUYER', label: 'Buyer', desc: 'I buy scrap metal' },
     { value: 'SELLER', label: 'Seller', desc: 'I sell scrap metal' },
-    { value: 'BOTH', label: 'Buyer & Seller', desc: 'I do both' },
-    { value: 'CHECKING_RATES', label: 'Just Checking Rates', desc: 'Browsing market data' },
+    { value: 'CHECKING_RATES', label: 'Just Checking', desc: 'Market observer' },
   ];
 
   return (
@@ -116,20 +122,27 @@ export default function Profile() {
         </div>
 
         <div style={{ marginBottom: 16 }}>
-          <label style={labelStyle}>I am a</label>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
-            {TRADER_TYPES.map(t => (
-              <button key={t.value} onClick={() => setTraderType(t.value)} style={{
-                padding: '10px 12px', borderRadius: 10, fontSize: 12, fontWeight: 600,
-                background: traderType === t.value ? 'rgba(207,181,59,0.12)' : 'rgba(255,255,255,0.03)',
-                border: `1px solid ${traderType === t.value ? 'rgba(207,181,59,0.3)' : 'rgba(255,255,255,0.06)'}`,
-                color: traderType === t.value ? '#CFB53B' : 'rgba(255,255,255,0.4)',
-                cursor: 'pointer', textAlign: 'left',
-              }}>
-                <div>{t.label}</div>
-                <div style={{ fontSize: 10, opacity: 0.6, marginTop: 2 }}>{t.desc}</div>
-              </button>
-            ))}
+          <label style={labelStyle}>I am a <span style={{ fontWeight: 400, textTransform: 'none' }}>(select all that apply)</span></label>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 8 }}>
+            {TRADER_TYPES.map(t => {
+              const active = traderTypes.includes(t.value);
+              return (
+                <button key={t.value} onClick={() => {
+                  setTraderTypes(prev => prev.includes(t.value)
+                    ? prev.filter(v => v !== t.value) : [...prev, t.value]);
+                }} style={{
+                  padding: '10px 12px', borderRadius: 10, fontSize: 12, fontWeight: 600,
+                  background: active ? 'rgba(207,181,59,0.12)' : 'rgba(255,255,255,0.03)',
+                  border: `1px solid ${active ? 'rgba(207,181,59,0.3)' : 'rgba(255,255,255,0.06)'}`,
+                  color: active ? '#CFB53B' : 'rgba(255,255,255,0.4)',
+                  cursor: 'pointer', textAlign: 'left', position: 'relative',
+                }}>
+                  {active && <span style={{ position: 'absolute', top: 4, right: 6, fontSize: 10, color: '#CFB53B' }}>✓</span>}
+                  <div>{t.label}</div>
+                  <div style={{ fontSize: 10, opacity: 0.6, marginTop: 2 }}>{t.desc}</div>
+                </button>
+              );
+            })}
           </div>
         </div>
 

@@ -289,9 +289,26 @@ async function main() {
       name: 'MX Pro Tester',
       city: 'Delhi',
       traderType: 'BOTH',
+      phoneVerified: true,
     },
   });
   console.log(`  ✅ Pro test user: test@metalxpress.in / test1234`);
+
+  // Admin test account with full subscription access (email: admin@metalxpress.in, password: admin1234)
+  const adminHash = await bcrypt.hash('admin1234', 12);
+  await prisma.user.create({
+    data: {
+      email: 'admin@metalxpress.in',
+      passwordHash: adminHash,
+      phone: '9999900001',
+      name: 'MX Admin',
+      city: 'Delhi',
+      traderType: 'BOTH',
+      phoneVerified: true,
+      kycVerified: true,
+    },
+  });
+  console.log(`  ✅ Admin user: admin@metalxpress.in / admin1234 (full pro access)`);
 
   const userMap = {};
   for (const tu of testUsers) {

@@ -10,7 +10,6 @@ const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID;
 const TRADER_TYPES = [
   { value: 'BUYER',          label: 'Buyer',          desc: 'I buy scrap metal' },
   { value: 'SELLER',         label: 'Seller',         desc: 'I sell scrap metal' },
-  { value: 'BOTH',           label: 'Buyer & Seller', desc: 'I do both' },
   { value: 'CHECKING_RATES', label: 'Just Checking',  desc: 'Market observer' },
 ];
 
@@ -41,7 +40,7 @@ export default function Signup() {
   const [name, setName] = useState('');
   const [phone, setPhone] = useState('');
   const [otp, setOtp] = useState('');
-  const [traderType, setTraderType] = useState('CHECKING_RATES');
+  const [traderTypes, setTraderTypes] = useState(['CHECKING_RATES']);
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -51,15 +50,19 @@ export default function Signup() {
 
   const googleAvailable = GOOGLE_CLIENT_ID && GOOGLE_CLIENT_ID !== 'undefined' && GOOGLE_CLIENT_ID.length > 8;
 
+  // Normalize phone for display/send
+  const cleanPhone = phone.replace(/[\s\-()]/g, '').replace(/^\+?91/, '').slice(-10);
+
   // Step 1: Validate details and send OTP
   const handleDetailsSubmit = async (e) => {
     e.preventDefault();
     if (password !== confirmPassword) { setError('Passwords do not match'); return; }
     if (password.length < 6) { setError('Password must be at least 6 characters'); return; }
-    if (!phone || phone.replace(/\s/g, '').length < 10) { setError('Valid phone number required for verification'); return; }
+    if (!phone || cleanPhone.length < 10) { setError('Valid 10-digit phone number required'); return; }
+    if (traderTypes.length === 0) { setError('Please select at least one trader type'); return; }
     setLoading(true); setError('');
     try {
-      await requestOTP(phone);
+      await requestOTP(cleanPhone);
       setOtpSent(true);
       setStep('otp');
     } catch (err) {
@@ -73,10 +76,19 @@ export default function Signup() {
     if (otp.length < 4) return;
     setLoading(true); setError('');
     try {
+      // Map multi-select to enum: BUYER+SELLER → BOTH
+      const hasBuyer = traderTypes.includes('BUYER');
+      const hasSeller = traderTypes.includes('SELLER');
+      const mappedType = (hasBuyer && hasSeller) ? 'BOTH'
+        : hasBuyer ? 'BUYER'
+        : hasSeller ? 'SELLER'
+        : 'CHECKING_RATES';
+
       // Register with email + password + phone (backend verifies OTP)
       const res = await registerEmail({
-        email, password, name: name || undefined, traderType,
-        phone: phone.replace(/\s/g, ''),
+        email, password, name: name || undefined,
+        traderType: mappedType,
+        phone: cleanPhone,
         otp, // backend will verify OTP before creating account
       });
       login(res.data.token, res.data.user);
@@ -89,7 +101,7 @@ export default function Signup() {
   const handleResendOTP = async () => {
     setLoading(true); setError('');
     try {
-      await requestOTP(phone);
+      await requestOTP(cleanPhone);
       setError(''); // clear any previous error
     } catch { setError('Failed to resend OTP'); }
     finally { setLoading(false); }
@@ -258,22 +270,28 @@ export default function Signup() {
                   onBlur={e => e.target.style.borderColor = 'rgba(255,255,255,0.1)'} />
               </div>
 
-              {/* Trader type */}
+              {/* Trader type (multi-select) */}
               <div>
                 <label style={{ fontSize: 10, fontWeight: 700, textTransform: 'uppercase',
                   letterSpacing: '0.08em', color: 'rgba(255,255,255,0.35)', display: 'block', marginBottom: 8 }}>
-                  I am a
+                  I am a <span style={{ fontWeight: 400, textTransform: 'none' }}>(select all that apply)</span>
                 </label>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 6 }}>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 6 }}>
                   {TRADER_TYPES.map(t => {
-                    const active = traderType === t.value;
+                    const active = traderTypes.includes(t.value);
                     return (
-                      <button key={t.value} type="button" onClick={() => setTraderType(t.value)}
+                      <button key={t.value} type="button" onClick={() => {
+                        setTraderTypes(prev => prev.includes(t.value)
+                          ? prev.filter(v => v !== t.value)
+                          : [...prev, t.value]);
+                      }}
                         style={{
                           padding: '8px 10px', borderRadius: 8, textAlign: 'left', cursor: 'pointer',
                           background: active ? 'rgba(207,181,59,0.12)' : 'rgba(255,255,255,0.04)',
                           border: `1px solid ${active ? 'rgba(207,181,59,0.5)' : 'rgba(255,255,255,0.08)'}`,
+                          position: 'relative',
                         }}>
+                        {active && <span style={{ position: 'absolute', top: 4, right: 6, fontSize: 10, color: '#CFB53B' }}>✓</span>}
                         <p style={{ fontSize: 11, fontWeight: 700, color: active ? '#CFB53B' : '#fff', margin: '0 0 1px' }}>{t.label}</p>
                         <p style={{ fontSize: 9, color: 'rgba(255,255,255,0.3)', margin: 0 }}>{t.desc}</p>
                       </button>
@@ -282,13 +300,13 @@ export default function Signup() {
                 </div>
               </div>
 
-              <button type="submit" disabled={loading || !email || password.length < 6 || !phone}
+              <button type="submit" disabled={loading || !email || password.length < 6 || !phone || traderTypes.length === 0}
                 style={{
                   width: '100%', padding: '13px', borderRadius: 12, fontWeight: 700, fontSize: 14,
                   background: '#CFB53B', color: '#000', border: 'none', cursor: 'pointer',
                   boxShadow: '0 4px 16px rgba(207,181,59,0.25)',
                   display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
-                  opacity: (loading || !email || password.length < 6 || !phone) ? 0.5 : 1,
+                  opacity: (loading || !email || password.length < 6 || !phone || traderTypes.length === 0) ? 0.5 : 1,
                 }}>
                 {loading ? 'Sending OTP...' : 'Verify Phone & Create Account'}
                 {!loading && <ArrowRight size={16} />}

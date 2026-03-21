@@ -10,15 +10,23 @@ const DEV_OTP = '1234';
 const OTP_EXPIRY_MINUTES = 10;
 const BCRYPT_ROUNDS = 12;
 
+// Normalize phone: strip spaces/dashes, remove +91/91 prefix → bare 10-digit
+function normalizePhone(raw) {
+  if (!raw) return null;
+  let p = raw.replace(/[\s\-()]/g, '');
+  if (p.startsWith('+91')) p = p.slice(3);
+  else if (p.startsWith('91') && p.length === 12) p = p.slice(2);
+  return /^[6-9]\d{9}$/.test(p) ? p : null;
+}
+
 // POST /api/auth/request-otp
 router.post('/request-otp', async (req, res) => {
   try {
     const { phone } = req.body;
-    if (!phone || !/^\+?[6-9]\d{9}$/.test(phone.replace(/\s/g, ''))) {
-      return res.status(400).json({ error: 'Valid Indian phone number required' });
+    const cleanPhone = normalizePhone(phone);
+    if (!cleanPhone) {
+      return res.status(400).json({ error: 'Valid 10-digit Indian phone number required (starting with 6-9)' });
     }
-
-    const cleanPhone = phone.replace(/\s/g, '');
 
     // Delete old OTP sessions for this phone
     await prisma.oTPSession.deleteMany({ where: { phone: cleanPhone } });
@@ -55,7 +63,8 @@ router.post('/verify-otp', async (req, res) => {
     const { phone, otp, name, traderType, city } = req.body;
     if (!phone || !otp) return res.status(400).json({ error: 'Phone and OTP required' });
 
-    const cleanPhone = phone.replace(/\s/g, '');
+    const cleanPhone = normalizePhone(phone);
+    if (!cleanPhone) return res.status(400).json({ error: 'Valid Indian phone number required' });
 
     const session = await prisma.oTPSession.findFirst({
       where: {
@@ -143,7 +152,8 @@ router.patch('/profile', async (req, res) => {
 
     // Link phone to account
     if (phone) {
-      const cleanPhone = phone.replace(/\s/g, '');
+      const cleanPhone = normalizePhone(phone);
+      if (!cleanPhone) return res.status(400).json({ error: 'Valid Indian phone number required' });
       const existing = await prisma.user.findUnique({ where: { phone: cleanPhone } });
       if (existing && existing.id !== payload.userId) {
         return res.status(409).json({ error: 'This phone number is already linked to another account' });
@@ -205,8 +215,8 @@ router.post('/register', async (req, res) => {
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return res.status(400).json({ error: 'Invalid email format' });
     if (password.length < 6) return res.status(400).json({ error: 'Password must be at least 6 characters' });
 
-    const cleanPhone = phone ? phone.replace(/\s/g, '') : null;
-    if (!cleanPhone) return res.status(400).json({ error: 'Phone number required for verification' });
+    const cleanPhone = normalizePhone(phone);
+    if (!cleanPhone) return res.status(400).json({ error: 'Valid 10-digit Indian phone number required for verification' });
 
     // Verify OTP if provided (required for new registration)
     if (otp) {

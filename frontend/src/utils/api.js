@@ -71,6 +71,11 @@ export const fetchListings = (params) => api.get('/marketplace/listings', { para
 export const fetchMyListings = () => api.get('/marketplace/my-listings');
 export const createListing = (data) => api.post('/marketplace/listings', data);
 export const deleteListing = (id) => api.delete(`/marketplace/listings/${id}`);
+export const uploadMedia = (files) => {
+  const form = new FormData();
+  files.forEach(f => form.append('files', f));
+  return api.post('/marketplace/upload', form, { headers: { 'Content-Type': 'multipart/form-data' } });
+};
 
 // Deals / Negotiation
 export const createDeal = (data) => api.post('/marketplace/deals', data);

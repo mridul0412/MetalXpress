@@ -1,4 +1,7 @@
 const express = require('express');
+const multer = require('multer');
+const path = require('path');
+const crypto = require('crypto');
 const { PrismaClient } = require('@prisma/client');
 const { authMiddleware } = require('../middleware/auth');
 
@@ -6,6 +9,38 @@ const router = express.Router();
 const prisma = new PrismaClient();
 
 const COMMISSION_RATE = 0.001; // 0.1%
+
+// Multer config — save to uploads/ with unique filenames
+const storage = multer.diskStorage({
+  destination: path.join(__dirname, '../../uploads'),
+  filename: (req, file, cb) => {
+    const ext = path.extname(file.originalname) || '.jpg';
+    cb(null, `${Date.now()}-${crypto.randomBytes(6).toString('hex')}${ext}`);
+  },
+});
+const upload = multer({
+  storage,
+  limits: { fileSize: 5 * 1024 * 1024 }, // 5MB per file
+  fileFilter: (req, file, cb) => {
+    const allowed = /\.(jpg|jpeg|png|gif|webp|mp4|mov|webm)$/i;
+    if (allowed.test(path.extname(file.originalname))) cb(null, true);
+    else cb(new Error('Only images and videos allowed (jpg, png, gif, webp, mp4, mov, webm)'));
+  },
+});
+
+// POST /api/marketplace/upload — upload up to 5 images/videos, returns file URLs
+router.post('/upload', authMiddleware, upload.array('files', 5), (req, res) => {
+  try {
+    if (!req.files || req.files.length === 0) {
+      return res.status(400).json({ error: 'No files uploaded' });
+    }
+    const urls = req.files.map(f => `/uploads/${f.filename}`);
+    res.json({ urls });
+  } catch (err) {
+    console.error('Upload error:', err);
+    res.status(500).json({ error: err.message || 'Upload failed' });
+  }
+});
 
 // GET /api/marketplace/listings — public browse (only verified+active listings)
 router.get('/listings', async (req, res) => {
