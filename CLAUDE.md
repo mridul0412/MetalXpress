@@ -629,7 +629,8 @@ frontend/src/
   utils/
     api.js                         ← Axios instance + all endpoints incl. registerEmail, loginEmail, checkSubscription,
                                       fetchDealDetail, counterOffer, acceptOffer, rejectDeal, fetchMyDeals,
-                                      fetchDealNotifications, fetchPendingListings, verifyListing, deleteListing
+                                      fetchDealNotifications, fetchPendingListings, verifyListing, deleteListing,
+                                      uploadMedia (multer file upload)
   context/
     AuthContext.jsx                ← Email/Phone/Google auth, JWT in localStorage, subscription state
 
