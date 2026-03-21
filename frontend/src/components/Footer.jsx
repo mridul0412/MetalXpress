@@ -1,6 +1,4 @@
 import { Link } from 'react-router-dom';
-import { TrendingUp } from 'lucide-react';
-
 export default function Footer() {
   return (
     <footer style={{
@@ -8,17 +6,26 @@ export default function Footer() {
       borderTop: '1px solid rgba(255,255,255,0.06)',
       padding: '32px 0 24px',
       marginTop: 40,
+      position: 'relative', overflow: 'hidden',
     }}>
-      <div className="max-w-5xl mx-auto px-4">
+      {/* Subtle ॐ watermark in footer */}
+      <div style={{
+        position: 'absolute', bottom: -20, right: 20,
+        fontSize: 120, fontWeight: 800, lineHeight: 1,
+        color: 'rgba(207,181,59,0.02)',
+        pointerEvents: 'none', userSelect: 'none',
+      }}>ॐ</div>
+
+      <div className="max-w-5xl mx-auto px-4" style={{ position: 'relative', zIndex: 1 }}>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: 24, marginBottom: 24 }}>
           {/* Brand */}
           <div>
             <div className="flex items-center gap-2 mb-3">
               <div style={{
                 width: 28, height: 28, borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center',
-                background: 'linear-gradient(135deg, #CFB53B, #A89028)',
+                background: 'linear-gradient(135deg, #E8CC5A, #CFB53B, #A89028)',
               }}>
-                <TrendingUp size={14} color="#000" strokeWidth={3} />
+                <span style={{ fontSize: 17, color: '#080E1A', fontWeight: 800, lineHeight: 1, marginTop: -1 }}>ॐ</span>
               </div>
               <span style={{ fontSize: 13, fontWeight: 700, letterSpacing: '0.1em', color: '#CFB53B' }}>
                 METALXPRESS

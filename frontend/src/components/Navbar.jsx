@@ -1,5 +1,5 @@
 import { Link, useLocation } from 'react-router-dom';
-import { Activity, Bell, Briefcase, Settings, TrendingUp } from 'lucide-react';
+import { Activity, Bell, Briefcase, Settings } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import LMEStrip from './LMEStrip';
 
@@ -28,10 +28,10 @@ export default function Navbar() {
           {/* Brand */}
           <Link to="/" className="flex items-center gap-2.5" style={{ textDecoration: 'none' }}>
             <div className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0" style={{
-              background: 'linear-gradient(135deg, #CFB53B, #A89028)',
+              background: 'linear-gradient(135deg, #E8CC5A, #CFB53B, #A89028)',
               boxShadow: '0 0 12px rgba(207,181,59,0.3)',
             }}>
-              <TrendingUp size={16} color="#000" strokeWidth={3} />
+              <span style={{ fontSize: 20, color: '#080E1A', fontWeight: 800, lineHeight: 1, marginTop: -1 }}>ॐ</span>
             </div>
             <span className="hidden sm:block text-base font-bold tracking-widest metallic-text">METALXPRESS</span>
             <span className="sm:hidden text-base font-bold tracking-widest metallic-text">MX⚡</span>
