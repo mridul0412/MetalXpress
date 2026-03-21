@@ -68,8 +68,15 @@ export const fetchLivePricesDetailed = () => api.get('/rates/live');
 
 // Marketplace
 export const fetchListings = (params) => api.get('/marketplace/listings', { params });
+export const fetchMyListings = () => api.get('/marketplace/my-listings');
 export const createListing = (data) => api.post('/marketplace/listings', data);
 export const deleteListing = (id) => api.delete(`/marketplace/listings/${id}`);
+
+// Deals
+export const createDeal = (data) => api.post('/marketplace/deals', data);
+export const payDeal = (dealId) => api.post(`/marketplace/deals/${dealId}/pay`);
+export const fetchMyDeals = () => api.get('/marketplace/my-deals');
+export const completeDeal = (dealId) => api.patch(`/marketplace/deals/${dealId}/complete`);
 
 // Alerts
 export const fetchAlerts = () => api.get('/alerts');

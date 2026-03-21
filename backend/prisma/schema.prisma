@@ -19,6 +19,7 @@ model User {
   updatedAt    DateTime    @updatedAt
   alerts       Alert[]
   listings     Listing[]
+  deals        Deal[]
 }
 
 enum TraderType {
@@ -165,8 +166,22 @@ model Listing {
   expiresAt   DateTime
   createdAt   DateTime @default(now())
   isActive    Boolean  @default(true)
-  isVerified  Boolean  @default(false)
-  listingType String   @default("sell") // "sell" | "buy"
+  status      String   @default("pending") // "pending" | "verified" | "rejected"
+  deals       Deal[]
+}
+
+model Deal {
+  id          String   @id @default(cuid())
+  listing     Listing  @relation(fields: [listingId], references: [id])
+  listingId   String
+  buyer       User     @relation(fields: [buyerId], references: [id])
+  buyerId     String
+  dealAmount  Float    // total deal value (price × qty)
+  commission  Float    // 0.1% of dealAmount
+  status      String   @default("pending") // "pending" | "paid" | "connected" | "completed" | "cancelled"
+  paidAt      DateTime?
+  completedAt DateTime?
+  createdAt   DateTime @default(now())
 }
 
 model OTPSession {
