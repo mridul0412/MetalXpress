@@ -22,7 +22,7 @@ export default function HeroSection() {
       <div style={{
         position: 'absolute', top: 0, left: 0, right: 0, bottom: 0,
         pointerEvents: 'none', userSelect: 'none', zIndex: 0,
-        backgroundImage: `url("data:image/svg+xml,${encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200"><text x="100" y="140" text-anchor="middle" font-size="180" font-weight="800" fill="rgba(207,181,59,0.08)">ॐ</text></svg>')}")`,
+        backgroundImage: `url("data:image/svg+xml,${encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 260"><text x="100" y="200" text-anchor="middle" font-size="180" font-weight="800" fill="rgba(207,181,59,0.12)">ॐ</text></svg>')}")`,
         backgroundRepeat: 'no-repeat',
         backgroundPosition: 'center center',
         backgroundSize: 'contain',
