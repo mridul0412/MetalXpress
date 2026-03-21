@@ -4,7 +4,7 @@ import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 
 export default function Alerts() {
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   const navigate = useNavigate();
 
   const [alerts, setAlerts] = useState([]);
@@ -20,11 +20,12 @@ export default function Alerts() {
   const [error, setError] = useState('');
 
   useEffect(() => {
+    if (authLoading) return; // wait for auth to resolve
     if (!user) { navigate('/login'); return; }
     loadAlerts();
     fetchMetals().then(r => setMetals(r.data || [])).catch(console.error);
     fetchCities().then(r => setCities(r.data || [])).catch(console.error);
-  }, [user]);
+  }, [user, authLoading]);
 
   const loadAlerts = async () => {
     setLoading(true);
