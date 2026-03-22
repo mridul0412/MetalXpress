@@ -86,8 +86,10 @@ export const rejectDeal = (dealId) => api.post(`/marketplace/deals/${dealId}/rej
 export const payDeal = (dealId) => api.post(`/marketplace/deals/${dealId}/pay`);
 export const fetchMyDeals = (role) => api.get('/marketplace/my-deals', { params: { role } });
 export const completeDeal = (dealId) => api.patch(`/marketplace/deals/${dealId}/complete`);
-export const disputeDeal = (dealId, reason) => api.post(`/marketplace/deals/${dealId}/dispute`, { reason });
+export const disputeDeal = (dealId, data) => api.post(`/marketplace/deals/${dealId}/dispute`, typeof data === 'string' ? { reason: data } : data);
 export const fetchDealNotifications = () => api.get('/marketplace/notifications');
+export const rateDeal = (dealId, data) => api.post(`/marketplace/deals/${dealId}/rate`, data);
+export const fetchUserRatings = (userId) => api.get(`/marketplace/users/${userId}/ratings`);
 
 // Admin marketplace
 export const fetchPendingListings = () => api.get('/marketplace/pending', { headers: adminHeaders() });

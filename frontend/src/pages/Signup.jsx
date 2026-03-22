@@ -42,6 +42,7 @@ export default function Signup() {
   const [otp, setOtp] = useState('');
   const [traderTypes, setTraderTypes] = useState(['CHECKING_RATES']);
   const [showPassword, setShowPassword] = useState(false);
+  const [termsAccepted, setTermsAccepted] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [otpSent, setOtpSent] = useState(false);
@@ -90,6 +91,7 @@ export default function Signup() {
         traderType: mappedType,
         phone: cleanPhone,
         otp, // backend will verify OTP before creating account
+        termsAccepted: true,
       });
       login(res.data.token, res.data.user);
       navigate('/');
@@ -300,13 +302,13 @@ export default function Signup() {
                 </div>
               </div>
 
-              <button type="submit" disabled={loading || !email || password.length < 6 || !phone || traderTypes.length === 0}
+              <button type="submit" disabled={loading || !email || password.length < 6 || !phone || traderTypes.length === 0 || !termsAccepted}
                 style={{
                   width: '100%', padding: '13px', borderRadius: 12, fontWeight: 700, fontSize: 14,
                   background: '#CFB53B', color: '#000', border: 'none', cursor: 'pointer',
                   boxShadow: '0 4px 16px rgba(207,181,59,0.25)',
                   display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
-                  opacity: (loading || !email || password.length < 6 || !phone || traderTypes.length === 0) ? 0.5 : 1,
+                  opacity: (loading || !email || password.length < 6 || !phone || traderTypes.length === 0 || !termsAccepted) ? 0.5 : 1,
                 }}>
                 {loading ? 'Sending OTP...' : 'Verify Phone & Create Account'}
                 {!loading && <ArrowRight size={16} />}
@@ -372,11 +374,19 @@ export default function Signup() {
           <Link to="/login" style={{ color: '#CFB53B', fontWeight: 700, textDecoration: 'none' }}>Login</Link>
         </p>
 
-        <p style={{ textAlign: 'center', fontSize: 10, color: 'rgba(255,255,255,0.2)', margin: '12px 0 0' }}>
-          By creating an account, you agree to our{' '}
-          <Link to="/terms" style={{ color: 'rgba(255,255,255,0.35)', textDecoration: 'underline' }}>Terms</Link>{' '}and{' '}
-          <Link to="/privacy" style={{ color: 'rgba(255,255,255,0.35)', textDecoration: 'underline' }}>Privacy Policy</Link>
-        </p>
+        {step === 'details' && (
+          <label style={{ display: 'flex', alignItems: 'flex-start', gap: 10, cursor: 'pointer', marginTop: 16 }}>
+            <input type="checkbox" checked={termsAccepted} onChange={e => setTermsAccepted(e.target.checked)}
+              style={{ marginTop: 3, accentColor: '#CFB53B', width: 16, height: 16, flexShrink: 0 }} />
+            <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.5)', lineHeight: 1.6, fontFamily: 'monospace' }}>
+              I agree to the <a href="/terms" target="_blank" style={{ color: '#CFB53B', textDecoration: 'underline' }}>Terms of Service</a> including the{' '}
+              <a href="/terms#commission" target="_blank" style={{ color: '#CFB53B', textDecoration: 'underline' }}>commission policy</a>,{' '}
+              <a href="/terms#refund-policy" target="_blank" style={{ color: '#CFB53B', textDecoration: 'underline' }}>refund policy</a>,{' '}
+              <a href="/terms#ban-policy" target="_blank" style={{ color: '#CFB53B', textDecoration: 'underline' }}>ban policy</a>, and{' '}
+              <a href="/privacy" target="_blank" style={{ color: '#CFB53B', textDecoration: 'underline' }}>Privacy Policy</a>
+            </span>
+          </label>
+        )}
       </motion.div>
     </div>
   );

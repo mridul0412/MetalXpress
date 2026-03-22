@@ -3,12 +3,13 @@ import {
   MapPin, Weight, Plus, ShieldCheck, X, ArrowRight, Package,
   Clock, CheckCircle, AlertCircle, Trash2, MessageSquare, Send,
   ChevronRight, DollarSign, Handshake, Camera, Image as ImageIcon,
+  Shield, AlertTriangle,
 } from 'lucide-react';
 import {
   fetchListings, fetchMyListings, createListing, createDeal, counterOffer,
   acceptOffer, rejectDeal, payDeal, fetchMyDeals, fetchDealDetail,
   completeDeal, disputeDeal, deleteListing, fetchMetals, fetchCities,
-  uploadMedia,
+  uploadMedia, rateDeal,
 } from '../utils/api';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
@@ -49,6 +50,24 @@ export default function Marketplace() {
   const [activeDeal, setActiveDeal] = useState(null);     // deal detail view
   const { user } = useAuth();
   const navigate = useNavigate();
+
+  const isOnCooldown = user?.cooldownUntil && new Date(user.cooldownUntil) > new Date();
+  const cooldownDate = isOnCooldown ? new Date(user.cooldownUntil).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }) : null;
+
+  if (user?.isBanned) {
+    return (
+      <div style={{ textAlign: 'center', padding: '80px 20px' }}>
+        <AlertTriangle size={48} style={{ color: '#f87171', margin: '0 auto 16px' }} />
+        <h3 style={{ fontFamily: 'monospace', color: '#f87171', fontSize: 20, marginBottom: 8 }}>Account Suspended</h3>
+        <p style={{ color: 'rgba(255,255,255,0.5)', fontSize: 13, maxWidth: 400, margin: '0 auto', lineHeight: 1.6 }}>
+          {user.banReason || 'Your account has been suspended due to policy violations.'}
+        </p>
+        <p style={{ color: 'rgba(255,255,255,0.3)', fontSize: 11, marginTop: 16 }}>
+          Contact support@metalxpress.in for assistance
+        </p>
+      </div>
+    );
+  }
 
   const load = async () => {
     setLoading(true);
@@ -119,16 +138,33 @@ export default function Marketplace() {
         user={user} navigate={navigate} onMakeOffer={setOfferListing} />}
 
       {tab === 'post' && (user
-        ? <PostForm user={user} onSuccess={() => { setTab('my-listings'); loadMyListings(); }} />
+        ? <>
+            {isOnCooldown && (
+              <div style={{ background: 'rgba(207,181,59,0.1)', border: '1px solid rgba(207,181,59,0.25)', borderRadius: 10, padding: '12px 16px', marginBottom: 16, fontSize: 12, color: '#CFB53B', fontFamily: 'monospace' }}>
+                <AlertTriangle size={14} style={{ verticalAlign: 'middle', marginRight: 6 }} />
+                Your account is on a 7-day cooldown due to multiple disputes. You cannot create new deals or listings until {cooldownDate}.
+              </div>
+            )}
+            <PostForm user={user} onSuccess={() => { setTab('my-listings'); loadMyListings(); }} />
+          </>
         : <LoginPrompt navigate={navigate} />)}
 
       {tab === 'my-listings' && <MyListingsTab listings={myListings} onRefresh={loadMyListings} onBrowseRefresh={load} />}
 
-      {tab === 'my-deals' && <MyDealsTab deals={deals} user={user}
-        onRefresh={loadDeals} onViewDeal={setActiveDeal} />}
+      {tab === 'my-deals' && <>
+        {isOnCooldown && (
+          <div style={{ background: 'rgba(207,181,59,0.1)', border: '1px solid rgba(207,181,59,0.25)', borderRadius: 10, padding: '12px 16px', marginBottom: 16, fontSize: 12, color: '#CFB53B', fontFamily: 'monospace' }}>
+            <AlertTriangle size={14} style={{ verticalAlign: 'middle', marginRight: 6 }} />
+            Your account is on a 7-day cooldown due to multiple disputes. You cannot create new deals or listings until {cooldownDate}.
+          </div>
+        )}
+        <MyDealsTab deals={deals} user={user}
+          onRefresh={loadDeals} onViewDeal={setActiveDeal} />
+      </>}
 
       {/* Offer Modal */}
       {offerListing && <OfferModal listing={offerListing}
+        isOnCooldown={isOnCooldown} cooldownDate={cooldownDate}
         onClose={() => setOfferListing(null)}
         onSuccess={(deal) => { setOfferListing(null); setActiveDeal(deal); setTab('my-deals'); loadDeals(); }} />}
 
@@ -216,7 +252,18 @@ function ListingCard({ listing: l, onAction, actionLabel, showStatus, onDelete }
       </div>
 
       <h3 style={{ fontSize: 17, fontWeight: 700, color: '#fff', margin: '0 0 4px' }}>{gradeName}</h3>
-      {l.sellerName && <p style={{ fontSize: 11, color: 'rgba(255,255,255,0.3)', margin: '0 0 8px' }}>by {l.sellerName}</p>}
+      {l.sellerName && <p style={{ fontSize: 11, color: 'rgba(255,255,255,0.3)', margin: '0 0 8px' }}>
+        by {l.sellerName}
+        {(l.sellerCompletedDeals > 0 || l.sellerAvgRating > 0) && (
+          <span style={{ fontSize: 10, color: 'rgba(255,255,255,0.4)', marginLeft: 8 }}>
+            {l.sellerCompletedDeals > 0 && `${l.sellerCompletedDeals} deals`}
+            {l.sellerAvgRating > 0 && ` \u00b7 \u2605 ${l.sellerAvgRating.toFixed(1)}`}
+          </span>
+        )}
+        {l.sellerKycVerified && (
+          <span style={{ fontSize: 9, color: '#34d399', marginLeft: 6 }}>{'\u2713'} KYC</span>
+        )}
+      </p>}
 
       {/* Image thumbnails */}
       {l.imageUrls?.length > 0 && (
@@ -264,7 +311,7 @@ function ListingCard({ listing: l, onAction, actionLabel, showStatus, onDelete }
 }
 
 /* ── Offer Modal (Make Offer) ─────────────────────────────────────── */
-function OfferModal({ listing: l, onClose, onSuccess }) {
+function OfferModal({ listing: l, onClose, onSuccess, isOnCooldown, cooldownDate }) {
   const [price, setPrice] = useState(l.price || '');
   const qty = l.qty; // qty comes from the listing, buyer can't change it
   const [message, setMessage] = useState('');
@@ -339,11 +386,24 @@ function OfferModal({ listing: l, onClose, onSuccess }) {
 
         {error && <p style={{ color: '#f87171', fontSize: 12, marginBottom: 12 }}>{error}</p>}
 
-        <button onClick={handleSubmit} disabled={submitting} style={{
+        {isOnCooldown && (
+          <p style={{ fontSize: 11, color: '#CFB53B', marginBottom: 12, fontFamily: 'monospace' }}>
+            <AlertTriangle size={12} style={{ verticalAlign: 'middle', marginRight: 4 }} />
+            Your account is on cooldown until {cooldownDate}. You cannot make offers.
+          </p>
+        )}
+
+        <p style={{ fontSize: 10, color: 'rgba(255,255,255,0.3)', marginBottom: 12, lineHeight: 1.5 }}>
+          0.1% commission charged only after both parties agree. Non-refundable after connection, except for fraud/no-response cases.
+          <a href="/terms#refund-policy" style={{ color: '#CFB53B' }}> View refund policy</a>
+        </p>
+
+        <button onClick={handleSubmit} disabled={submitting || isOnCooldown} style={{
           width: '100%', padding: '14px', borderRadius: 10, fontSize: 14, fontWeight: 700,
-          background: '#CFB53B', color: '#000', border: 'none', cursor: 'pointer',
+          background: (submitting || isOnCooldown) ? 'rgba(207,181,59,0.3)' : '#CFB53B', color: '#000', border: 'none',
+          cursor: (submitting || isOnCooldown) ? 'not-allowed' : 'pointer',
           opacity: submitting ? 0.6 : 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
-        }}><Send size={16} /> {submitting ? 'Sending…' : 'Send Offer'}</button>
+        }}><Send size={16} /> {submitting ? 'Sending…' : isOnCooldown ? 'On Cooldown' : 'Send Offer'}</button>
       </div>
     </div>
   );
@@ -361,6 +421,17 @@ function DealDetailPanel({ dealId, user, onClose }) {
   const [error, setError] = useState('');
   const [showDispute, setShowDispute] = useState(false);
   const [disputeReason, setDisputeReason] = useState('');
+  const [disputeCategory, setDisputeCategory] = useState('');
+  const [disputeEvidence, setDisputeEvidence] = useState([]);
+  const [uploadingEvidence, setUploadingEvidence] = useState(false);
+  const [showRating, setShowRating] = useState(false);
+
+  const refreshDeal = useCallback(async () => {
+    try {
+      const res = await fetchDealDetail(dealId);
+      setDeal(res.data);
+    } catch {}
+  }, [dealId]);
 
   const loadDeal = useCallback(async () => {
     try {
@@ -407,15 +478,26 @@ function DealDetailPanel({ dealId, user, onClose }) {
         await payDeal(deal.id);
       } else if (action === 'complete') {
         await completeDeal(deal.id);
+        await loadDeal();
+        setActionLoading('');
+        setShowRating(true);
+        return;
       } else if (action === 'dispute') {
+        if (!disputeCategory) {
+          setError('Please select an issue type');
+          setActionLoading('');
+          return;
+        }
         if (!disputeReason || disputeReason.trim().length < 10) {
           setError('Please describe the issue in detail (at least 10 characters)');
           setActionLoading('');
           return;
         }
-        await disputeDeal(deal.id, disputeReason);
+        await disputeDeal(deal.id, { reason: disputeReason, category: disputeCategory, evidence: disputeEvidence });
         setShowDispute(false);
         setDisputeReason('');
+        setDisputeCategory('');
+        setDisputeEvidence([]);
       }
       await loadDeal();
     } catch (err) {
@@ -573,6 +655,10 @@ function DealDetailPanel({ dealId, user, onClose }) {
                   Commission (0.1%): ₹{fmt(deal.commission)}
                 </div>
               </div>
+              <p style={{ fontSize: 10, color: 'rgba(255,255,255,0.3)', marginBottom: 8, lineHeight: 1.5 }}>
+                By paying, you agree to our <a href="/terms#commission" style={{ color: '#CFB53B' }}>commission</a> and <a href="/terms#refund-policy" style={{ color: '#CFB53B' }}>refund policy</a>.
+                Contact details will be shared after payment.
+              </p>
               <button onClick={() => handleAction('pay')} disabled={!!actionLoading}
                 style={{ width: '100%', padding: '14px', borderRadius: 10, fontSize: 14, fontWeight: 700,
                   background: '#34d399', color: '#000', border: 'none', cursor: 'pointer' }}>
@@ -644,16 +730,79 @@ function DealDetailPanel({ dealId, user, onClose }) {
                       <p style={{ fontSize: 11, color: 'rgba(255,255,255,0.35)', margin: '0 0 10px' }}>
                         Commission is held in escrow. Our team will review and resolve within 48 hours.
                       </p>
+
+                      {/* Dispute category */}
+                      <select value={disputeCategory} onChange={e => setDisputeCategory(e.target.value)} style={{
+                        width: '100%', background: '#0D1420', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 8,
+                        padding: '10px 12px', color: '#fff', fontFamily: 'monospace', fontSize: 12, marginBottom: 12, boxSizing: 'border-box',
+                      }}>
+                        <option value="" style={optionStyle}>Select issue type...</option>
+                        <option value="seller_no_response" style={optionStyle}>Seller never responded after connection</option>
+                        <option value="buyer_ghosted" style={optionStyle}>Buyer stopped responding</option>
+                        <option value="material_quality" style={optionStyle}>Material quality doesn't match listing</option>
+                        <option value="fake_listing" style={optionStyle}>Fake listing / scam attempt</option>
+                        <option value="both_claim_no_deal" style={optionStyle}>Deal didn't happen</option>
+                        <option value="other" style={optionStyle}>Other issue</option>
+                      </select>
+
+                      {/* Refund eligibility hint */}
+                      {disputeCategory && (
+                        <div style={{ padding: '8px 12px', borderRadius: 6, marginBottom: 12, fontSize: 11, fontFamily: 'monospace',
+                          background: ['seller_no_response','fake_listing'].includes(disputeCategory) ? 'rgba(52,211,153,0.1)' : 'rgba(248,113,113,0.1)',
+                          color: ['seller_no_response','fake_listing'].includes(disputeCategory) ? '#34d399' : '#f87171',
+                          border: `1px solid ${['seller_no_response','fake_listing'].includes(disputeCategory) ? 'rgba(52,211,153,0.2)' : 'rgba(248,113,113,0.2)'}`
+                        }}>
+                          {['seller_no_response','fake_listing'].includes(disputeCategory) ? '\u2713 Eligible for commission refund' : '\u2717 Not eligible for refund \u2014 see Terms of Service'}
+                        </div>
+                      )}
+
                       <textarea value={disputeReason} onChange={e => setDisputeReason(e.target.value)}
                         placeholder="Describe the issue: e.g., seller not responding, material quality mismatch, deal done outside app…"
-                        style={{ ...inputStyle, minHeight: 70, resize: 'vertical', fontSize: 12, marginBottom: 8 }} />
+                        style={{ ...inputStyle, minHeight: 70, resize: 'vertical', fontSize: 12, marginBottom: 12 }} />
+
+                      {/* Evidence upload */}
+                      <div style={{ marginBottom: 12 }}>
+                        <label style={{ fontSize: 11, color: 'rgba(255,255,255,0.4)', marginBottom: 6, display: 'block' }}>
+                          Upload Evidence (photos, screenshots)
+                        </label>
+                        <input type="file" accept="image/*" multiple onChange={async (e) => {
+                          const files = Array.from(e.target.files);
+                          if (files.length === 0) return;
+                          setUploadingEvidence(true);
+                          try {
+                            const res = await uploadMedia(files);
+                            setDisputeEvidence(prev => [...prev, ...(res.data.urls || res.data.files || [])]);
+                          } catch (err) { alert('Upload failed'); }
+                          setUploadingEvidence(false);
+                          e.target.value = '';
+                        }} style={{ display: 'none' }} id="evidence-upload" />
+                        <label htmlFor="evidence-upload" style={{
+                          display: 'inline-block', padding: '8px 16px', borderRadius: 8, cursor: 'pointer',
+                          border: '1px dashed rgba(255,255,255,0.2)', color: 'rgba(255,255,255,0.4)', fontSize: 12, fontFamily: 'monospace'
+                        }}>{uploadingEvidence ? 'Uploading...' : '\uD83D\uDCCE Attach Evidence'}</label>
+                        {disputeEvidence.length > 0 && (
+                          <div style={{ display: 'flex', gap: 8, marginTop: 8, flexWrap: 'wrap' }}>
+                            {disputeEvidence.map((f, i) => (
+                              <div key={i} style={{ position: 'relative' }}>
+                                <img src={f.startsWith('/uploads/') ? `${import.meta.env.VITE_API_URL?.replace('/api','') || 'http://localhost:3001'}${f}` : f}
+                                  style={{ width: 56, height: 56, borderRadius: 6, objectFit: 'cover' }} />
+                                <button onClick={() => setDisputeEvidence(prev => prev.filter((_,j) => j!==i))} style={{
+                                  position: 'absolute', top: -6, right: -6, width: 18, height: 18, borderRadius: '50%',
+                                  background: '#f87171', border: 'none', color: '#fff', fontSize: 10, cursor: 'pointer', lineHeight: 1
+                                }}>{'\u00d7'}</button>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+
                       <div style={{ display: 'flex', gap: 8 }}>
                         <button onClick={() => handleAction('dispute')} disabled={!!actionLoading}
                           style={{ flex: 1, padding: '10px', borderRadius: 8, fontSize: 12, fontWeight: 700,
                             background: '#f87171', color: '#000', border: 'none', cursor: 'pointer' }}>
                           {actionLoading === 'dispute' ? 'Submitting…' : 'Submit Dispute'}
                         </button>
-                        <button onClick={() => { setShowDispute(false); setDisputeReason(''); }}
+                        <button onClick={() => { setShowDispute(false); setDisputeReason(''); setDisputeCategory(''); setDisputeEvidence([]); }}
                           style={{ padding: '10px 16px', borderRadius: 8, fontSize: 12,
                             background: 'transparent', color: '#666', border: '1px solid rgba(255,255,255,0.1)', cursor: 'pointer' }}>
                           Cancel
@@ -692,7 +841,71 @@ function DealDetailPanel({ dealId, user, onClose }) {
           )}
         </div>
       </div>
+      {showRating && (
+        <RatingModal dealId={deal.id} counterpartyName={myRole === 'buyer' ? deal.seller?.name : deal.buyer?.name}
+          onClose={() => { setShowRating(false); refreshDeal(); }}
+          onSubmit={() => { setShowRating(false); refreshDeal(); }} />
+      )}
     </Overlay>
+  );
+}
+
+/* ── Rating Modal ────────────────────────────────────────────────── */
+function RatingModal({ dealId, counterpartyName, onClose, onSubmit }) {
+  const [score, setScore] = useState(0);
+  const [comment, setComment] = useState('');
+  const [submitting, setSubmitting] = useState(false);
+
+  const handleSubmit = async () => {
+    if (score === 0) return;
+    setSubmitting(true);
+    try {
+      await rateDeal(dealId, { score, comment });
+      onSubmit?.();
+    } catch (e) {
+      alert(e.response?.data?.error || 'Failed to submit rating');
+    }
+    setSubmitting(false);
+  };
+
+  return (
+    <div style={{ position: 'fixed', inset: 0, zIndex: 1000, background: 'rgba(0,0,0,0.7)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
+      <div onClick={e => e.stopPropagation()} style={{ background: '#0D1420', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 16, padding: 24, maxWidth: 400, width: '100%' }}>
+        <h3 style={{ fontFamily: 'monospace', color: '#CFB53B', fontSize: 18, marginBottom: 4 }}>Rate Your Experience</h3>
+        <p style={{ color: 'rgba(255,255,255,0.5)', fontSize: 12, marginBottom: 20 }}>How was your deal with {counterpartyName}?</p>
+
+        {/* 5 stars */}
+        <div style={{ display: 'flex', gap: 8, justifyContent: 'center', marginBottom: 16 }}>
+          {[1,2,3,4,5].map(s => (
+            <span key={s} onClick={() => setScore(s)} style={{
+              fontSize: 32, cursor: 'pointer', color: s <= score ? '#CFB53B' : 'rgba(255,255,255,0.15)',
+              transition: 'color 0.2s'
+            }}>{'\u2605'}</span>
+          ))}
+        </div>
+        <p style={{ textAlign: 'center', fontSize: 12, color: 'rgba(255,255,255,0.4)', marginBottom: 16 }}>
+          {score === 0 ? 'Tap a star to rate' : ['', 'Poor', 'Below Average', 'Good', 'Very Good', 'Excellent'][score]}
+        </p>
+
+        <textarea value={comment} onChange={e => setComment(e.target.value)} placeholder="Optional: share your experience..."
+          maxLength={500} rows={3} style={{
+            width: '100%', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)',
+            borderRadius: 8, padding: 12, color: '#fff', fontFamily: 'monospace', fontSize: 12, resize: 'none', marginBottom: 16,
+            boxSizing: 'border-box',
+          }} />
+
+        <div style={{ display: 'flex', gap: 8 }}>
+          <button onClick={handleSubmit} disabled={score === 0 || submitting} style={{
+            flex: 1, padding: '10px 0', borderRadius: 8, border: 'none', cursor: score > 0 ? 'pointer' : 'default',
+            backgroundColor: score > 0 ? '#CFB53B' : 'rgba(207,181,59,0.3)', color: '#000', fontWeight: 700, fontFamily: 'monospace', fontSize: 13
+          }}>{submitting ? 'Submitting...' : 'Submit Rating'}</button>
+          <button onClick={onClose} style={{
+            padding: '10px 16px', borderRadius: 8, border: '1px solid rgba(255,255,255,0.1)', cursor: 'pointer',
+            background: 'transparent', color: 'rgba(255,255,255,0.5)', fontFamily: 'monospace', fontSize: 13
+          }}>Skip</button>
+        </div>
+      </div>
+    </div>
   );
 }
 
@@ -843,6 +1056,22 @@ function PostForm({ user, onSuccess }) {
       setError(err.response?.data?.error || 'Failed to publish');
     } finally { setSubmitting(false); }
   };
+
+  if (user && !user.kycVerified) {
+    return (
+      <div style={{ textAlign: 'center', padding: '40px 20px' }}>
+        <Shield size={48} style={{ color: 'rgba(207,181,59,0.3)', margin: '0 auto 16px' }} />
+        <h3 style={{ fontFamily: 'monospace', color: '#CFB53B', fontSize: 18, marginBottom: 8 }}>KYC Verification Required</h3>
+        <p style={{ color: 'rgba(255,255,255,0.5)', fontSize: 13, maxWidth: 400, margin: '0 auto 16px', lineHeight: 1.6 }}>
+          Complete identity verification (Aadhaar/PAN) before posting listings. This protects all traders on the platform.
+        </p>
+        <button onClick={() => window.location.href = '/profile'} style={{
+          padding: '10px 24px', borderRadius: 8, border: 'none', cursor: 'pointer',
+          backgroundColor: '#CFB53B', color: '#000', fontWeight: 700, fontFamily: 'monospace', fontSize: 13
+        }}>Complete KYC &rarr;</button>
+      </div>
+    );
+  }
 
   return (
     <div style={{ background: '#0D1420', borderRadius: 16, border: '1px solid rgba(207,181,59,0.15)', padding: 24, maxWidth: 600 }}>

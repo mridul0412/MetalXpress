@@ -139,6 +139,9 @@ async function main() {
   console.log('🌱 Seeding MetalXpress database...');
 
   // Clear existing data
+  await prisma.rating.deleteMany();
+  await prisma.offer.deleteMany();
+  await prisma.deal.deleteMany();
   await prisma.rate.deleteMany();
   await prisma.rateUpdate.deleteMany();
   await prisma.lMERate.deleteMany();
@@ -271,13 +274,41 @@ async function main() {
 
   // Seed test users
   const bcrypt = require('bcryptjs');
-  const testUsers = [
-    { phone: '9876543210', name: 'Rajesh Kumar', city: 'Delhi', traderType: 'SELLER' },
-    { phone: '9876543211', name: 'Amit Sharma', city: 'Mumbai', traderType: 'BUYER' },
-    { phone: '9876543212', name: 'Suresh Patel', city: 'Ahmedabad', traderType: 'BOTH' },
-    { phone: '9876543213', name: 'Priya Verma', city: 'Chennai', traderType: 'SELLER' },
-    { phone: '9876543214', name: 'Vikram Singh', city: 'Ludhiana', traderType: 'BUYER' },
-  ];
+  const testHash = await bcrypt.hash('test1234', 12);
+
+  const rajesh = await prisma.user.create({ data: {
+    phone: '9876543210', email: 'rajesh@test.com', passwordHash: testHash,
+    name: 'Rajesh Kumar', city: 'Delhi', traderType: 'SELLER',
+    phoneVerified: true, kycVerified: true,
+  }});
+  const amit = await prisma.user.create({ data: {
+    phone: '9876543211', email: 'amit@test.com', passwordHash: testHash,
+    name: 'Amit Sharma', city: 'Mumbai', traderType: 'BUYER',
+    phoneVerified: true, kycVerified: true,
+  }});
+  const suresh = await prisma.user.create({ data: {
+    phone: '9876543212', email: 'suresh@test.com', passwordHash: testHash,
+    name: 'Suresh Patel', city: 'Ahmedabad', traderType: 'BOTH',
+    phoneVerified: true, kycVerified: true,
+  }});
+  const priya = await prisma.user.create({ data: {
+    phone: '9876543213', email: 'priya@test.com', passwordHash: testHash,
+    name: 'Priya Verma', city: 'Chennai', traderType: 'SELLER',
+    phoneVerified: true, kycVerified: false,
+  }});
+  const vikram = await prisma.user.create({ data: {
+    phone: '9876543214', email: 'vikram@test.com', passwordHash: testHash,
+    name: 'Vikram Singh', city: 'Ludhiana', traderType: 'BUYER',
+    phoneVerified: true, kycVerified: true,
+  }});
+
+  const userMap = {
+    'Rajesh Kumar': rajesh,
+    'Amit Sharma': amit,
+    'Suresh Patel': suresh,
+    'Priya Verma': priya,
+    'Vikram Singh': vikram,
+  };
 
   // Owner test account with pro subscription (email: test@metalxpress.in, password: test1234)
   const ownerHash = await bcrypt.hash('test1234', 12);
@@ -309,13 +340,7 @@ async function main() {
     },
   });
   console.log(`  ✅ Admin user: admin@metalxpress.in / admin1234 (full pro access)`);
-
-  const userMap = {};
-  for (const tu of testUsers) {
-    const u = await prisma.user.create({ data: tu });
-    userMap[tu.name] = u;
-  }
-  console.log(`  ✅ Test users: ${testUsers.length + 1}`);
+  console.log(`  ✅ Test users: 7 (5 traders + pro tester + admin)`);
 
   // Seed sample marketplace listings (10 diverse listings)
   const copperMetal = metalMap['Copper'];
@@ -326,75 +351,218 @@ async function main() {
 
   const listings = [
     {
-      userId: userMap['Rajesh Kumar'].id, metalId: copperMetal.id,
+      userId: rajesh.id, metalId: copperMetal.id,
       gradeId: gradeMap['Copper:Armature Bhatti']?.id || null,
       qty: 500, location: 'Mandoli, Delhi', price: 1140,
       description: 'Good quality armature copper scrap. Available immediately. Regular supply.',
       contact: '9876543210', status: 'verified',
+      images: JSON.stringify(['/uploads/seed-copper-armature-1.jpg', '/uploads/seed-copper-armature-2.jpg']),
     },
     {
-      userId: userMap['Rajesh Kumar'].id, metalId: copperMetal.id,
+      userId: rajesh.id, metalId: copperMetal.id,
       gradeId: gradeMap['Copper:CC Rod']?.id || null,
       qty: 2000, location: 'Mandoli, Delhi', price: 1240,
       description: 'CC Rod copper, premium quality. 2 ton lot ready for dispatch.',
       contact: '9876543210', status: 'verified',
+      images: JSON.stringify(['/uploads/seed-copper-cc-rod-1.jpg', '/uploads/seed-copper-cc-rod-2.jpg', '/uploads/seed-copper-cc-rod-3.jpg']),
     },
     {
-      userId: userMap['Amit Sharma'].id, metalId: brassMetal.id,
+      userId: amit.id, metalId: brassMetal.id,
       gradeId: gradeMap['Brass:Purja']?.id || null,
       qty: 800, location: 'Kurla, Mumbai', price: 670,
       description: 'Brass purja scrap, clean, no iron mixed. Can deliver within Mumbai.',
       contact: '9876543211', status: 'verified',
+      images: JSON.stringify(['/uploads/seed-brass-purja-1.jpg', '/uploads/seed-brass-purja-2.jpg', '/uploads/seed-brass-purja-video.mp4']),
     },
     {
-      userId: userMap['Suresh Patel'].id, metalId: alumMetal.id,
+      userId: suresh.id, metalId: alumMetal.id,
       gradeId: gradeMap['Aluminium:Ingot']?.id || null,
       qty: 3000, location: 'Naroda, Ahmedabad', price: 335,
       description: 'Aluminium ingot scrap lot. Best offer invited. Serious buyers only.',
       contact: '9876543212', status: 'verified',
+      images: JSON.stringify(['/uploads/seed-aluminium-ingot-1.jpg', '/uploads/seed-aluminium-ingot-2.jpg']),
     },
     {
-      userId: userMap['Suresh Patel'].id, metalId: zincMetal.id,
+      userId: suresh.id, metalId: zincMetal.id,
       gradeId: gradeMap['Zinc:Slab']?.id || null,
       qty: 1500, location: 'Naroda, Ahmedabad', price: 334,
       description: 'Zinc slab — full truck load available. Ready for pickup.',
       contact: '9876543212', status: 'pending',
+      images: JSON.stringify(['/uploads/seed-zinc-slab-1.jpg', '/uploads/seed-zinc-slab-2.jpg']),
     },
     {
-      userId: userMap['Priya Verma'].id, metalId: leadMetal.id,
+      userId: priya.id, metalId: leadMetal.id,
       gradeId: gradeMap['Lead:Battery']?.id || null,
       qty: 10000, location: 'Ambattur, Chennai', price: 112,
       description: 'Used battery lead scrap. Monthly supply available. ISO certified recycler.',
       contact: '9876543213', status: 'verified',
+      images: JSON.stringify(['/uploads/seed-lead-battery-1.jpg', '/uploads/seed-lead-battery-2.jpg', '/uploads/seed-lead-battery-video.mp4']),
     },
     {
-      userId: userMap['Priya Verma'].id, metalId: brassMetal.id,
+      userId: priya.id, metalId: brassMetal.id,
       gradeId: gradeMap['Brass:Honey']?.id || null,
       qty: 600, location: 'Chennai', price: null,
       description: 'Brass honey scrap — looking for buyers. Rate negotiable based on volume.',
       contact: '9876543213', status: 'pending',
+      images: JSON.stringify(['/uploads/seed-brass-honey-1.jpg', '/uploads/seed-brass-honey-2.jpg']),
     },
     {
-      userId: userMap['Vikram Singh'].id, metalId: copperMetal.id,
+      userId: vikram.id, metalId: copperMetal.id,
       gradeId: gradeMap['Copper:CCR']?.id || null,
       qty: 1000, location: 'Focal Point, Ludhiana', price: 1300,
       description: 'CCR copper available. Factory surplus from cable manufacturing.',
       contact: '9876543214', status: 'verified',
+      images: JSON.stringify(['/uploads/seed-copper-ccr-1.jpg', '/uploads/seed-copper-ccr-2.jpg', '/uploads/seed-copper-ccr-3.jpg']),
     },
     {
-      userId: userMap['Vikram Singh'].id, metalId: alumMetal.id,
+      userId: vikram.id, metalId: alumMetal.id,
       gradeId: gradeMap['Aluminium:Wire Scrap']?.id || null,
       qty: 2500, location: 'Ludhiana', price: 300,
       description: 'Aluminium wire scrap for recycling. Have stock from power cable project.',
       contact: '9876543214', status: 'verified',
+      images: JSON.stringify(['/uploads/seed-aluminium-wire-1.jpg', '/uploads/seed-aluminium-wire-2.jpg']),
     },
   ];
 
   const expiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000); // 30 days
+  const createdListings = [];
   for (const l of listings) {
-    await prisma.listing.create({ data: { ...l, unit: 'kg', expiresAt } });
+    const listing = await prisma.listing.create({ data: { ...l, unit: 'kg', expiresAt } });
+    createdListings.push(listing);
   }
-  console.log(`  ✅ Sample listings: ${listings.length}`);
+  console.log(`  ✅ Sample listings: ${listings.length} (with images)`);
+
+  // ── Sample completed deals with offer history and ratings ──
+
+  const pastDate = (daysAgo) => new Date(Date.now() - daysAgo * 24 * 60 * 60 * 1000);
+
+  // Deal 1: Rajesh (seller) → Amit (buyer), Copper CC Rod, 500kg @ 1150/kg
+  const deal1 = await prisma.deal.create({ data: {
+    listingId: createdListings[1].id, // CC Rod listing
+    buyerId: amit.id,
+    sellerId: rajesh.id,
+    agreedPrice: 1150,
+    agreedQty: 500,
+    dealAmount: 575000,
+    commission: 575,
+    status: 'completed',
+    lastOfferAt: pastDate(12),
+    paidAt: pastDate(11),
+    completedAt: pastDate(8),
+  }});
+
+  // Deal 1 offers: Amit offered 1130, Rajesh countered 1150, Amit accepted
+  await prisma.offer.create({ data: {
+    dealId: deal1.id, fromUserId: amit.id,
+    pricePerKg: 1130, qty: 500, message: 'Can you do 1130? Need 500kg for factory order.',
+    status: 'countered', createdAt: pastDate(14),
+  }});
+  await prisma.offer.create({ data: {
+    dealId: deal1.id, fromUserId: rajesh.id,
+    pricePerKg: 1150, qty: 500, message: 'Best I can do is 1150. Premium quality CC Rod.',
+    status: 'accepted', createdAt: pastDate(12),
+  }});
+
+  // Deal 1 ratings
+  await prisma.rating.create({ data: {
+    dealId: deal1.id, fromUserId: amit.id, toUserId: rajesh.id,
+    score: 5, comment: 'Excellent quality copper, delivered on time',
+  }});
+  await prisma.rating.create({ data: {
+    dealId: deal1.id, fromUserId: rajesh.id, toUserId: amit.id,
+    score: 4, comment: 'Prompt payment, good buyer',
+  }});
+
+  // Deal 2: Suresh (seller) → Amit (buyer), Brass Purja, 1000kg @ 650/kg
+  const deal2 = await prisma.deal.create({ data: {
+    listingId: createdListings[2].id, // Brass Purja listing (Amit's listing, but Suresh sells here)
+    buyerId: amit.id,
+    sellerId: suresh.id,
+    agreedPrice: 650,
+    agreedQty: 1000,
+    dealAmount: 650000,
+    commission: 650,
+    status: 'completed',
+    lastOfferAt: pastDate(20),
+    paidAt: pastDate(19),
+    completedAt: pastDate(15),
+  }});
+
+  // Deal 2 offers
+  await prisma.offer.create({ data: {
+    dealId: deal2.id, fromUserId: amit.id,
+    pricePerKg: 640, qty: 1000, message: 'Looking for 1 ton brass purja. Can you do 640?',
+    status: 'countered', createdAt: pastDate(22),
+  }});
+  await prisma.offer.create({ data: {
+    dealId: deal2.id, fromUserId: suresh.id,
+    pricePerKg: 650, qty: 1000, message: 'Clean brass, no iron mixed. 650 is fair price.',
+    status: 'accepted', createdAt: pastDate(20),
+  }});
+
+  // Deal 2 ratings
+  await prisma.rating.create({ data: {
+    dealId: deal2.id, fromUserId: amit.id, toUserId: suresh.id,
+    score: 4, comment: 'Good brass quality, slight delay in delivery',
+  }});
+  await prisma.rating.create({ data: {
+    dealId: deal2.id, fromUserId: suresh.id, toUserId: amit.id,
+    score: 5, comment: 'Very reliable buyer, immediate payment',
+  }});
+
+  // Deal 3: Vikram (seller) → Rajesh (buyer), Aluminium Wire Scrap, 800kg @ 290/kg
+  const deal3 = await prisma.deal.create({ data: {
+    listingId: createdListings[8].id, // Aluminium Wire Scrap listing
+    buyerId: rajesh.id,
+    sellerId: vikram.id,
+    agreedPrice: 290,
+    agreedQty: 800,
+    dealAmount: 232000,
+    commission: 232,
+    status: 'completed',
+    lastOfferAt: pastDate(7),
+    paidAt: pastDate(6),
+    completedAt: pastDate(3),
+  }});
+
+  // Deal 3 offers
+  await prisma.offer.create({ data: {
+    dealId: deal3.id, fromUserId: rajesh.id,
+    pricePerKg: 280, qty: 800, message: 'Need 800kg aluminium wire scrap for recycling unit.',
+    status: 'countered', createdAt: pastDate(9),
+  }});
+  await prisma.offer.create({ data: {
+    dealId: deal3.id, fromUserId: vikram.id,
+    pricePerKg: 295, qty: 800, message: 'High grade wire from power cable project. 295 minimum.',
+    status: 'countered', createdAt: pastDate(8),
+  }});
+  await prisma.offer.create({ data: {
+    dealId: deal3.id, fromUserId: rajesh.id,
+    pricePerKg: 290, qty: 800, message: 'Let us meet at 290. Deal?',
+    status: 'accepted', createdAt: pastDate(7),
+  }});
+
+  // Deal 3 ratings
+  await prisma.rating.create({ data: {
+    dealId: deal3.id, fromUserId: rajesh.id, toUserId: vikram.id,
+    score: 5, comment: 'Top quality aluminium, will deal again',
+  }});
+  await prisma.rating.create({ data: {
+    dealId: deal3.id, fromUserId: vikram.id, toUserId: rajesh.id,
+    score: 5, comment: 'Experienced trader, smooth transaction',
+  }});
+
+  console.log(`  ✅ Sample deals: 3 (completed with offer history)`);
+  console.log(`  ✅ Sample ratings: 6`);
+
+  // Recalculate user stats from ratings
+  for (const user of [rajesh, suresh, amit, vikram]) {
+    const agg = await prisma.rating.aggregate({ where: { toUserId: user.id }, _avg: { score: true }, _count: true });
+    if (agg._count > 0) {
+      await prisma.user.update({ where: { id: user.id }, data: { avgRating: agg._avg.score || 0, completedDeals: agg._count } });
+    }
+  }
+  console.log(`  ✅ User stats recalculated from ratings`);
 
   console.log('\n🎉 Seed complete!');
 }

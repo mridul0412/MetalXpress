@@ -10,6 +10,14 @@ const prisma = new PrismaClient();
 
 const COMMISSION_RATE = 0.001; // 0.1%
 
+// Ban/cooldown check helper
+async function checkBanCooldown(userId) {
+  const u = await prisma.user.findUnique({ where: { id: userId }, select: { isBanned: true, banReason: true, cooldownUntil: true } });
+  if (u?.isBanned) return { blocked: true, reason: u.banReason || 'Account suspended due to policy violations' };
+  if (u?.cooldownUntil && new Date(u.cooldownUntil) > new Date()) return { blocked: true, reason: `Account on cooldown until ${u.cooldownUntil.toLocaleDateString()}` };
+  return { blocked: false };
+}
+
 // Multer config — save to uploads/ with unique filenames
 const storage = multer.diskStorage({
   destination: path.join(__dirname, '../../uploads'),
@@ -69,7 +77,7 @@ router.get('/listings', async (req, res) => {
         include: {
           metal: true,
           grade: true,
-          user: { select: { name: true, city: true } },
+          user: { select: { name: true, city: true, completedDeals: true, avgRating: true, kycVerified: true } },
         },
         orderBy: { createdAt: 'desc' },
         skip,
@@ -84,6 +92,9 @@ router.get('/listings', async (req, res) => {
       contact: undefined, // strip contact from browse response
       sellerName: l.user?.name || 'Anonymous',
       sellerCity: l.user?.city || l.location,
+      sellerCompletedDeals: l.user?.completedDeals || 0,
+      sellerAvgRating: l.user?.avgRating || 0,
+      sellerKycVerified: l.user?.kycVerified || false,
       imageUrls: l.images ? JSON.parse(l.images) : [],
     }));
 
@@ -111,6 +122,14 @@ router.get('/my-listings', authMiddleware, async (req, res) => {
 // POST /api/marketplace/listings — create new listing (goes to pending)
 router.post('/listings', authMiddleware, async (req, res) => {
   try {
+    // Ban/cooldown check
+    const banCheck = await checkBanCooldown(req.user.userId);
+    if (banCheck.blocked) return res.status(403).json({ error: banCheck.reason, code: 'ACCOUNT_BLOCKED' });
+
+    // KYC check
+    const userObj = await prisma.user.findUnique({ where: { id: req.user.userId } });
+    if (!userObj.kycVerified) return res.status(403).json({ error: 'KYC verification required before posting listings', code: 'KYC_REQUIRED' });
+
     const { metalId, gradeId, qty, unit, location, price, description, contact, images } = req.body;
 
     if (!metalId || !qty || !location || !contact) {
@@ -252,6 +271,10 @@ const DEAL_INCLUDE = {
 // POST /api/marketplace/deals — buyer makes initial offer
 router.post('/deals', authMiddleware, async (req, res) => {
   try {
+    // Ban/cooldown check
+    const banCheck = await checkBanCooldown(req.user.userId);
+    if (banCheck.blocked) return res.status(403).json({ error: banCheck.reason, code: 'ACCOUNT_BLOCKED' });
+
     const { listingId, pricePerKg, qty, message } = req.body;
     if (!listingId || !pricePerKg) return res.status(400).json({ error: 'listingId and pricePerKg required' });
 
@@ -306,6 +329,10 @@ router.post('/deals', authMiddleware, async (req, res) => {
 // POST /api/marketplace/deals/:id/counter — counter-offer
 router.post('/deals/:id/counter', authMiddleware, async (req, res) => {
   try {
+    // Ban/cooldown check
+    const banCheck = await checkBanCooldown(req.user.userId);
+    if (banCheck.blocked) return res.status(403).json({ error: banCheck.reason, code: 'ACCOUNT_BLOCKED' });
+
     const deal = await prisma.deal.findUnique({
       where: { id: req.params.id },
       include: { offers: { orderBy: { createdAt: 'desc' }, take: 1 } },
@@ -592,7 +619,7 @@ router.post('/deals/:id/dispute', authMiddleware, async (req, res) => {
       return res.status(400).json({ error: 'Can only dispute connected or completed deals' });
     }
 
-    const { reason } = req.body;
+    const { reason, evidence, category } = req.body;
     if (!reason || reason.trim().length < 10) {
       return res.status(400).json({ error: 'Please provide a detailed reason (at least 10 characters)' });
     }
@@ -603,8 +630,19 @@ router.post('/deals/:id/dispute', authMiddleware, async (req, res) => {
         status: 'disputed',
         disputeReason: reason.trim(),
         disputedAt: new Date(),
+        disputeEvidence: evidence ? JSON.stringify(evidence) : null,
+        disputeCategory: category || 'other',
       },
       include: DEAL_INCLUDE,
+    });
+
+    // Increment dispute count for the filing user; if >= 3, set cooldown
+    const newCount = await prisma.user.findUnique({ where: { id: req.user.userId }, select: { disputeCount: true } });
+    const updatedCount = (newCount?.disputeCount || 0) + 1;
+    const cooldownData = updatedCount >= 3 ? { cooldownUntil: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000) } : {};
+    await prisma.user.update({
+      where: { id: req.user.userId },
+      data: { disputeCount: updatedCount, ...cooldownData },
     });
 
     res.json({
@@ -658,18 +696,45 @@ router.patch('/deals/:id/resolve-dispute', async (req, res) => {
     if (!deal) return res.status(404).json({ error: 'Deal not found' });
     if (deal.status !== 'disputed') return res.status(400).json({ error: 'Deal is not in disputed state' });
 
-    const newStatus = resolution === 'refund' ? 'cancelled' : resolution;
+    // Refund policy automation based on dispute category
+    const REFUND_POLICY = {
+      seller_no_response: { refund: true, banSeller: false, action: 'warn_seller' },
+      buyer_ghosted: { refund: false, banBuyer: false },
+      material_quality: { refund: false, shareKyc: true },
+      fake_listing: { refund: true, banSeller: true },
+      both_claim_no_deal: { refund: false },
+    };
+
+    const policy = REFUND_POLICY[deal.disputeCategory] || {};
+    const shouldRefund = resolution === 'refund' || (policy.refund && resolution !== 'completed');
+    const newStatus = shouldRefund ? 'cancelled' : resolution === 'completed' ? 'completed' : 'cancelled';
+
     const updated = await prisma.deal.update({
       where: { id: req.params.id },
-      data: { status: newStatus, ...(resolution === 'completed' ? { completedAt: new Date() } : {}) },
+      data: {
+        status: newStatus,
+        resolvedAt: new Date(),
+        resolvedBy: 'admin',
+        refundIssued: shouldRefund,
+        ...(newStatus === 'completed' ? { completedAt: new Date() } : {}),
+      },
       include: DEAL_INCLUDE,
     });
 
+    // If fake_listing policy triggers, ban the seller
+    if (policy.banSeller && deal.sellerId) {
+      await prisma.user.update({
+        where: { id: deal.sellerId },
+        data: { isBanned: true, banReason: 'Fake listing detected via dispute resolution', bannedAt: new Date() },
+      });
+    }
+
     res.json({
       deal: updated,
-      message: resolution === 'refund'
+      policyApplied: deal.disputeCategory ? (policy.refund !== undefined ? deal.disputeCategory : 'manual') : 'manual',
+      message: shouldRefund
         ? 'Dispute resolved: commission refunded, deal cancelled.'
-        : resolution === 'completed'
+        : newStatus === 'completed'
         ? 'Dispute resolved: deal marked as completed.'
         : 'Dispute resolved: deal cancelled.',
     });
@@ -696,6 +761,59 @@ router.patch('/deals/:id/complete', authMiddleware, async (req, res) => {
     res.json({ success: true, deal: updated });
   } catch (err) {
     res.status(500).json({ error: 'Failed to complete deal' });
+  }
+});
+
+// POST /api/marketplace/deals/:id/rate — rate a completed deal
+router.post('/deals/:id/rate', authMiddleware, async (req, res) => {
+  try {
+    const { score, comment } = req.body;
+    if (!score || score < 1 || score > 5) return res.status(400).json({ error: 'Score must be 1-5' });
+
+    const deal = await prisma.deal.findUnique({ where: { id: req.params.id } });
+    if (!deal) return res.status(404).json({ error: 'Deal not found' });
+    if (deal.status !== 'completed') return res.status(400).json({ error: 'Can only rate completed deals' });
+
+    const isBuyer = deal.buyerId === req.user.userId;
+    const isSeller = deal.sellerId === req.user.userId;
+    if (!isBuyer && !isSeller) return res.status(403).json({ error: 'Not your deal' });
+
+    const toUserId = isBuyer ? deal.sellerId : deal.buyerId;
+
+    try {
+      const rating = await prisma.rating.create({
+        data: { dealId: deal.id, fromUserId: req.user.userId, toUserId, score: parseInt(score), comment: comment?.substring(0, 500) }
+      });
+
+      // Recalculate stats
+      const agg = await prisma.rating.aggregate({ where: { toUserId }, _avg: { score: true }, _count: true });
+      await prisma.user.update({ where: { id: toUserId }, data: { avgRating: agg._avg.score || 0, completedDeals: agg._count } });
+
+      res.json({ rating });
+    } catch (e) {
+      if (e.code === 'P2002') return res.status(400).json({ error: 'Already rated this deal' });
+      throw e;
+    }
+  } catch (err) {
+    console.error('/api/marketplace/deals/rate error:', err);
+    res.status(500).json({ error: 'Failed to rate deal' });
+  }
+});
+
+// GET /api/marketplace/users/:id/ratings — public user ratings
+router.get('/users/:id/ratings', async (req, res) => {
+  try {
+    const ratings = await prisma.rating.findMany({
+      where: { toUserId: req.params.id },
+      include: { fromUser: { select: { name: true, city: true } } },
+      orderBy: { createdAt: 'desc' },
+      take: 20
+    });
+    const user = await prisma.user.findUnique({ where: { id: req.params.id }, select: { avgRating: true, completedDeals: true, name: true } });
+    res.json({ ratings, user });
+  } catch (err) {
+    console.error('/api/marketplace/users/ratings error:', err);
+    res.status(500).json({ error: 'Failed to fetch ratings' });
   }
 });
 

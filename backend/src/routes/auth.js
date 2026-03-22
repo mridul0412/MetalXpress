@@ -128,7 +128,15 @@ router.get('/me', async (req, res) => {
     if (!header) return res.status(401).json({ error: 'No token' });
     const token = header.replace('Bearer ', '');
     const payload = jwt.verify(token, process.env.JWT_SECRET);
-    const user = await prisma.user.findUnique({ where: { id: payload.userId } });
+    const user = await prisma.user.findUnique({
+      where: { id: payload.userId },
+      select: {
+        id: true, phone: true, email: true, name: true, city: true, traderType: true,
+        phoneVerified: true, kycVerified: true, createdAt: true, updatedAt: true,
+        isBanned: true, banReason: true, cooldownUntil: true,
+        completedDeals: true, avgRating: true, disputeCount: true,
+      },
+    });
     if (!user) return res.status(404).json({ error: 'User not found' });
     res.json(user);
   } catch (err) {
@@ -210,7 +218,7 @@ router.get('/subscription', async (req, res) => {
 // POST /api/auth/register — email+password+phone signup (OTP required)
 router.post('/register', async (req, res) => {
   try {
-    const { email, password, name, traderType, city, phone, otp } = req.body;
+    const { email, password, name, traderType, city, phone, otp, termsAccepted } = req.body;
     if (!email || !password) return res.status(400).json({ error: 'Email and password required' });
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return res.status(400).json({ error: 'Invalid email format' });
     if (password.length < 6) return res.status(400).json({ error: 'Password must be at least 6 characters' });
@@ -250,6 +258,7 @@ router.post('/register', async (req, res) => {
         name: name || null,
         city: city || null,
         traderType: traderType || 'CHECKING_RATES',
+        ...(termsAccepted ? { termsAcceptedAt: new Date() } : {}),
       },
     });
 

@@ -13,7 +13,15 @@ model User {
   email        String?     @unique
   passwordHash  String?
   phoneVerified Boolean     @default(false)
-  kycVerified   Boolean     @default(false)
+  kycVerified    Boolean     @default(false)
+  isBanned       Boolean     @default(false)
+  banReason      String?     @db.Text
+  bannedAt       DateTime?
+  disputeCount   Int         @default(0)
+  cooldownUntil  DateTime?
+  completedDeals Int         @default(0)
+  avgRating      Float       @default(0)
+  termsAcceptedAt DateTime?
   name          String?
   city         String?
   traderType   TraderType  @default(CHECKING_RATES)
@@ -24,6 +32,8 @@ model User {
   buyerDeals   Deal[]      @relation("BuyerDeals")
   sellerDeals  Deal[]      @relation("SellerDeals")
   offers       Offer[]
+  ratingsGiven    Rating[]  @relation("RatingsGiven")
+  ratingsReceived Rating[]  @relation("RatingsReceived")
 }
 
 enum TraderType {
@@ -193,9 +203,15 @@ model Deal {
   expiresAt     DateTime?
   paidAt        DateTime?
   completedAt   DateTime?
-  disputeReason String?   @db.Text
-  disputedAt    DateTime?
-  createdAt     DateTime  @default(now())
+  disputeReason    String?   @db.Text
+  disputedAt       DateTime?
+  disputeEvidence  String?   @db.Text
+  disputeCategory  String?
+  resolvedAt       DateTime?
+  resolvedBy       String?
+  refundIssued     Boolean   @default(false)
+  ratings          Rating[]
+  createdAt        DateTime  @default(now())
 }
 
 model Offer {
@@ -209,6 +225,20 @@ model Offer {
   message    String?  @db.Text
   status     String   @default("pending") // pending | accepted | countered | rejected | expired
   createdAt  DateTime @default(now())
+}
+
+model Rating {
+  id         String   @id @default(cuid())
+  dealId     String
+  deal       Deal     @relation(fields: [dealId], references: [id])
+  fromUserId String
+  fromUser   User     @relation("RatingsGiven", fields: [fromUserId], references: [id])
+  toUserId   String
+  toUser     User     @relation("RatingsReceived", fields: [toUserId], references: [id])
+  score      Int
+  comment    String?  @db.Text
+  createdAt  DateTime @default(now())
+  @@unique([dealId, fromUserId])
 }
 
 model OTPSession {
