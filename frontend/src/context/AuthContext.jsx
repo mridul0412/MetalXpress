@@ -17,6 +17,19 @@ export function AuthProvider({ children }) {
     }
   }, []);
 
+  const refreshUser = useCallback(async () => {
+    try {
+      const res = await fetchMe();
+      setUser(res.data);
+      localStorage.setItem('mx_user', JSON.stringify(res.data));
+    } catch {
+      // token invalid — log out
+      localStorage.removeItem('mx_token');
+      localStorage.removeItem('mx_user');
+      setUser(null);
+    }
+  }, []);
+
   useEffect(() => {
     const token = localStorage.getItem('mx_token');
     if (token) {
@@ -48,7 +61,7 @@ export function AuthProvider({ children }) {
   };
 
   return (
-    <AuthContext.Provider value={{ user, subscription, loading, login, logout, refreshSubscription }}>
+    <AuthContext.Provider value={{ user, subscription, loading, login, logout, refreshSubscription, refreshUser }}>
       {children}
     </AuthContext.Provider>
   );

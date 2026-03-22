@@ -483,14 +483,107 @@ Grade names updated to match actual WhatsApp message format (so `normGrade` matc
 - Live deal value + commission preview below inputs
 - Instructional text: "Edit both price and quantity to counter-offer"
 
-## Current Status (as of 2026-03-22, session 9)
+## Session 10 Changes (2026-03-22) — Full Detail
+
+### Lightbox Gallery for Listing Images/Videos
+- **New `Lightbox` component** in `Marketplace.jsx`: full-screen dark overlay, ← → arrow navigation, keyboard support (ArrowLeft/Right/Escape), thumbnail strip at bottom (gold border on active, Play icon for video), counter "N / total" top-center
+- **Video autoplay** with full browser controls in lightbox
+- **ListingCard updated**: thumbnails now clickable (opens lightbox at clicked index), shows up to 4 thumbnails, "+N" on 4th if more
+- Imported `ChevronLeft`, `ZoomIn`, `Play` from lucide-react
+
+### Real Scrap Metal Photos & Videos — Local Serving
+- **Problem**: Pexels CDN URLs blocked hotlinks in browser (Referer check)
+- **Fix**: All seed images switched from `https://images.pexels.com/...` to local `/uploads/seed-*.jpg` paths
+- **11 photos downloaded** to `backend/uploads/` (seed-scrap-yard-1/2/3, seed-metal-wire-1, seed-metal-ingot-1, seed-metal-pile-1, seed-metal-texture-1, seed-metal-scrap-2/3, seed-metal-recycle-1, seed-metal-factory-1)
+- **2 videos downloaded** to `backend/uploads/`:
+  - `seed-scrap-metal-recycle.webm` — 19.9MB scrap metal recycling footage (Wikimedia CC)
+  - `seed-copper-pipe.webm` — 4.9MB copper conductivity demo (Wikimedia CC)
+- **Seed.js updated**: `IMG` object maps descriptive keys to `/uploads/seed-*.jpg`; `VID` object maps to `/uploads/seed-*.webm`; each listing has appropriate metal-matched photos
+- **Cloud deployment note**: Copy `backend/uploads/` to server, OR migrate to Cloudinary (change multer config only — paths in DB stay same format)
+
+### Minimum 4 Media Required for Listings
+- `PostForm` in Marketplace.jsx: requires at least 4 photos/videos before submitting
+- Shows `{imageUrls.length}/4 minimum` counter (amber < 4, green ≥ 4)
+- Submit button disabled with message "Add at least 4 photos/videos" until met
+- Instructional text: "Upload at least 4 clear photos or a video to help buyers verify quality"
+
+### "Just Checking" Trader Type Gate on Marketplace
+- `JustCheckingGate` component: lock icon + explanation + "Update My Profile" button → `/profile`
+- Shows on Browse tab if `user.traderType === 'CHECKING_RATES'`
+- Shows on Sell Scrap tab if `user.traderType === 'CHECKING_RATES'`
+- Logged-out users see existing `LoginPrompt` (unchanged)
+
+### Explicit T&C Acceptance on Offer + Listing
+- **OfferModal**: `termsChecked` state + checkbox with links to Terms, commission policy, refund policy. Submit disabled until checked.
+- **PostForm**: `termsChecked` state + checkbox with links to Terms and dispute policy. Submit disabled until checked AND ≥4 media.
+- Both use inline links to specific anchor sections (`/terms#commission`, `/terms#refund-policy`, `/terms#dispute`)
+
+### KYC System — Full Implementation
+**Schema changes** (schema.prisma):
+- Added `businessName String?` to User model
+- Added `tradeCategory String?` to User model
+- DB pushed: `npx prisma db push` ✓
+
+**3-step Signup flow for Buyer/Seller**:
+- Step 1: Details (email, password, name, phone, trader type, T&C checkbox)
+- Step 2: Verify Phone (OTP)
+- Step 3 (BUYER/SELLER only): Trade Profile (KYC)
+  - Trade category required (dropdown: Scrap Collector/Kabadiwala, Dealer/Merchant, Factory, Recycler, Individual, Broker, Other)
+  - Business/trade name optional
+  - Privacy promise box prominently displayed (non-scary)
+  - "Skip for now" button → logs in without kycVerified
+  - Submitting → sets `kycVerified: true` via PATCH /profile `kycComplete: true`
+- `CHECKING_RATES` users skip KYC step entirely
+
+**Privacy promise** (shown on KYC step and Profile page):
+> MetalXpress does NOT report any transaction data to GST, Income Tax, or any government body. This step only confirms you're a real trader — to protect the community from fraud. Your deal amounts remain strictly between you and your counterparty.
+
+**Self-declared KYC**: No government verification. Selecting trade category + agreeing to terms = `kycVerified: true`. Admin can still revoke for fraud.
+
+**Backend changes** (auth.js):
+- GET /me: now returns `businessName`, `tradeCategory`, `termsAcceptedAt`
+- PATCH /profile: accepts `businessName`, `tradeCategory`, `kycComplete` (sets `kycVerified: true`)
+- POST /register: accepts `businessName`, `tradeCategory`; if `tradeCategory` provided, sets `kycVerified: true`
+
+### Profile Page — Complete Rewrite
+**Bugs fixed**:
+- Save changes now calls `refreshUser()` (new AuthContext method) → UI immediately reflects updated name/email/city/etc.
+- Phone change requires OTP verification: detect if phone changed → "Send OTP" button appears → verify before saving → backend validates OTP on PATCH /profile
+
+**New AuthContext method**: `refreshUser()` — re-fetches `/api/auth/me` and updates `user` state + localStorage. Exported in context value.
+
+**Profile page new sections**:
+- KYC status banner: green "Identity Verified ✓" or amber "Verification Required" with Verify button
+- KYC inline form (shown for unverified BUYER/SELLER): trade category dropdown, business name, privacy promise
+- Phone change OTP flow: "Send OTP" button appears when phone edited, OTP input shown after send, validated before save
+- Trade category and business name fields in personal info section
+
+### TRADE_CATEGORIES constant
+Used in both Signup.jsx and Profile.jsx:
+```js
+['Scrap Collector / Kabadiwala', 'Scrap Dealer / Merchant', 'Factory / Manufacturer',
+ 'Recycler / Smelter', 'Individual Trader', 'Broker / Agent', 'Other']
+```
+
+### Files Modified (session 10)
+- `frontend/src/pages/Marketplace.jsx` — Lightbox, min 4 media, JustCheckingGate, T&C checkboxes
+- `frontend/src/pages/Profile.jsx` — Complete rewrite: refreshUser, phone OTP, KYC, all fields editable
+- `frontend/src/pages/Signup.jsx` — 3-step flow with KYC, TRADE_CATEGORIES, step indicator
+- `frontend/src/context/AuthContext.jsx` — Added `refreshUser()` method
+- `backend/src/routes/auth.js` — /me returns new fields, PATCH /profile handles kycComplete + phone OTP, POST /register handles businessName/tradeCategory
+- `backend/prisma/schema.prisma` — Added `businessName String?`, `tradeCategory String?` to User
+- `backend/uploads/` — 11 real scrap metal photos + 2 industrial videos (local serving)
+- `backend/src/prisma/seed.js` — Updated to use local `/uploads/` paths (not CDN), proper metal-matched images per listing
+
+## Current Status (as of 2026-03-22, session 10)
 - **Auth**: Unified signup (email+phone+OTP mandatory), email+password login, phone OTP login, Google OAuth — prevents duplicate accounts. Phone normalization handles +91 prefix, spaces, dashes.
 - **Subscription**: Pro test user `test@metalxpress.in` / `test1234`, Admin user `admin@metalxpress.in` / `admin1234` — pro plan via PRO_EMAILS env var
 - **Landing**: Hero section for non-logged-in users with feature cards and CTAs
 - **Paywall**: Local rates blurred/gated for non-subscribers with "Sign Up" or "Upgrade to Pro" overlay
-- **Marketplace**: Negotiation-first deal flow, 0.1% commission on agreed value, chat-style offer thread, direct file upload for photos/videos (multer → local disk), dispute/escrow mechanism, 4-tab UI (Browse shows login prompt when logged out / Sell Scrap / My Listings / My Deals). Make Offer has read-only qty (from listing), only price editable.
+- **Marketplace**: Negotiation-first deal flow, 0.1% commission on agreed value, chat-style offer thread, direct file upload for photos/videos (multer → local disk), dispute/escrow mechanism, 4-tab UI. Browse/Sell gated for "Just Checking" users. Minimum 4 media required to post. Explicit T&C acceptance on both offer-making and listing. Lightbox gallery (click thumbnail → full-screen with nav arrows + thumbnail strip + video autoplay). Seed listings use local `/uploads/` photos+videos (real scrap metal content).
 - **Disputes**: Full dispute lifecycle — raise dispute → admin reviews → refund/complete/cancel resolution
-- **Profile**: `/profile` page with subscription status, personal info form, multi-select trader type (Buyer/Seller/Just Checking with checkmarks), save + sign out
+- **Profile**: Complete rewrite — save now refreshes AuthContext immediately (no stale data), phone change requires OTP verification, KYC status banner, inline KYC form for unverified traders, all fields editable, trade category + business name fields
+- **KYC**: 3-step signup for Buyer/Seller (Details → OTP → Trade Profile). Self-declared: select trade category (Scrap Collector, Dealer, Factory, etc.) → kycVerified=true. Privacy promise shown: "MetalXpress does NOT report to GST/IT/any authority." No GST, no Aadhaar required. Can skip and verify later from Profile page.
 - **Admin**: 3-tab admin (Rate Management / Listings / Disputes), detailed listing verification with seller profile + KYC checklist, dispute resolution panel
 - **Accordion**: All metals default-open, per-metal collapse, Expand/Collapse All button
 - **Footer**: Company + Legal links on all consumer pages

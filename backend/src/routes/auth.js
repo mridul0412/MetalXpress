@@ -135,6 +135,7 @@ router.get('/me', async (req, res) => {
         phoneVerified: true, kycVerified: true, createdAt: true, updatedAt: true,
         isBanned: true, banReason: true, cooldownUntil: true,
         completedDeals: true, avgRating: true, disputeCount: true,
+        businessName: true, tradeCategory: true, termsAcceptedAt: true,
       },
     });
     if (!user) return res.status(404).json({ error: 'User not found' });
@@ -152,19 +153,36 @@ router.patch('/profile', async (req, res) => {
     const token = header.replace('Bearer ', '');
     const payload = jwt.verify(token, process.env.JWT_SECRET);
 
-    const { name, traderType, city, phone, email } = req.body;
+    const { name, traderType, city, phone, email, businessName, tradeCategory, kycComplete } = req.body;
     const updateData = {};
     if (name) updateData.name = name;
     if (traderType) updateData.traderType = traderType;
     if (city) updateData.city = city;
+    if (businessName !== undefined) updateData.businessName = businessName;
+    if (tradeCategory) updateData.tradeCategory = tradeCategory;
+    // Self-declared KYC: mark verified if user completes the KYC form
+    if (kycComplete === true) updateData.kycVerified = true;
 
-    // Link phone to account
+    // Link/change phone — requires OTP verification if changing
     if (phone) {
       const cleanPhone = normalizePhone(phone);
       if (!cleanPhone) return res.status(400).json({ error: 'Valid Indian phone number required' });
       const existing = await prisma.user.findUnique({ where: { phone: cleanPhone } });
       if (existing && existing.id !== payload.userId) {
         return res.status(409).json({ error: 'This phone number is already linked to another account' });
+      }
+      // Require OTP if phone is being changed (not just linked for the first time)
+      const currentUser = await prisma.user.findUnique({ where: { id: payload.userId } });
+      if (currentUser.phone && currentUser.phone !== cleanPhone) {
+        const { phoneOtp } = req.body;
+        if (!phoneOtp) return res.status(400).json({ error: 'OTP required to change phone number' });
+        const session = await prisma.oTPSession.findFirst({
+          where: { phone: cleanPhone, used: false, expiresAt: { gt: new Date() } },
+          orderBy: { createdAt: 'desc' },
+        });
+        if (!session || session.otp !== phoneOtp) return res.status(400).json({ error: 'Invalid or expired OTP for phone change' });
+        await prisma.oTPSession.update({ where: { id: session.id }, data: { used: true } });
+        updateData.phoneVerified = true;
       }
       updateData.phone = cleanPhone;
     }
@@ -218,7 +236,7 @@ router.get('/subscription', async (req, res) => {
 // POST /api/auth/register — email+password+phone signup (OTP required)
 router.post('/register', async (req, res) => {
   try {
-    const { email, password, name, traderType, city, phone, otp, termsAccepted } = req.body;
+    const { email, password, name, traderType, city, phone, otp, termsAccepted, businessName, tradeCategory } = req.body;
     if (!email || !password) return res.status(400).json({ error: 'Email and password required' });
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return res.status(400).json({ error: 'Invalid email format' });
     if (password.length < 6) return res.status(400).json({ error: 'Password must be at least 6 characters' });
@@ -259,6 +277,8 @@ router.post('/register', async (req, res) => {
         city: city || null,
         traderType: traderType || 'CHECKING_RATES',
         ...(termsAccepted ? { termsAcceptedAt: new Date() } : {}),
+        ...(businessName ? { businessName } : {}),
+        ...(tradeCategory ? { tradeCategory, kycVerified: true } : {}),
       },
     });
 

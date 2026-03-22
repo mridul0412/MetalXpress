@@ -31,8 +31,18 @@ const inputStyle = {
   fontFamily: 'inherit',
 };
 
+const TRADE_CATEGORIES = [
+  'Scrap Collector / Kabadiwala',
+  'Scrap Dealer / Merchant',
+  'Factory / Manufacturer',
+  'Recycler / Smelter',
+  'Individual Trader',
+  'Broker / Agent',
+  'Other',
+];
+
 export default function Signup() {
-  // Step: 'details' → 'otp' → done
+  // Step: 'details' → 'otp' → 'kyc' (for buyers/sellers) → done
   const [step, setStep] = useState('details');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -46,6 +56,12 @@ export default function Signup() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [otpSent, setOtpSent] = useState(false);
+  // KYC step
+  const [tradeCategory, setTradeCategory] = useState('');
+  const [businessName, setBusinessName] = useState('');
+  // Temp token/user for KYC step after registration
+  const [pendingToken, setPendingToken] = useState(null);
+  const [pendingUser, setPendingUser] = useState(null);
   const navigate = useNavigate();
   const { login } = useAuth();
 
@@ -77,7 +93,6 @@ export default function Signup() {
     if (otp.length < 4) return;
     setLoading(true); setError('');
     try {
-      // Map multi-select to enum: BUYER+SELLER → BOTH
       const hasBuyer = traderTypes.includes('BUYER');
       const hasSeller = traderTypes.includes('SELLER');
       const mappedType = (hasBuyer && hasSeller) ? 'BOTH'
@@ -85,19 +100,49 @@ export default function Signup() {
         : hasSeller ? 'SELLER'
         : 'CHECKING_RATES';
 
-      // Register with email + password + phone (backend verifies OTP)
       const res = await registerEmail({
         email, password, name: name || undefined,
         traderType: mappedType,
         phone: cleanPhone,
-        otp, // backend will verify OTP before creating account
+        otp,
         termsAccepted: true,
       });
-      login(res.data.token, res.data.user);
-      navigate('/');
+
+      // If buyer or seller — go to KYC step before logging in
+      if (hasBuyer || hasSeller) {
+        setPendingToken(res.data.token);
+        setPendingUser(res.data.user);
+        setStep('kyc');
+      } else {
+        login(res.data.token, res.data.user);
+        navigate('/');
+      }
     } catch (err) {
       setError(err.response?.data?.error || 'Registration failed. Check OTP and try again.');
     } finally { setLoading(false); }
+  };
+
+  // Step 3: Submit KYC (trade category + optional business name)
+  const handleKYCSubmit = async (e) => {
+    e.preventDefault();
+    if (!tradeCategory) { setError('Please select your trade category'); return; }
+    setLoading(true); setError('');
+    try {
+      // Temporarily set token so updateProfile can make an authenticated request
+      localStorage.setItem('mx_token', pendingToken);
+      const { updateProfile } = await import('../utils/api');
+      await updateProfile({ tradeCategory, businessName: businessName || undefined, kycComplete: true });
+      login(pendingToken, { ...pendingUser, kycVerified: true, tradeCategory, businessName });
+      navigate('/');
+    } catch (err) {
+      localStorage.removeItem('mx_token');
+      setError(err.response?.data?.error || 'KYC submission failed');
+    } finally { setLoading(false); }
+  };
+
+  const handleSkipKYC = () => {
+    login(pendingToken, pendingUser);
+    navigate('/');
   };
 
   const handleResendOTP = async () => {
@@ -138,34 +183,38 @@ export default function Signup() {
             display: 'flex', alignItems: 'center', justifyContent: 'center',
             boxShadow: '0 8px 24px rgba(207,181,59,0.3)',
           }}>
-            {step === 'otp' ? <Smartphone size={24} color="#000" strokeWidth={2.5} /> : <Shield size={24} color="#000" strokeWidth={2.5} />}
+            {step === 'otp' ? <Smartphone size={24} color="#000" strokeWidth={2.5} /> : step === 'kyc' ? <CheckCircle size={24} color="#000" strokeWidth={2.5} /> : <Shield size={24} color="#000" strokeWidth={2.5} />}
           </div>
           <h1 style={{ fontSize: 22, fontWeight: 700, color: '#fff', margin: '0 0 4px' }}>
-            {step === 'otp' ? 'Verify Your Phone' : 'Create Your Account'}
+            {step === 'otp' ? 'Verify Your Phone' : step === 'kyc' ? 'Almost Done!' : 'Create Your Account'}
           </h1>
           <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.4)', margin: 0 }}>
-            {step === 'otp' ? `OTP sent to ${phone}` : 'Both email & phone required for security'}
+            {step === 'otp' ? `OTP sent to ${phone}` : step === 'kyc' ? 'Tell us about your trade — 30 seconds' : 'Both email & phone required for security'}
           </p>
         </div>
 
         {/* Step indicator */}
         <div style={{ display: 'flex', gap: 8, marginBottom: 20, justifyContent: 'center' }}>
-          {['Details', 'Verify Phone'].map((label, i) => (
-            <div key={label} style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-              <div style={{
-                width: 24, height: 24, borderRadius: '50%', fontSize: 11, fontWeight: 700,
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                background: (i === 0 && step === 'details') || (i === 1 && step === 'otp')
-                  ? '#CFB53B' : i === 0 && step === 'otp' ? '#34d399' : 'rgba(255,255,255,0.1)',
-                color: (i === 0 && step === 'details') || (i === 1 && step === 'otp') ? '#000'
-                  : i === 0 && step === 'otp' ? '#000' : 'rgba(255,255,255,0.3)',
-              }}>
-                {i === 0 && step === 'otp' ? <CheckCircle size={14} /> : i + 1}
+          {['Details', 'Verify Phone', 'Trade Profile'].map((label, i) => {
+            const stepOrder = ['details', 'otp', 'kyc'];
+            const currentIdx = stepOrder.indexOf(step);
+            const done = i < currentIdx;
+            const active = i === currentIdx;
+            return (
+              <div key={label} style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                <div style={{
+                  width: 24, height: 24, borderRadius: '50%', fontSize: 11, fontWeight: 700,
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  background: done ? '#34d399' : active ? '#CFB53B' : 'rgba(255,255,255,0.1)',
+                  color: (done || active) ? '#000' : 'rgba(255,255,255,0.3)',
+                }}>
+                  {done ? <CheckCircle size={14} /> : i + 1}
+                </div>
+                <span style={{ fontSize: 11, color: active ? 'rgba(255,255,255,0.7)' : 'rgba(255,255,255,0.4)' }}>{label}</span>
+                {i < 2 && <div style={{ width: 20, height: 1, background: 'rgba(255,255,255,0.1)' }} />}
               </div>
-              <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.4)' }}>{label}</span>
-              {i === 0 && <div style={{ width: 24, height: 1, background: 'rgba(255,255,255,0.1)' }} />}
-            </div>
-          ))}
+            );
+          })}
         </div>
 
         {/* Error */}
@@ -368,11 +417,67 @@ export default function Signup() {
           </form>
         )}
 
-        {/* Login link */}
+        {/* ── Step 3: KYC / Trade Profile ── */}
+        {step === 'kyc' && (
+          <form onSubmit={handleKYCSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+            {/* Privacy promise — prominent */}
+            <div style={{ background: 'rgba(52,211,153,0.07)', border: '1px solid rgba(52,211,153,0.2)', borderRadius: 12, padding: '14px 16px' }}>
+              <p style={{ fontSize: 12, fontWeight: 700, color: '#34d399', margin: '0 0 6px' }}>🛡️ Your Privacy is 100% Protected</p>
+              <p style={{ fontSize: 11, color: 'rgba(255,255,255,0.55)', margin: 0, lineHeight: 1.7 }}>
+                MetalXpress does <strong style={{ color: '#fff' }}>NOT</strong> report any transaction data to GST, Income Tax, or any government body.
+                This step only confirms you're a real trader — to protect buyers and sellers in the community from fraud.
+                Your deal amounts remain strictly between you and your counterparty.
+              </p>
+            </div>
+
+            <div>
+              <label style={{ fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', color: 'rgba(255,255,255,0.35)', display: 'block', marginBottom: 8 }}>
+                Your Trade Type <span style={{ color: '#f87171' }}>*</span>
+              </label>
+              <select value={tradeCategory} onChange={e => setTradeCategory(e.target.value)}
+                style={{ width: '100%', padding: '12px 14px', borderRadius: 10, fontSize: 13, background: '#0a1020', border: '1px solid rgba(255,255,255,0.1)', color: tradeCategory ? '#fff' : 'rgba(255,255,255,0.4)', outline: 'none', boxSizing: 'border-box', fontFamily: 'inherit' }}>
+                <option value="" style={{ background: '#0D1420' }}>Select your trade type…</option>
+                {TRADE_CATEGORIES.map(c => <option key={c} value={c} style={{ background: '#0D1420' }}>{c}</option>)}
+              </select>
+            </div>
+
+            <div>
+              <label style={{ fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', color: 'rgba(255,255,255,0.35)', display: 'block', marginBottom: 8 }}>
+                Business / Trade Name <span style={{ color: 'rgba(255,255,255,0.3)', fontWeight: 400, textTransform: 'none' }}>(optional)</span>
+              </label>
+              <input value={businessName} onChange={e => setBusinessName(e.target.value)}
+                placeholder="e.g. Ram Kumar Traders — or leave blank"
+                style={{ width: '100%', padding: '12px 14px', borderRadius: 10, fontSize: 13, background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: '#fff', outline: 'none', boxSizing: 'border-box', fontFamily: 'inherit' }}
+                onFocus={e => e.target.style.borderColor = '#CFB53B'}
+                onBlur={e => e.target.style.borderColor = 'rgba(255,255,255,0.1)'} />
+            </div>
+
+            <button type="submit" disabled={loading || !tradeCategory}
+              style={{ width: '100%', padding: '13px', borderRadius: 12, fontWeight: 700, fontSize: 14,
+                background: '#CFB53B', color: '#000', border: 'none', cursor: 'pointer',
+                opacity: (loading || !tradeCategory) ? 0.5 : 1 }}>
+              {loading ? 'Saving…' : 'Complete Setup & Enter →'}
+            </button>
+
+            <button type="button" onClick={handleSkipKYC}
+              style={{ width: '100%', padding: '10px', borderRadius: 10, fontWeight: 600, fontSize: 12,
+                background: 'transparent', color: 'rgba(255,255,255,0.3)', border: '1px solid rgba(255,255,255,0.08)',
+                cursor: 'pointer' }}>
+              Skip for now — I'll verify later
+            </button>
+            <p style={{ textAlign: 'center', fontSize: 11, color: 'rgba(255,255,255,0.2)', margin: 0 }}>
+              You can complete verification anytime from your Profile page
+            </p>
+          </form>
+        )}
+
+        {/* Login link — only show on details/otp steps */}
+        {step !== 'kyc' && (
         <p style={{ textAlign: 'center', fontSize: 12, color: 'rgba(255,255,255,0.35)', marginTop: 14, marginBottom: 0 }}>
           Already have an account?{' '}
           <Link to="/login" style={{ color: '#CFB53B', fontWeight: 700, textDecoration: 'none' }}>Login</Link>
         </p>
+        )}
 
         {step === 'details' && (
           <label style={{ display: 'flex', alignItems: 'flex-start', gap: 10, cursor: 'pointer', marginTop: 16 }}>

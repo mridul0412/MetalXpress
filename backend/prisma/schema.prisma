@@ -25,6 +25,8 @@ model User {
   name          String?
   city         String?
   traderType   TraderType  @default(CHECKING_RATES)
+  businessName  String?
+  tradeCategory String?
   createdAt    DateTime    @default(now())
   updatedAt    DateTime    @updatedAt
   alerts       Alert[]

@@ -1,9 +1,9 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import {
   MapPin, Weight, Plus, ShieldCheck, X, ArrowRight, Package,
   Clock, CheckCircle, AlertCircle, Trash2, MessageSquare, Send,
   ChevronRight, DollarSign, Handshake, Camera, Image as ImageIcon,
-  Shield, AlertTriangle,
+  Shield, AlertTriangle, ChevronLeft, ZoomIn, Play,
 } from 'lucide-react';
 import {
   fetchListings, fetchMyListings, createListing, createDeal, counterOffer,
@@ -138,15 +138,17 @@ export default function Marketplace() {
         user={user} navigate={navigate} onMakeOffer={setOfferListing} />}
 
       {tab === 'post' && (user
-        ? <>
-            {isOnCooldown && (
-              <div style={{ background: 'rgba(207,181,59,0.1)', border: '1px solid rgba(207,181,59,0.25)', borderRadius: 10, padding: '12px 16px', marginBottom: 16, fontSize: 12, color: '#CFB53B', fontFamily: 'monospace' }}>
-                <AlertTriangle size={14} style={{ verticalAlign: 'middle', marginRight: 6 }} />
-                Your account is on a 7-day cooldown due to multiple disputes. You cannot create new deals or listings until {cooldownDate}.
-              </div>
-            )}
-            <PostForm user={user} onSuccess={() => { setTab('my-listings'); loadMyListings(); }} />
-          </>
+        ? (user.traderType === 'CHECKING_RATES'
+          ? <JustCheckingGate navigate={navigate} />
+          : <>
+              {isOnCooldown && (
+                <div style={{ background: 'rgba(207,181,59,0.1)', border: '1px solid rgba(207,181,59,0.25)', borderRadius: 10, padding: '12px 16px', marginBottom: 16, fontSize: 12, color: '#CFB53B', fontFamily: 'monospace' }}>
+                  <AlertTriangle size={14} style={{ verticalAlign: 'middle', marginRight: 6 }} />
+                  Your account is on a 7-day cooldown due to multiple disputes. You cannot create new deals or listings until {cooldownDate}.
+                </div>
+              )}
+              <PostForm user={user} onSuccess={() => { setTab('my-listings'); loadMyListings(); }} />
+            </>)
         : <LoginPrompt navigate={navigate} />)}
 
       {tab === 'my-listings' && <MyListingsTab listings={myListings} onRefresh={loadMyListings} onBrowseRefresh={load} />}
@@ -192,7 +194,9 @@ function BrowseTab({ listings, loading, filterMetal, setFilterMetal, filterCity,
           placeholder="Filter by city…" style={inputStyle} />
       </div>
 
-      {!user ? (
+      {user && user.traderType === 'CHECKING_RATES' ? (
+        <JustCheckingGate navigate={navigate} />
+      ) : !user ? (
         <div style={{ textAlign: 'center', padding: '60px 20px' }}>
           <Package size={48} style={{ color: 'rgba(207,181,59,0.2)', marginBottom: 16 }} />
           <h3 style={{ fontSize: 18, fontWeight: 700, color: '#fff', margin: '0 0 8px' }}>
@@ -224,12 +228,123 @@ function BrowseTab({ listings, loading, filterMetal, setFilterMetal, filterCity,
   );
 }
 
+/* ── Lightbox ─────────────────────────────────────────────────────── */
+function Lightbox({ items, startIndex, onClose }) {
+  const [idx, setIdx] = useState(startIndex || 0);
+  const videoRef = useRef(null);
+  const BACKEND = import.meta.env.VITE_API_URL?.replace('/api', '') || 'http://localhost:3001';
+
+  const toSrc = (url) => url.startsWith('/uploads/') ? `${BACKEND}${url}` : url;
+  const isVideo = (url) => /\.(mp4|mov|webm)$/i.test(url);
+
+  const prev = () => setIdx((i) => (i - 1 + items.length) % items.length);
+  const next = () => setIdx((i) => (i + 1) % items.length);
+
+  // keyboard nav
+  useEffect(() => {
+    const handler = (e) => {
+      if (e.key === 'ArrowLeft') prev();
+      else if (e.key === 'ArrowRight') next();
+      else if (e.key === 'Escape') onClose();
+    };
+    window.addEventListener('keydown', handler);
+    return () => window.removeEventListener('keydown', handler);
+  }, [items.length]);
+
+  const current = items[idx];
+  const src = toSrc(current);
+
+  return (
+    <div onClick={onClose} style={{
+      position: 'fixed', inset: 0, zIndex: 9999,
+      background: 'rgba(0,0,0,0.95)',
+      display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+    }}>
+      {/* Close */}
+      <button onClick={onClose} style={{
+        position: 'absolute', top: 16, right: 16, zIndex: 1,
+        background: 'rgba(255,255,255,0.1)', border: 'none', borderRadius: '50%',
+        width: 40, height: 40, display: 'flex', alignItems: 'center', justifyContent: 'center',
+        cursor: 'pointer', color: '#fff',
+      }}><X size={20} /></button>
+
+      {/* Counter */}
+      <div style={{
+        position: 'absolute', top: 20, left: '50%', transform: 'translateX(-50%)',
+        fontSize: 12, color: 'rgba(255,255,255,0.5)', fontFamily: 'monospace',
+        background: 'rgba(0,0,0,0.5)', padding: '4px 12px', borderRadius: 20,
+      }}>{idx + 1} / {items.length}</div>
+
+      {/* Main media */}
+      <div onClick={(e) => e.stopPropagation()} style={{
+        maxWidth: '90vw', maxHeight: '80vh', display: 'flex', alignItems: 'center', justifyContent: 'center',
+      }}>
+        {isVideo(current)
+          ? <video ref={videoRef} src={src} controls autoPlay
+              style={{ maxWidth: '90vw', maxHeight: '80vh', borderRadius: 10, outline: 'none' }} />
+          : <img src={src} alt={`Media ${idx + 1}`}
+              style={{ maxWidth: '90vw', maxHeight: '80vh', objectFit: 'contain', borderRadius: 10, userSelect: 'none' }} />
+        }
+      </div>
+
+      {/* Prev / Next arrows */}
+      {items.length > 1 && <>
+        <button onClick={(e) => { e.stopPropagation(); prev(); }} style={{
+          position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)',
+          background: 'rgba(255,255,255,0.1)', border: 'none', borderRadius: '50%',
+          width: 44, height: 44, display: 'flex', alignItems: 'center', justifyContent: 'center',
+          cursor: 'pointer', color: '#fff',
+        }}><ChevronLeft size={22} /></button>
+        <button onClick={(e) => { e.stopPropagation(); next(); }} style={{
+          position: 'absolute', right: 12, top: '50%', transform: 'translateY(-50%)',
+          background: 'rgba(255,255,255,0.1)', border: 'none', borderRadius: '50%',
+          width: 44, height: 44, display: 'flex', alignItems: 'center', justifyContent: 'center',
+          cursor: 'pointer', color: '#fff',
+        }}><ChevronRight size={22} /></button>
+      </>}
+
+      {/* Thumbnail strip */}
+      {items.length > 1 && (
+        <div onClick={(e) => e.stopPropagation()} style={{
+          position: 'absolute', bottom: 20,
+          display: 'flex', gap: 8, padding: '8px 12px',
+          background: 'rgba(0,0,0,0.5)', borderRadius: 12,
+          maxWidth: '90vw', overflowX: 'auto',
+        }}>
+          {items.map((item, i) => {
+            const s = toSrc(item);
+            return (
+              <div key={i} onClick={() => setIdx(i)} style={{
+                width: 52, height: 52, borderRadius: 8, overflow: 'hidden', cursor: 'pointer', flexShrink: 0,
+                border: i === idx ? '2px solid #CFB53B' : '2px solid transparent',
+                position: 'relative',
+              }}>
+                {isVideo(item)
+                  ? <div style={{ width: '100%', height: '100%', background: '#1a1a1a', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                      <Play size={16} color="#CFB53B" />
+                    </div>
+                  : <img src={s} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                }
+              </div>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+}
+
 /* ── Listing Card ─────────────────────────────────────────────────── */
 function ListingCard({ listing: l, onAction, actionLabel, showStatus, onDelete }) {
   const metalName = l.metal?.name || 'Metal';
   const gradeName = l.grade?.name || metalName;
   const priceStr = l.price ? `₹${fmt(l.price)}` : 'Negotiate';
   const totalVal = l.price && l.qty ? l.price * l.qty : null;
+  const [lightboxIdx, setLightboxIdx] = useState(null);
+  const BACKEND = import.meta.env.VITE_API_URL?.replace('/api', '') || 'http://localhost:3001';
+
+  const toSrc = (url) => url.startsWith('/uploads/') ? `${BACKEND}${url}` : url;
+  const isVideo = (url) => /\.(mp4|mov|webm)$/i.test(url);
 
   return (
     <div style={{ background: '#0D1420', borderRadius: 14, border: '1px solid rgba(255,255,255,0.07)', padding: 18, display: 'flex', flexDirection: 'column' }}>
@@ -265,23 +380,44 @@ function ListingCard({ listing: l, onAction, actionLabel, showStatus, onDelete }
         )}
       </p>}
 
-      {/* Image thumbnails */}
+      {/* Image thumbnails — click to open lightbox */}
       {l.imageUrls?.length > 0 && (
         <div style={{ display: 'flex', gap: 6, marginBottom: 10, overflowX: 'auto' }}>
-          {l.imageUrls.slice(0, 3).map((url, i) => {
-            const src = url.startsWith('/uploads/') ? `${import.meta.env.VITE_API_URL?.replace('/api', '') || 'http://localhost:3001'}${url}` : url;
-            return url.match(/\.(mp4|mov|webm)$/i)
-              ? <video key={i} src={src} style={{ width: 72, height: 72, objectFit: 'cover', borderRadius: 8, border: '1px solid rgba(255,255,255,0.1)' }} />
-              : <img key={i} src={src} alt={`${gradeName} ${i + 1}`}
-                  style={{ width: 72, height: 72, objectFit: 'cover', borderRadius: 8, border: '1px solid rgba(255,255,255,0.1)' }} />;
+          {l.imageUrls.slice(0, 4).map((url, i) => {
+            const src = toSrc(url);
+            const isLast = i === 3 && l.imageUrls.length > 4;
+            return (
+              <div key={i} onClick={() => setLightboxIdx(i)}
+                style={{ position: 'relative', width: 72, height: 72, flexShrink: 0, cursor: 'pointer', borderRadius: 8, overflow: 'hidden',
+                  border: '1px solid rgba(255,255,255,0.1)' }}>
+                {isVideo(url)
+                  ? <div style={{ width: '100%', height: '100%', background: '#111', display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column', gap: 2 }}>
+                      <Play size={20} color="#CFB53B" />
+                      <span style={{ fontSize: 9, color: 'rgba(255,255,255,0.4)' }}>VIDEO</span>
+                    </div>
+                  : <img src={src} alt={`${gradeName} ${i + 1}`}
+                      style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
+                }
+                {/* Zoom icon on hover overlay */}
+                <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0)', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  transition: 'background 0.15s' }}
+                  onMouseEnter={e => e.currentTarget.style.background = 'rgba(0,0,0,0.35)'}
+                  onMouseLeave={e => e.currentTarget.style.background = 'rgba(0,0,0,0)'}>
+                  {isLast
+                    ? <span style={{ fontSize: 13, fontWeight: 700, color: '#fff' }}>+{l.imageUrls.length - 4}</span>
+                    : <ZoomIn size={16} color="rgba(255,255,255,0.8)" style={{ opacity: 0 }}
+                        className="zoom-icon" />
+                  }
+                </div>
+              </div>
+            );
           })}
-          {l.imageUrls.length > 3 && (
-            <div style={{ width: 72, height: 72, borderRadius: 8, background: 'rgba(255,255,255,0.05)',
-              display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, color: 'rgba(255,255,255,0.3)' }}>
-              +{l.imageUrls.length - 3}
-            </div>
-          )}
         </div>
+      )}
+
+      {/* Lightbox */}
+      {lightboxIdx !== null && (
+        <Lightbox items={l.imageUrls} startIndex={lightboxIdx} onClose={() => setLightboxIdx(null)} />
       )}
 
       {l.description && <p style={{ fontSize: 12, color: 'rgba(255,255,255,0.5)', margin: '0 0 10px', lineHeight: 1.5 }}>
@@ -317,6 +453,7 @@ function OfferModal({ listing: l, onClose, onSuccess, isOnCooldown, cooldownDate
   const [message, setMessage] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
+  const [termsChecked, setTermsChecked] = useState(false);
 
   const totalVal = price && qty ? parseFloat(price) * parseFloat(qty) : 0;
   const commission = Math.max(Math.ceil(totalVal * 0.001), 1);
@@ -398,10 +535,20 @@ function OfferModal({ listing: l, onClose, onSuccess, isOnCooldown, cooldownDate
           <a href="/terms#refund-policy" style={{ color: '#CFB53B' }}> View refund policy</a>
         </p>
 
-        <button onClick={handleSubmit} disabled={submitting || isOnCooldown} style={{
+        <label style={{ display: 'flex', alignItems: 'flex-start', gap: 10, cursor: 'pointer', marginBottom: 12 }}>
+          <input type="checkbox" checked={termsChecked} onChange={e => setTermsChecked(e.target.checked)}
+            style={{ marginTop: 3, accentColor: '#CFB53B', width: 16, height: 16, flexShrink: 0 }} />
+          <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.5)', lineHeight: 1.6, fontFamily: 'monospace' }}>
+            I agree to MetalXpress <a href="/terms" target="_blank" style={{ color: '#CFB53B' }}>Terms of Service</a>, the{' '}
+            <a href="/terms#commission" target="_blank" style={{ color: '#CFB53B' }}>0.1% commission policy</a> (charged only after mutual agreement), and the{' '}
+            <a href="/terms#refund-policy" target="_blank" style={{ color: '#CFB53B' }}>Refund Policy</a>.
+          </span>
+        </label>
+
+        <button onClick={handleSubmit} disabled={submitting || isOnCooldown || !termsChecked} style={{
           width: '100%', padding: '14px', borderRadius: 10, fontSize: 14, fontWeight: 700,
-          background: (submitting || isOnCooldown) ? 'rgba(207,181,59,0.3)' : '#CFB53B', color: '#000', border: 'none',
-          cursor: (submitting || isOnCooldown) ? 'not-allowed' : 'pointer',
+          background: (submitting || isOnCooldown || !termsChecked) ? 'rgba(207,181,59,0.3)' : '#CFB53B', color: '#000', border: 'none',
+          cursor: (submitting || isOnCooldown || !termsChecked) ? 'not-allowed' : 'pointer',
           opacity: submitting ? 0.6 : 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
         }}><Send size={16} /> {submitting ? 'Sending…' : isOnCooldown ? 'On Cooldown' : 'Send Offer'}</button>
       </div>
@@ -1038,6 +1185,7 @@ function PostForm({ user, onSuccess }) {
   const [uploading, setUploading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
+  const [termsChecked, setTermsChecked] = useState(false);
 
   useEffect(() => {
     fetchMetals().then(r => setMetals(r.data || [])).catch(() => {});
@@ -1130,7 +1278,7 @@ function PostForm({ user, onSuccess }) {
       <div style={{ marginBottom: 16 }}>
         <label style={labelStyle}>Photos / Videos (up to 5)</label>
         <p style={{ fontSize: 10, color: 'rgba(255,255,255,0.25)', margin: '0 0 8px' }}>
-          Add clear photos of your scrap material. Photos significantly increase buyer trust and faster deal closure.
+          Upload at least 4 clear photos or a video to help buyers verify quality
         </p>
         {/* Preview thumbnails */}
         {imageUrls.length > 0 && (
@@ -1182,15 +1330,34 @@ function PostForm({ user, onSuccess }) {
             </span>
           </label>
         )}
+        <p style={{ fontSize: 11, fontFamily: 'monospace', marginTop: 8, color: imageUrls.length >= 4 ? '#34d399' : '#CFB53B' }}>
+          {imageUrls.length}/4 minimum
+        </p>
       </div>
 
       {error && <p style={{ color: '#f87171', fontSize: 12, marginBottom: 12 }}>{error}</p>}
 
-      <button onClick={handleSubmit} disabled={submitting} style={{
+      <label style={{ display: 'flex', alignItems: 'flex-start', gap: 10, cursor: 'pointer', marginBottom: 12 }}>
+        <input type="checkbox" checked={termsChecked} onChange={e => setTermsChecked(e.target.checked)}
+          style={{ marginTop: 3, accentColor: '#CFB53B', width: 16, height: 16, flexShrink: 0 }} />
+        <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.5)', lineHeight: 1.6, fontFamily: 'monospace' }}>
+          I confirm this listing is accurate and I agree to the{' '}
+          <a href="/terms" target="_blank" style={{ color: '#CFB53B' }}>Terms of Service</a>,{' '}
+          <a href="/terms#dispute" target="_blank" style={{ color: '#CFB53B' }}>Dispute Policy</a>, and that MetalXpress may verify this listing before publishing.
+        </span>
+      </label>
+
+      <button onClick={handleSubmit} disabled={submitting || !termsChecked || imageUrls.length < 4} style={{
         width: '100%', padding: '14px', borderRadius: 10, fontSize: 14, fontWeight: 700,
-        background: '#CFB53B', color: '#000', border: 'none', cursor: 'pointer', opacity: submitting ? 0.6 : 1,
+        background: (submitting || !termsChecked || imageUrls.length < 4) ? 'rgba(207,181,59,0.3)' : '#CFB53B',
+        color: '#000', border: 'none',
+        cursor: (submitting || !termsChecked || imageUrls.length < 4) ? 'not-allowed' : 'pointer',
+        opacity: submitting ? 0.6 : 1,
         display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
-      }}><Plus size={16} /> {submitting ? 'Submitting…' : 'Submit for Review'}</button>
+      }}>
+        <Plus size={16} />
+        {submitting ? 'Submitting…' : imageUrls.length < 4 ? 'Add at least 4 photos/videos' : 'Submit for Review'}
+      </button>
 
       <p style={{ fontSize: 10, color: 'rgba(255,255,255,0.2)', textAlign: 'center', marginTop: 8 }}>
         Listings are reviewed within 24 hours. Contact info is only shared with paid buyers.
@@ -1209,6 +1376,23 @@ function LoginPrompt({ navigate }) {
         padding: '12px 32px', borderRadius: 10, fontSize: 14, fontWeight: 700,
         background: '#CFB53B', color: '#000', border: 'none', cursor: 'pointer',
       }}>Login / Sign Up</button>
+    </div>
+  );
+}
+
+/* ── Just Checking Gate ───────────────────────────────────────────── */
+function JustCheckingGate({ navigate }) {
+  return (
+    <div style={{ textAlign: 'center', padding: '60px 24px' }}>
+      <div style={{ fontSize: 40, marginBottom: 16 }}>🔒</div>
+      <h3 style={{ fontSize: 20, fontWeight: 700, color: '#fff', marginBottom: 8 }}>Marketplace Access Required</h3>
+      <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.5)', marginBottom: 24, maxWidth: 320, margin: '0 auto 24px' }}>
+        You're currently set to "Just Checking Rates". To browse listings and trade, update your profile to Buyer or Seller.
+      </p>
+      <button onClick={() => navigate('/profile')} style={{
+        padding: '12px 28px', borderRadius: 10, fontWeight: 700, fontSize: 14,
+        background: '#CFB53B', color: '#000', border: 'none', cursor: 'pointer',
+      }}>Update My Profile</button>
     </div>
   );
 }
