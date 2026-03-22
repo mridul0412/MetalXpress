@@ -135,7 +135,8 @@ export default function Marketplace() {
       {tab === 'browse' && <BrowseTab listings={listings} loading={loading}
         filterMetal={filterMetal} setFilterMetal={setFilterMetal}
         filterCity={filterCity} setFilterCity={setFilterCity}
-        user={user} navigate={navigate} onMakeOffer={setOfferListing} />}
+        user={user} navigate={navigate} onMakeOffer={setOfferListing}
+        activeDeals={deals} onViewDeal={(dealId) => { setActiveDeal(dealId); setTab('my-deals'); }} />}
 
       {tab === 'post' && (user
         ? (user.traderType === 'CHECKING_RATES'
@@ -178,7 +179,17 @@ export default function Marketplace() {
 }
 
 /* ── Browse Tab ───────────────────────────────────────────────────── */
-function BrowseTab({ listings, loading, filterMetal, setFilterMetal, filterCity, setFilterCity, user, navigate, onMakeOffer }) {
+function BrowseTab({ listings, loading, filterMetal, setFilterMetal, filterCity, setFilterCity, user, navigate, onMakeOffer, activeDeals, onViewDeal }) {
+  // Build a map: listingId → dealId for active (negotiating/agreed) deals
+  const activeDealMap = {};
+  if (activeDeals) {
+    activeDeals.forEach(d => {
+      if (['negotiating', 'agreed'].includes(d.status) && d.listing?.id) {
+        activeDealMap[d.listing.id] = d.id;
+      }
+    });
+  }
+
   return (
     <div>
       {/* Filters */}
@@ -220,9 +231,16 @@ function BrowseTab({ listings, loading, filterMetal, setFilterMetal, filterCity,
       : listings.length === 0
         ? <p style={{ color: 'rgba(255,255,255,0.3)', textAlign: 'center', padding: 40 }}>No listings found. Be the first to post!</p>
         : <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: 16 }}>
-            {listings.map(l => <ListingCard key={l.id} listing={l}
-              onAction={() => onMakeOffer(l)}
-              actionLabel="Make Offer" />)}
+            {listings.map(l => {
+              const existingDealId = user ? activeDealMap[l.id] : null;
+              return (
+                <ListingCard key={l.id} listing={l}
+                  onAction={existingDealId
+                    ? () => onViewDeal(existingDealId)
+                    : () => onMakeOffer(l)}
+                  actionLabel={existingDealId ? '📋 View My Offer' : 'Make Offer'} />
+              );
+            })}
           </div>}
     </div>
   );
@@ -465,7 +483,13 @@ function OfferModal({ listing: l, onClose, onSuccess, isOnCooldown, cooldownDate
       const res = await createDeal({ listingId: l.id, pricePerKg: parseFloat(price), qty: parseFloat(qty), message });
       onSuccess(res.data.deal);
     } catch (err) {
-      setError(err.response?.data?.error || 'Failed to send offer');
+      const data = err.response?.data;
+      // If an active deal already exists for this listing, go to it instead of showing error
+      if (data?.dealId) {
+        onSuccess({ id: data.dealId });
+        return;
+      }
+      setError(data?.error || 'Failed to send offer. Please try again.');
     } finally { setSubmitting(false); }
   };
 
