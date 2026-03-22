@@ -15,3 +15,8 @@ ali.json
 hg.json
 znc.json
 backend-log.txt
+
+# User-uploaded files — stored locally in dev, use Cloudinary/S3 in production
+# Never commit uploads — they get wiped on cloud deploys anyway
+backend/uploads/*
+!backend/uploads/.gitkeep

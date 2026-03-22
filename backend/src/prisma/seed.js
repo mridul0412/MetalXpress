@@ -342,7 +342,29 @@ async function main() {
   console.log(`  ✅ Admin user: admin@metalxpress.in / admin1234 (full pro access)`);
   console.log(`  ✅ Test users: 7 (5 traders + pro tester + admin)`);
 
-  // Seed sample marketplace listings (10 diverse listings)
+  // Seed sample marketplace listings
+  // ──────────────────────────────────────────────────────────────────────────
+  // CLOUD-READY IMAGE/VIDEO STRATEGY:
+  //   All seed images use Pexels CDN URLs (free, no auth, works in any env).
+  //   All seed videos use Wikimedia Commons transcoded CDN URLs (CC-licensed).
+  //   → No local files to manage, no uploads/ folder dependency.
+  //   → Works identically on Railway, Render, Heroku, localhost.
+  //
+  //   For user-uploaded files in production:
+  //   → Set STORAGE_BACKEND=cloudinary (or s3) in .env
+  //   → See backend/src/routes/marketplace.js upload endpoint
+  //   → Current default: local disk (fine for MVP/dev, NOT for production)
+  // ──────────────────────────────────────────────────────────────────────────
+
+  // Pexels CDN: free, no auth, no hotlinking restrictions for non-commercial use
+  const PX = (id) => `https://images.pexels.com/photos/${id}/pexels-photo-${id}.jpeg?auto=compress&cs=tinysrgb&w=600`;
+
+  // Wikimedia Commons: CC-licensed industrial/scrap metal videos
+  const VID = {
+    scrapYard: 'https://upload.wikimedia.org/wikipedia/commons/transcoded/5/5f/Recyclage_M%C3%A9tal.webm/Recyclage_M%C3%A9tal.webm.360p.webm',
+    copperPipe: 'https://upload.wikimedia.org/wikipedia/commons/1/1a/What_can_you_do_with_a_Neodymium_magnet_and_a_copper_pipe-.webm',
+  };
+
   const copperMetal = metalMap['Copper'];
   const brassMetal = metalMap['Brass'];
   const alumMetal = metalMap['Aluminium'];
@@ -354,73 +376,73 @@ async function main() {
       userId: rajesh.id, metalId: copperMetal.id,
       gradeId: gradeMap['Copper:Armature Bhatti']?.id || null,
       qty: 500, location: 'Mandoli, Delhi', price: 1140,
-      description: 'Good quality armature copper scrap. Available immediately. Regular supply.',
+      description: 'Good quality armature copper scrap. Available immediately. Regular supply of 500kg/month from motor rewinding workshop.',
       contact: '9876543210', status: 'verified',
-      images: JSON.stringify(['/uploads/seed-copper-armature-1.jpg', '/uploads/seed-copper-armature-2.jpg']),
+      images: JSON.stringify([PX(3802537), PX(3794777)]),
     },
     {
       userId: rajesh.id, metalId: copperMetal.id,
       gradeId: gradeMap['Copper:CC Rod']?.id || null,
       qty: 2000, location: 'Mandoli, Delhi', price: 1240,
-      description: 'CC Rod copper, premium quality. 2 ton lot ready for dispatch.',
+      description: 'CC Rod copper, premium quality. 2 ton lot ready for dispatch. Sourced directly from cable plant.',
       contact: '9876543210', status: 'verified',
-      images: JSON.stringify(['/uploads/seed-copper-cc-rod-1.jpg', '/uploads/seed-copper-cc-rod-2.jpg', '/uploads/seed-copper-cc-rod-3.jpg']),
+      images: JSON.stringify([PX(1108101), PX(2892462)]),
     },
     {
       userId: amit.id, metalId: brassMetal.id,
       gradeId: gradeMap['Brass:Purja']?.id || null,
       qty: 800, location: 'Kurla, Mumbai', price: 670,
-      description: 'Brass purja scrap, clean, no iron mixed. Can deliver within Mumbai.',
+      description: 'Brass purja scrap, clean, no iron mixed. Can deliver within Mumbai. Watch video to see material quality.',
       contact: '9876543211', status: 'verified',
-      images: JSON.stringify(['/uploads/seed-brass-purja-1.jpg', '/uploads/seed-brass-purja-2.jpg', '/uploads/seed-brass-purja-video.mp4']),
+      images: JSON.stringify([PX(1440727), PX(2625896), VID.scrapYard]),
     },
     {
       userId: suresh.id, metalId: alumMetal.id,
       gradeId: gradeMap['Aluminium:Ingot']?.id || null,
       qty: 3000, location: 'Naroda, Ahmedabad', price: 335,
-      description: 'Aluminium ingot scrap lot. Best offer invited. Serious buyers only.',
+      description: 'Aluminium ingot scrap lot. Best offer invited. Serious buyers only. Monthly availability guaranteed.',
       contact: '9876543212', status: 'verified',
-      images: JSON.stringify(['/uploads/seed-aluminium-ingot-1.jpg', '/uploads/seed-aluminium-ingot-2.jpg']),
+      images: JSON.stringify([PX(190340), PX(2846213)]),
     },
     {
       userId: suresh.id, metalId: zincMetal.id,
       gradeId: gradeMap['Zinc:Slab']?.id || null,
       qty: 1500, location: 'Naroda, Ahmedabad', price: 334,
-      description: 'Zinc slab — full truck load available. Ready for pickup.',
+      description: 'Zinc slab — full truck load available. Ready for pickup from warehouse.',
       contact: '9876543212', status: 'pending',
-      images: JSON.stringify(['/uploads/seed-zinc-slab-1.jpg', '/uploads/seed-zinc-slab-2.jpg']),
+      images: JSON.stringify([PX(128421), PX(3962285)]),
     },
     {
       userId: priya.id, metalId: leadMetal.id,
       gradeId: gradeMap['Lead:Battery']?.id || null,
       qty: 10000, location: 'Ambattur, Chennai', price: 112,
-      description: 'Used battery lead scrap. Monthly supply available. ISO certified recycler.',
+      description: 'Used battery lead scrap. Monthly supply of 10MT available. ISO certified recycler. Watch video for process overview.',
       contact: '9876543213', status: 'verified',
-      images: JSON.stringify(['/uploads/seed-lead-battery-1.jpg', '/uploads/seed-lead-battery-2.jpg', '/uploads/seed-lead-battery-video.mp4']),
+      images: JSON.stringify([PX(4397933), PX(3794777), VID.copperPipe]),
     },
     {
       userId: priya.id, metalId: brassMetal.id,
       gradeId: gradeMap['Brass:Honey']?.id || null,
       qty: 600, location: 'Chennai', price: null,
-      description: 'Brass honey scrap — looking for buyers. Rate negotiable based on volume.',
+      description: 'Brass honey scrap — looking for buyers. Rate negotiable based on volume. First lot available next week.',
       contact: '9876543213', status: 'pending',
-      images: JSON.stringify(['/uploads/seed-brass-honey-1.jpg', '/uploads/seed-brass-honey-2.jpg']),
+      images: JSON.stringify([PX(2625896), PX(1440727)]),
     },
     {
       userId: vikram.id, metalId: copperMetal.id,
       gradeId: gradeMap['Copper:CCR']?.id || null,
       qty: 1000, location: 'Focal Point, Ludhiana', price: 1300,
-      description: 'CCR copper available. Factory surplus from cable manufacturing.',
+      description: 'CCR copper available. Factory surplus from cable manufacturing unit. Quality guaranteed.',
       contact: '9876543214', status: 'verified',
-      images: JSON.stringify(['/uploads/seed-copper-ccr-1.jpg', '/uploads/seed-copper-ccr-2.jpg', '/uploads/seed-copper-ccr-3.jpg']),
+      images: JSON.stringify([PX(1108101), PX(3802537)]),
     },
     {
       userId: vikram.id, metalId: alumMetal.id,
       gradeId: gradeMap['Aluminium:Wire Scrap']?.id || null,
       qty: 2500, location: 'Ludhiana', price: 300,
-      description: 'Aluminium wire scrap for recycling. Have stock from power cable project.',
+      description: 'Aluminium wire scrap for recycling. Have stock from power cable project. Consistent 2.5MT available.',
       contact: '9876543214', status: 'verified',
-      images: JSON.stringify(['/uploads/seed-aluminium-wire-1.jpg', '/uploads/seed-aluminium-wire-2.jpg']),
+      images: JSON.stringify([PX(190340), PX(2892462)]),
     },
   ];
 
