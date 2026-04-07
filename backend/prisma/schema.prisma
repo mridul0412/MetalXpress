@@ -27,6 +27,9 @@ model User {
   traderType   TraderType  @default(CHECKING_RATES)
   businessName  String?
   tradeCategory String?
+  panNumber     String?
+  gstNumber     String?
+  legalName     String?
   createdAt    DateTime    @default(now())
   updatedAt    DateTime    @updatedAt
   alerts       Alert[]

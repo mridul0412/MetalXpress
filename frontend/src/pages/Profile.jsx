@@ -45,6 +45,10 @@ export default function Profile() {
   const [traderTypes, setTraderTypes] = useState([]);
   const [businessName, setBusinessName] = useState('');
   const [tradeCategory, setTradeCategory] = useState('');
+  // KYC fields
+  const [panNumber, setPanNumber] = useState('');
+  const [gstNumber, setGstNumber] = useState('');
+  const [legalName, setLegalName] = useState('');
 
   // Phone OTP flow (for phone number changes)
   const [originalPhone, setOriginalPhone] = useState('');
@@ -70,6 +74,9 @@ export default function Profile() {
     setCity(user.city || '');
     setBusinessName(user.businessName || '');
     setTradeCategory(user.tradeCategory || '');
+    setPanNumber(user.panNumber || '');
+    setGstNumber(user.gstNumber || '');
+    setLegalName(user.legalName || '');
     const tt = user.traderType || 'CHECKING_RATES';
     if (tt === 'BOTH') setTraderTypes(['BUYER', 'SELLER']);
     else setTraderTypes([tt]);
@@ -113,7 +120,10 @@ export default function Profile() {
         name, email: email || undefined, city, traderType: mappedType,
         businessName: businessName || undefined,
         tradeCategory: tradeCategory || undefined,
-        ...(tradeCategory && !user.kycVerified ? { kycComplete: true } : {}),
+        panNumber: panNumber || undefined,
+        gstNumber: gstNumber || undefined,
+        legalName: legalName || undefined,
+        ...(panNumber && tradeCategory && !user.kycVerified ? { kycComplete: true } : {}),
       };
       if (phoneChanged && phoneOtp) {
         payload.phone = cleanPhone(phone);
@@ -186,10 +196,10 @@ export default function Profile() {
           </p>
           <p style={{ fontSize: 11, color: 'rgba(255,255,255,0.4)', margin: 0 }}>
             {isKycDone
-              ? 'You can post listings and make deals. Your verified badge is visible to other traders.'
+              ? 'You can browse listings, post scrap, and make deals. Your verified badge is visible to other traders.'
               : needsKyc
-              ? 'Complete your trade profile below to post listings and make deals.'
-              : 'Buyers and sellers need verification. Rate watchers don\'t.'}
+              ? 'Complete PAN verification below to access the marketplace.'
+              : 'All marketplace users need identity verification.'}
           </p>
         </div>
         {needsKyc && (
@@ -201,23 +211,40 @@ export default function Profile() {
       </div>
 
       {/* KYC inline section */}
-      {(showKyc || (needsKyc)) && !isKycDone && (
+      {(showKyc || needsKyc) && !isKycDone && (
         <div style={{ background: '#0D1420', borderRadius: 14, border: '1px solid rgba(207,181,59,0.2)', padding: 20, marginBottom: 16 }}>
           <h3 style={{ fontSize: 14, fontWeight: 700, color: '#CFB53B', margin: '0 0 4px' }}>
-            🔒 Trader Verification (KYC)
+            🔒 Identity Verification
           </h3>
           <p style={{ fontSize: 12, color: 'rgba(255,255,255,0.4)', margin: '0 0 16px' }}>
-            Just 2 quick fields. No government forms, no GST, no Aadhaar required.
+            Quick PAN-based verification to confirm you're a real trader. Required for marketplace access.
           </p>
 
-          {/* Privacy promise */}
-          <div style={{ background: 'rgba(52,211,153,0.06)', border: '1px solid rgba(52,211,153,0.15)', borderRadius: 10, padding: '12px 16px', marginBottom: 16 }}>
-            <p style={{ fontSize: 11, color: '#34d399', fontWeight: 700, margin: '0 0 4px' }}>🛡️ Your Privacy is Protected</p>
-            <p style={{ fontSize: 11, color: 'rgba(255,255,255,0.5)', margin: 0, lineHeight: 1.6 }}>
-              MetalXpress does <strong style={{ color: '#fff' }}>not</strong> report any transaction data to GST, Income Tax, or any government body.
-              Verification is only to confirm you're a real trader — to protect the community from fraud.
-              Your trade volume stays strictly between you and your counterparty.
+          {/* Privacy promise — professional, no government/tax mentions */}
+          <div style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 10, padding: '12px 16px', marginBottom: 16 }}>
+            <p style={{ fontSize: 11, color: 'rgba(255,255,255,0.5)', margin: 0, lineHeight: 1.7 }}>
+              🛡️ <strong style={{ color: 'rgba(255,255,255,0.7)' }}>Your data is secure.</strong> Identity details are stored with bank-grade encryption and used solely for trader verification on MetalXpress. We never share your information with external parties.
             </p>
+          </div>
+
+          <div style={{ marginBottom: 12 }}>
+            <label style={labelStyle}>PAN Card Number <span style={{ color: '#f87171' }}>*</span></label>
+            <input value={panNumber} onChange={e => setPanNumber(e.target.value.toUpperCase())}
+              placeholder="ABCDE1234F" maxLength={10}
+              style={{ ...inputStyle, fontFamily: 'monospace', letterSpacing: '0.1em', textTransform: 'uppercase' }}
+              onFocus={e => e.target.style.borderColor = '#CFB53B'}
+              onBlur={e => e.target.style.borderColor = 'rgba(255,255,255,0.1)'} />
+            {panNumber && !/^[A-Z]{5}[0-9]{4}[A-Z]$/.test(panNumber) && (
+              <p style={{ fontSize: 10, color: '#f87171', margin: '4px 0 0' }}>Format: 5 letters + 4 digits + 1 letter (e.g. ABCDE1234F)</p>
+            )}
+          </div>
+
+          <div style={{ marginBottom: 12 }}>
+            <label style={labelStyle}>Legal Name <span style={{ color: '#f87171' }}>*</span> <span style={{ fontWeight: 400, textTransform: 'none' }}>(as on PAN card)</span></label>
+            <input value={legalName} onChange={e => setLegalName(e.target.value)}
+              placeholder="Full name as printed on your PAN card" style={inputStyle}
+              onFocus={e => e.target.style.borderColor = '#CFB53B'}
+              onBlur={e => e.target.style.borderColor = 'rgba(255,255,255,0.1)'} />
           </div>
 
           <div style={{ marginBottom: 12 }}>
@@ -229,14 +256,28 @@ export default function Profile() {
             </select>
           </div>
 
-          <div style={{ marginBottom: 16 }}>
-            <label style={labelStyle}>Business / Trade Name <span style={{ color: 'rgba(255,255,255,0.3)', fontWeight: 400, textTransform: 'none' }}>(optional — can be just your name)</span></label>
+          <div style={{ marginBottom: 12 }}>
+            <label style={labelStyle}>Business / Trade Name <span style={{ color: 'rgba(255,255,255,0.3)', fontWeight: 400, textTransform: 'none' }}>(optional)</span></label>
             <input value={businessName} onChange={e => setBusinessName(e.target.value)}
-              placeholder="e.g. Ram Kumar Scrap Traders" style={inputStyle} />
+              placeholder="e.g. Ram Kumar Scrap Traders" style={inputStyle}
+              onFocus={e => e.target.style.borderColor = '#CFB53B'}
+              onBlur={e => e.target.style.borderColor = 'rgba(255,255,255,0.1)'} />
+          </div>
+
+          <div style={{ marginBottom: 16 }}>
+            <label style={labelStyle}>GSTIN <span style={{ color: 'rgba(255,255,255,0.3)', fontWeight: 400, textTransform: 'none' }}>(optional — for GST-registered businesses)</span></label>
+            <input value={gstNumber} onChange={e => setGstNumber(e.target.value.toUpperCase())}
+              placeholder="22ABCDE1234F1Z5" maxLength={15}
+              style={{ ...inputStyle, fontFamily: 'monospace', letterSpacing: '0.05em', textTransform: 'uppercase' }}
+              onFocus={e => e.target.style.borderColor = '#CFB53B'}
+              onBlur={e => e.target.style.borderColor = 'rgba(255,255,255,0.1)'} />
+            {gstNumber && gstNumber.length > 0 && gstNumber.length < 15 && (
+              <p style={{ fontSize: 10, color: 'rgba(255,255,255,0.3)', margin: '4px 0 0' }}>GSTIN is 15 characters</p>
+            )}
           </div>
 
           <p style={{ fontSize: 11, color: 'rgba(255,255,255,0.3)', margin: '0 0 12px', fontStyle: 'italic' }}>
-            Submitting this verifies you as a real trader and enables you to post listings and make offers.
+            Complete the fields above and click Save Changes below to get your verified trader badge.
           </p>
         </div>
       )}

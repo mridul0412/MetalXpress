@@ -136,6 +136,7 @@ router.get('/me', async (req, res) => {
         isBanned: true, banReason: true, cooldownUntil: true,
         completedDeals: true, avgRating: true, disputeCount: true,
         businessName: true, tradeCategory: true, termsAcceptedAt: true,
+        panNumber: true, gstNumber: true, legalName: true,
       },
     });
     if (!user) return res.status(404).json({ error: 'User not found' });
@@ -153,15 +154,41 @@ router.patch('/profile', async (req, res) => {
     const token = header.replace('Bearer ', '');
     const payload = jwt.verify(token, process.env.JWT_SECRET);
 
-    const { name, traderType, city, phone, email, businessName, tradeCategory, kycComplete } = req.body;
+    const { name, traderType, city, phone, email, businessName, tradeCategory, kycComplete, panNumber, gstNumber, legalName } = req.body;
     const updateData = {};
     if (name) updateData.name = name;
     if (traderType) updateData.traderType = traderType;
     if (city) updateData.city = city;
     if (businessName !== undefined) updateData.businessName = businessName;
     if (tradeCategory) updateData.tradeCategory = tradeCategory;
-    // Self-declared KYC: mark verified if user completes the KYC form
-    if (kycComplete === true) updateData.kycVerified = true;
+    if (legalName) updateData.legalName = legalName;
+
+    // PAN validation (ABCDE1234F format)
+    if (panNumber) {
+      const pan = panNumber.toUpperCase().trim();
+      if (!/^[A-Z]{5}[0-9]{4}[A-Z]$/.test(pan)) {
+        return res.status(400).json({ error: 'Invalid PAN format. Expected: ABCDE1234F (5 letters, 4 digits, 1 letter)' });
+      }
+      updateData.panNumber = pan;
+    }
+
+    // GST validation (15 alphanumeric)
+    if (gstNumber) {
+      const gst = gstNumber.toUpperCase().trim();
+      if (!/^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z][A-Z0-9]Z[A-Z0-9]$/.test(gst)) {
+        return res.status(400).json({ error: 'Invalid GST format. Expected 15-character GSTIN (e.g., 07ABCDE1234F1Z5)' });
+      }
+      updateData.gstNumber = gst;
+    }
+
+    // KYC completion: requires PAN + tradeCategory at minimum
+    if (kycComplete === true) {
+      if (!updateData.panNumber && !req.body.panNumber) {
+        const currentUser = await prisma.user.findUnique({ where: { id: payload.userId }, select: { panNumber: true } });
+        if (!currentUser?.panNumber) return res.status(400).json({ error: 'PAN Card number required to complete verification' });
+      }
+      updateData.kycVerified = true;
+    }
 
     // Link/change phone — requires OTP verification if changing
     if (phone) {
@@ -236,7 +263,7 @@ router.get('/subscription', async (req, res) => {
 // POST /api/auth/register — email+password+phone signup (OTP required)
 router.post('/register', async (req, res) => {
   try {
-    const { email, password, name, traderType, city, phone, otp, termsAccepted, businessName, tradeCategory } = req.body;
+    const { email, password, name, traderType, city, phone, otp, termsAccepted, businessName, tradeCategory, panNumber, gstNumber, legalName } = req.body;
     if (!email || !password) return res.status(400).json({ error: 'Email and password required' });
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return res.status(400).json({ error: 'Invalid email format' });
     if (password.length < 6) return res.status(400).json({ error: 'Password must be at least 6 characters' });
@@ -278,7 +305,11 @@ router.post('/register', async (req, res) => {
         traderType: traderType || 'CHECKING_RATES',
         ...(termsAccepted ? { termsAcceptedAt: new Date() } : {}),
         ...(businessName ? { businessName } : {}),
-        ...(tradeCategory ? { tradeCategory, kycVerified: true } : {}),
+        ...(tradeCategory ? { tradeCategory } : {}),
+        ...(legalName ? { legalName } : {}),
+        ...(panNumber ? { panNumber: panNumber.toUpperCase().trim() } : {}),
+        ...(gstNumber ? { gstNumber: gstNumber.toUpperCase().trim() } : {}),
+        ...(panNumber && tradeCategory ? { kycVerified: true } : {}),
       },
     });
 

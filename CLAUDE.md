@@ -51,6 +51,118 @@ MetalXpress is a real-time scrap metal rate platform for Indian traders. It repl
 - **2026-03-21 (session 7)**: Negotiation-first deal flow redesign, Profile page, Admin marketplace panel — see Session 7 details below
 - **2026-03-21 (session 8)**: Auth unification, dispute flow, image support, admin verification overhaul — see Session 8 details below
 - **2026-03-22 (session 9)**: OTP fix, multi-select trader type, file uploads, offer UX, admin user, comprehensive roadmap — see Session 9 details below
+- **2026-03-22 (session 10)**: Image/video fix, Lightbox gallery, KYC overhaul (PAN-based), T&C enforcement, deal flow fixes — see Session 10 details below
+
+## Session 10 Changes (2026-03-22) — Full Detail
+
+### Image/Video Display Fix
+- **Problem**: Seed listing images used Pexels CDN URLs which were hotlink-blocked by browsers (HTTP 200 from curl but blank/broken in `<img>` tags due to Referer checks)
+- **Solution**: Downloaded 11 real scrap metal photos (26KB-99KB) + 2 videos to `backend/uploads/` folder. Switched seed.js from Pexels URLs to local `/uploads/seed-*.{jpg,webm}` paths served via Express static middleware
+- **Files**: `seed-scrap-yard-1.jpg` through `seed-metal-factory-1.jpg`, `seed-scrap-metal-recycle.webm` (19.9MB, Wikimedia CC), `seed-copper-pipe.webm` (4.9MB, Wikimedia CC)
+- **Express static**: Already configured `app.use('/uploads', express.static(...))` in `backend/src/index.js`
+
+### Lightbox Gallery Component (Marketplace.jsx)
+- **Full-screen image/video viewer** for quality inspection of scrap metal listings
+- Features: arrow navigation (←→), keyboard support (Escape to close, arrow keys), thumbnail strip at bottom, video autoplay, counter display ("2 / 5"), click-outside-to-close
+- Thumbnails in ListingCard now clickable — opens Lightbox at the clicked index
+- ListingCard shows up to 4 thumbnails with "+N" overflow indicator and ZoomIn hover overlay
+- Video files detected by extension (.mp4, .mov, .webm) and rendered with `<video>` tag
+
+### Minimum 4 Media Required per Listing
+- PostForm now requires at least 4 photos/videos before submit
+- Validation message: "At least 4 photos/videos required for listing verification"
+- Counter shows current count vs minimum
+
+### T&C Enforcement (Explicit, Not Implicit)
+- **PostForm**: Added T&C checkbox with links to Terms of Service and Dispute Policy. Submit blocked until both minimum media AND T&C are accepted
+- **OfferModal**: Added T&C checkbox with links to Terms, Commission Policy, and Refund Policy. Submit disabled until checked
+- **Signup.jsx**: T&C checkbox already present (from session 9) with links to Terms, commission policy, refund policy, ban policy, and Privacy Policy
+
+### Deal Flow Bug Fix — "Make Offer Fails First Time"
+- **Problem**: Frontend showed "Failed to send offer" error on first click, but deal was actually created (409 conflict on duplicate attempt)
+- **Root cause**: Backend returned `{error, dealId}` for existing deal attempts, frontend only checked `err.response?.data?.error` for display
+- **Fix**: Frontend now checks `err.response?.data?.dealId` — if present, navigates to existing deal instead of showing error
+- **Additional**: BrowseTab now builds `activeDealMap` from loaded deals, shows "📋 View My Offer" button for listings with existing negotiations (prevents duplicate attempt entirely)
+
+### Profile Page Fixes
+- **Stale data bug**: After profile save, AuthContext `user` object wasn't refreshed. Added `refreshUser()` method to AuthContext that re-fetches `/api/auth/me` and updates state + localStorage. Called after successful profile save.
+- **Phone change OTP**: Detects when phone number differs from original, shows "Send OTP" button, OTP input appears after send, backend verifies OTP before allowing phone change
+- **KYC form overhaul** (see KYC section below)
+
+### KYC Verification Overhaul — PAN-Based Identity Check
+**Philosophy**: Thorough verification that maintains trader privacy. No scary government/tax language. Professional tone only.
+
+**What we collect**:
+- **PAN Card Number** (required) — `[A-Z]{5}[0-9]{4}[A-Z]` format validation, stored uppercase
+- **Legal Name** (required) — as printed on PAN card
+- **Trade Category** (required) — dropdown: Scrap Collector/Kabadiwala, Scrap Dealer/Merchant, Factory/Manufacturer, Recycler/Smelter, Individual Trader, Broker/Agent, Other
+- **Business/Trade Name** (optional)
+- **GSTIN** (optional) — 15-character format validation for GST-registered businesses
+
+**KYC Gate — Blocks Entire Marketplace**:
+- `KycGate` component in Marketplace.jsx renders ABOVE all tab content when `user && !user.kycVerified`
+- Blocks ALL marketplace access: browsing, posting, negotiating — not just posting
+- Professional messaging: "To keep the marketplace safe for everyone, we verify all participants..."
+- Trust indicators: PAN-based identity check, End-to-end encrypted, Verified trader badge, Industry-standard security
+- CTA: "Complete Verification →" navigates to `/profile`
+- "Just Checking" users get: "Join as a Trader to Access Marketplace" variant
+
+**Privacy Messaging (IMPORTANT — rephrased per owner feedback)**:
+- **OLD (removed)**: "MetalXpress does NOT report any transaction data to GST, Income Tax, or any government body" — owner said this "seems too outright and makes my business seem illegitimate and fraudulent"
+- **NEW**: "Your identity details are stored with bank-grade encryption and used solely for trader verification on MetalXpress. We never share your information with external parties."
+- No mention of government, GST, Income Tax, or tax authorities anywhere in KYC flow
+- Focus on: encryption, security, trust between traders, data protection
+
+**Signup KYC Step (Step 3)**:
+- For BUYER/SELLER signups only (CHECKING_RATES skips)
+- Fields: PAN Card (required), Legal Name (required), Trade Category (required), Business Name (optional), GSTIN (optional)
+- Real-time PAN format validation with error message
+- "Skip for now" button available — but note: "Marketplace access requires verification"
+- Professional privacy message (see above)
+
+**Profile KYC Section**:
+- Shows when `needsKyc` is true (user is buyer/seller and not yet verified)
+- Same fields as Signup KYC step
+- KYC status banner: green "Identity Verified ✓" or amber "Verification Required"
+- Inline PAN format validation
+
+**Backend KYC Logic** (auth.js):
+- GET `/me`: Returns `panNumber`, `gstNumber`, `legalName`, `businessName`, `tradeCategory`, `termsAcceptedAt`
+- PATCH `/profile`: PAN format validation (`/^[A-Z]{5}[0-9]{4}[A-Z]$/`), GST format validation (`/^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z][A-Z0-9]Z[A-Z0-9]$/`), `kycComplete` flag requires PAN to be present
+- POST `/register`: Accepts `panNumber`, `gstNumber`, `legalName`; sets `kycVerified: true` only when both PAN AND tradeCategory provided
+
+**Schema Changes** (User model):
+```prisma
+panNumber     String?   // PAN card: ABCDE1234F
+gstNumber     String?   // GSTIN: 22ABCDE1234F1Z5
+legalName     String?   // Full legal name as on PAN
+businessName  String?   // Trade/business name (optional)
+tradeCategory String?   // Dropdown category
+```
+
+### Removed: JustCheckingGate
+- Old `JustCheckingGate` references in BrowseTab and Sell tab removed
+- Replaced by top-level `KycGate` in Marketplace component (blocks everything for unverified users, regardless of trader type)
+- CHECKING_RATES users now see KycGate with "Join as a Trader" messaging
+
+### AuthContext Enhancement
+- Added `refreshUser()` method — calls GET `/api/auth/me`, updates `user` state and localStorage
+- Exported in Provider value alongside `user`, `subscription`, `loading`, `login`, `logout`, `refreshSubscription`
+- Used by Profile.jsx after save to ensure UI reflects latest data immediately
+
+### Dependencies Added (Session 10)
+- `multer` (added in session 9) — file upload middleware for Express
+
+### Files Modified (Session 10)
+- `backend/prisma/schema.prisma` — Added `panNumber`, `gstNumber`, `legalName` to User model
+- `backend/src/routes/auth.js` — KYC fields in GET /me, PATCH /profile (PAN/GST validation), POST /register
+- `backend/src/prisma/seed.js` — Local image/video paths replacing Pexels CDN URLs
+- `backend/uploads/` — 11 seed images + 2 seed videos (local files)
+- `frontend/src/pages/Marketplace.jsx` — KycGate (blocks entire marketplace), Lightbox gallery, ListingCard thumbnails, OfferModal T&C + dealId fix, PostForm min 4 media + T&C, BrowseTab activeDealMap, removed JustCheckingGate
+- `frontend/src/pages/Profile.jsx` — refreshUser() after save, phone OTP flow, PAN/GST/legalName KYC form, rephrased privacy message
+- `frontend/src/pages/Signup.jsx` — KYC step with PAN/Legal Name/GST fields, rephrased privacy message
+- `frontend/src/context/AuthContext.jsx` — Added `refreshUser()` method
+- `frontend/src/utils/api.js` — `uploadMedia()` function (added in session 9)
 
 ## Session 3 Changes (2026-03-20) — Full Detail
 
@@ -280,7 +392,7 @@ Grade names updated to match actual WhatsApp message format (so `normGrade` matc
 - **Contact page**: Phone/WhatsApp numbers are placeholder "XXXXX XXXXX" in `Contact.jsx` — update with real numbers before go-live.
 - **Marketplace commission**: 0.1% negotiation-first flow working in dev mode (instant payment) — needs Razorpay integration for production.
 - **Deal notifications**: Polling-based (30s/15s intervals) — consider WebSocket or SSE for real-time updates in production.
-- **KYC verification**: Schema fields `kycVerified` and `phoneVerified` exist. Phone verification works via OTP. KYC needs: document upload (Aadhaar/PAN), file storage, admin review panel.
+- **KYC verification**: PAN-based KYC implemented (session 10). Collects PAN number, legal name, trade category, optional GST. Gates entire marketplace. Admin can still see `kycVerified` status in listing verification panel. No document upload yet (just data entry) — could add PAN card photo upload for extra verification in future.
 - **Image storage for production**: Currently files saved to local `backend/uploads/` folder via multer. For production at scale, migrate to S3/Cloudinary with CDN. Local disk works fine for MVP/early launch.
 - **Dispute SLA**: 48-hour resolution promise is manual (admin reviews) — needs notification to admin when dispute filed.
 - **Analytics layer**: Charts, market analysis, Hindi toggle — Phase 2 feature, not yet built.
@@ -580,10 +692,10 @@ Used in both Signup.jsx and Profile.jsx:
 - **Subscription**: Pro test user `test@metalxpress.in` / `test1234`, Admin user `admin@metalxpress.in` / `admin1234` — pro plan via PRO_EMAILS env var
 - **Landing**: Hero section for non-logged-in users with feature cards and CTAs
 - **Paywall**: Local rates blurred/gated for non-subscribers with "Sign Up" or "Upgrade to Pro" overlay
-- **Marketplace**: Negotiation-first deal flow, 0.1% commission on agreed value, chat-style offer thread, direct file upload for photos/videos (multer → local disk), dispute/escrow mechanism, 4-tab UI. Browse/Sell gated for "Just Checking" users. Minimum 4 media required to post. Explicit T&C acceptance on both offer-making and listing. Lightbox gallery (click thumbnail → full-screen with nav arrows + thumbnail strip + video autoplay). Seed listings use local `/uploads/` photos+videos (real scrap metal content).
+- **Marketplace**: Negotiation-first deal flow, 0.1% commission on agreed value, chat-style offer thread, direct file upload for photos/videos (multer → local disk), dispute/escrow mechanism, 4-tab UI. **KYC gate blocks entire marketplace** (browse/post/deals) for unverified users. Minimum 4 media required to post. Explicit T&C acceptance on both offer-making and listing. Lightbox gallery (click thumbnail → full-screen with nav arrows + thumbnail strip + video autoplay). Seed listings use local `/uploads/` photos+videos (real scrap metal content). "Make Offer" duplicate-deal bug fixed (navigates to existing deal).
 - **Disputes**: Full dispute lifecycle — raise dispute → admin reviews → refund/complete/cancel resolution
-- **Profile**: Complete rewrite — save now refreshes AuthContext immediately (no stale data), phone change requires OTP verification, KYC status banner, inline KYC form for unverified traders, all fields editable, trade category + business name fields
-- **KYC**: 3-step signup for Buyer/Seller (Details → OTP → Trade Profile). Self-declared: select trade category (Scrap Collector, Dealer, Factory, etc.) → kycVerified=true. Privacy promise shown: "MetalXpress does NOT report to GST/IT/any authority." No GST, no Aadhaar required. Can skip and verify later from Profile page.
+- **Profile**: Complete rewrite — save now refreshes AuthContext immediately via `refreshUser()` (no stale data), phone change requires OTP verification, KYC status banner, inline PAN-based KYC form for unverified traders, all fields editable
+- **KYC**: PAN-based identity verification. Collects: PAN Card Number (required, format validated), Legal Name as on PAN (required), Trade Category (required), Business Name (optional), GSTIN (optional, format validated). Gates entire marketplace access. 3-step signup for Buyer/Seller (Details → OTP → KYC). Privacy messaging: "bank-grade encryption, solely for trader verification, never shared with external parties" — NO mention of government/tax/GST/Income Tax. Can skip during signup and verify later from Profile page.
 - **Admin**: 3-tab admin (Rate Management / Listings / Disputes), detailed listing verification with seller profile + KYC checklist, dispute resolution panel
 - **Accordion**: All metals default-open, per-metal collapse, Expand/Collapse All button
 - **Footer**: Company + Legal links on all consumer pages
@@ -930,6 +1042,9 @@ const isOpen = !closedMetals.has(metalName);
 - [x] Price alerts (basic CRUD — no trigger mechanism yet)
 - [x] Pro subscription gating (local rates, via PRO_EMAILS env var)
 - [x] Profile page with multi-select trader type
+- [x] KYC verification: PAN-based identity check, gates entire marketplace, integrated in signup + profile
+- [x] Lightbox gallery for listing photos/videos (full-screen, keyboard nav, thumbnails)
+- [x] T&C enforcement: explicit acceptance on offers, listings, and signup
 - [x] Landing page with hero section + feature cards
 - [x] Footer + static pages (About, Terms, Privacy, Contact)
 
@@ -955,7 +1070,7 @@ const isOpen = !closedMetals.has(metalName);
 ### Phase 4 — Enhanced Features
 **Priority: MEDIUM — post-launch improvements**
 - [ ] **Price alert triggers**: Cron job (node-cron already installed) to periodically check alert thresholds + send SMS/push notifications. `alertService.js` has Twilio stub.
-- [ ] **KYC verification flow**: Document upload (Aadhaar/PAN) → file storage → admin review panel. Schema `kycVerified` field exists.
+- [ ] **KYC enhancement**: PAN-based data entry KYC is done. Future: PAN card photo upload for extra verification, automated PAN validation via NSDL API, admin KYC review panel.
 - [ ] **metals-api.com**: Set METALS_API_KEY → auto-update all 6 LME metals hourly. Currently plug-and-play in `livePriceFetcher.js`.
 - [ ] **Google OAuth**: Set GOOGLE_CLIENT_ID + GOOGLE_CLIENT_SECRET → instant activation. Currently shows greyed "Soon".
 - [ ] **Analytics layer**: Price charts, market analysis, trend graphs. Pro-tier feature. Not started.
@@ -1106,6 +1221,11 @@ git push origin claude/great-goldwasser:main
 - Uploaded files stored in `backend/uploads/` — this folder should be in `.gitignore` and backed up separately
 - `multer` file size limit: 5MB per file, max 5 files per upload
 - Image URLs in DB: `/uploads/filename.jpg` (relative). Frontend prefixes with backend URL for display.
+- KYC privacy messaging: NEVER mention "government", "GST", "Income Tax", or tax authorities. Owner explicitly flagged this as making the business seem "illegitimate and fraudulent". Use: "bank-grade encryption", "solely for trader verification", "never shared with external parties".
+- KYC gates entire marketplace — user must be `kycVerified: true` to browse, post, or negotiate. Old `JustCheckingGate` component removed.
+- Pexels CDN images don't work as `<img src>` in browsers (hotlink blocked via Referer check). Always serve images from local `backend/uploads/` or use S3/Cloudinary.
+- Seed images/videos are in `backend/uploads/seed-*` — these are local files, not URLs. If uploads folder is cleared, re-run seed script to regenerate.
+- PAN format validation: `/^[A-Z]{5}[0-9]{4}[A-Z]$/` (e.g. ABCDE1234F). GSTIN format: `/^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z][A-Z0-9]Z[A-Z0-9]$/` (15 chars).
 
 ## Test Accounts
 | Email | Password | Role | Subscription |

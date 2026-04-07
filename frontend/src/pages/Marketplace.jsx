@@ -54,6 +54,23 @@ export default function Marketplace() {
   const isOnCooldown = user?.cooldownUntil && new Date(user.cooldownUntil) > new Date();
   const cooldownDate = isOnCooldown ? new Date(user.cooldownUntil).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }) : null;
 
+  // KYC gate — blocks entire marketplace for unverified users
+  if (user && !user.kycVerified) {
+    return (
+      <div className="max-w-5xl mx-auto px-4 py-5 pb-24 md:pb-8">
+        <div style={{ marginBottom: 20 }}>
+          <h2 style={{ fontSize: 24, fontWeight: 700, color: '#fff', margin: 0 }}>
+            Scrap <span style={{ color: '#CFB53B' }}>Marketplace</span>
+          </h2>
+          <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.35)', margin: '2px 0 0' }}>
+            Sell scrap metal · Negotiate · Connect
+          </p>
+        </div>
+        <KycGate user={user} navigate={navigate} />
+      </div>
+    );
+  }
+
   if (user?.isBanned) {
     return (
       <div style={{ textAlign: 'center', padding: '80px 20px' }}>
@@ -139,9 +156,7 @@ export default function Marketplace() {
         activeDeals={deals} onViewDeal={(dealId) => { setActiveDeal(dealId); setTab('my-deals'); }} />}
 
       {tab === 'post' && (user
-        ? (user.traderType === 'CHECKING_RATES'
-          ? <JustCheckingGate navigate={navigate} />
-          : <>
+        ? <>
               {isOnCooldown && (
                 <div style={{ background: 'rgba(207,181,59,0.1)', border: '1px solid rgba(207,181,59,0.25)', borderRadius: 10, padding: '12px 16px', marginBottom: 16, fontSize: 12, color: '#CFB53B', fontFamily: 'monospace' }}>
                   <AlertTriangle size={14} style={{ verticalAlign: 'middle', marginRight: 6 }} />
@@ -149,7 +164,7 @@ export default function Marketplace() {
                 </div>
               )}
               <PostForm user={user} onSuccess={() => { setTab('my-listings'); loadMyListings(); }} />
-            </>)
+            </>
         : <LoginPrompt navigate={navigate} />)}
 
       {tab === 'my-listings' && <MyListingsTab listings={myListings} onRefresh={loadMyListings} onBrowseRefresh={load} />}
@@ -205,9 +220,7 @@ function BrowseTab({ listings, loading, filterMetal, setFilterMetal, filterCity,
           placeholder="Filter by city…" style={inputStyle} />
       </div>
 
-      {user && user.traderType === 'CHECKING_RATES' ? (
-        <JustCheckingGate navigate={navigate} />
-      ) : !user ? (
+      {!user ? (
         <div style={{ textAlign: 'center', padding: '60px 20px' }}>
           <Package size={48} style={{ color: 'rgba(207,181,59,0.2)', marginBottom: 16 }} />
           <h3 style={{ fontSize: 18, fontWeight: 700, color: '#fff', margin: '0 0 8px' }}>
@@ -1404,19 +1417,67 @@ function LoginPrompt({ navigate }) {
   );
 }
 
-/* ── Just Checking Gate ───────────────────────────────────────────── */
-function JustCheckingGate({ navigate }) {
+/* ── KYC / Verification Gate (blocks entire marketplace) ──────────── */
+function KycGate({ user, navigate }) {
+  const isJustChecking = user?.traderType === 'CHECKING_RATES';
+
   return (
-    <div style={{ textAlign: 'center', padding: '60px 24px' }}>
-      <div style={{ fontSize: 40, marginBottom: 16 }}>🔒</div>
-      <h3 style={{ fontSize: 20, fontWeight: 700, color: '#fff', marginBottom: 8 }}>Marketplace Access Required</h3>
-      <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.5)', marginBottom: 24, maxWidth: 320, margin: '0 auto 24px' }}>
-        You're currently set to "Just Checking Rates". To browse listings and trade, update your profile to Buyer or Seller.
+    <div style={{ textAlign: 'center', padding: '40px 24px', maxWidth: 520, margin: '0 auto' }}>
+      <div style={{
+        width: 64, height: 64, borderRadius: 16, margin: '0 auto 20px',
+        background: 'linear-gradient(135deg, rgba(207,181,59,0.15), rgba(207,181,59,0.05))',
+        border: '1px solid rgba(207,181,59,0.2)',
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+      }}>
+        <Shield size={28} color="#CFB53B" />
+      </div>
+
+      <h3 style={{ fontSize: 22, fontWeight: 700, color: '#fff', marginBottom: 8 }}>
+        {isJustChecking ? 'Join as a Trader to Access Marketplace' : 'Verify Your Identity to Continue'}
+      </h3>
+
+      <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.5)', lineHeight: 1.7, maxWidth: 400, margin: '0 auto 24px' }}>
+        {isJustChecking
+          ? 'Marketplace features are available to verified traders. Update your profile and complete a quick identity check — it takes under 2 minutes.'
+          : 'To keep the marketplace safe for everyone, we verify all participants before they can browse, post, or trade. Quick PAN-based check — under 2 minutes.'}
       </p>
+
+      {/* Trust indicators */}
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, maxWidth: 360, margin: '0 auto 28px', textAlign: 'left' }}>
+        {[
+          'PAN-based identity check',
+          'End-to-end encrypted',
+          'Verified trader badge',
+          'Industry-standard security',
+        ].map(t => (
+          <span key={t} style={{ fontSize: 11, color: 'rgba(255,255,255,0.4)', display: 'flex', alignItems: 'center', gap: 6 }}>
+            <CheckCircle size={12} color="#34d399" style={{ flexShrink: 0 }} /> {t}
+          </span>
+        ))}
+      </div>
+
+      {/* Professional data promise */}
+      <div style={{
+        background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)',
+        borderRadius: 12, padding: '14px 18px', marginBottom: 24, maxWidth: 400, margin: '0 auto 24px',
+      }}>
+        <p style={{ fontSize: 11, color: 'rgba(255,255,255,0.45)', margin: 0, lineHeight: 1.7 }}>
+          Your identity details are stored securely with bank-grade encryption. We use PAN only for trader verification —
+          your data is never shared with external parties or used for any purpose beyond confirming your identity on MetalXpress.
+        </p>
+      </div>
+
       <button onClick={() => navigate('/profile')} style={{
-        padding: '12px 28px', borderRadius: 10, fontWeight: 700, fontSize: 14,
+        padding: '14px 36px', borderRadius: 12, fontWeight: 700, fontSize: 15,
         background: '#CFB53B', color: '#000', border: 'none', cursor: 'pointer',
-      }}>Update My Profile</button>
+        boxShadow: '0 4px 16px rgba(207,181,59,0.25)',
+      }}>
+        {isJustChecking ? 'Update Profile & Verify' : 'Complete Verification →'}
+      </button>
+
+      <p style={{ fontSize: 11, color: 'rgba(255,255,255,0.25)', marginTop: 16 }}>
+        Takes less than 2 minutes · Secure & confidential
+      </p>
     </div>
   );
 }
