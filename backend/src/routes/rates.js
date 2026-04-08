@@ -406,6 +406,8 @@ router.post('/save-parsed', adminMiddleware, async (req, res) => {
       if (!hub) return res.status(404).json({ error: 'Hub not found' });
     }
 
+    let lmeSaved = 0, mcxSaved = 0, fxSaved = 0;
+
     // Save LME rates if present — normalise metal names for reliable matching in /live
     if (parsed.lme && parsed.lme.length > 0) {
       const CANONICAL = ['Copper', 'Aluminium', 'Aluminum', 'Zinc', 'Nickel', 'Lead', 'Tin'];
@@ -415,28 +417,31 @@ router.post('/save-parsed', adminMiddleware, async (req, res) => {
           lme.metal.toLowerCase().includes(c.toLowerCase())
         );
         const metalName = canonical === 'Aluminum' ? 'Aluminium' : (canonical || lme.metal);
-        await prisma.lMERate.create({
-          data: {
-            metal: metalName,
-            price: lme.price,
-            change: lme.change,
-            unit: lme.unit || '$/MT',
-          },
-        }).catch(() => {});
+        try {
+          await prisma.lMERate.create({
+            data: {
+              metal: metalName,
+              price: lme.price,
+              change: lme.change,
+              unit: lme.unit || '$/MT',
+            },
+          });
+          lmeSaved++;
+        } catch {}
       }
     }
 
     // Save MCX rates if present
     if (parsed.mcx && parsed.mcx.length > 0) {
       for (const mcx of parsed.mcx) {
-        await prisma.mCXRate.create({ data: mcx });
+        try { await prisma.mCXRate.create({ data: mcx }); mcxSaved++; } catch {}
       }
     }
 
     // Save Forex rates if present
     const allForex = [...(parsed.forex || []), ...(parsed.indices || [])];
     for (const fx of allForex) {
-      await prisma.forexRate.create({ data: fx });
+      try { await prisma.forexRate.create({ data: fx }); fxSaved++; } catch {}
     }
 
     // Save local metal rates (only if hub provided)
@@ -501,10 +506,15 @@ router.post('/save-parsed', adminMiddleware, async (req, res) => {
         }
       }
 
-      return res.json({ success: true, savedRates: savedCount, rateUpdateId: rateUpdate.id });
+      return res.json({
+        success: true,
+        savedRates: savedCount,
+        rateUpdateId: rateUpdate.id,
+        lmeSaved, mcxSaved, fxSaved,
+      });
     }
 
-    res.json({ success: true, savedRates: 0 });
+    res.json({ success: true, savedRates: 0, lmeSaved, mcxSaved, fxSaved });
   } catch (err) {
     console.error('/api/rates/save-parsed error:', err);
     res.status(500).json({ error: 'Failed to save parsed rates' });

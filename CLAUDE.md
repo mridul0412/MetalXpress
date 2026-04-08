@@ -1086,6 +1086,84 @@ const isOpen = !closedMetals.has(metalName);
 - [ ] **Multi-city expansion**: Automated hub onboarding, admin per city.
 - [ ] **Mobile app**: React Native wrapper or PWA for app store presence.
 
+## Tracked Roadmap — Capital & Launch Checklist
+> Last updated: 2026-04-09. Update status as tasks complete: [ ] pending → [x] done
+
+### 🚀 Phase 1 — Before First Real Users (Deploy + Go Live)
+- [ ] **Deploy backend → Railway** (Node + PostgreSQL plugin, set DATABASE_URL)
+- [ ] **Deploy frontend → Vercel** (free tier, set VITE_API_URL to Railway backend)
+- [ ] **Production env vars** — unique JWT_SECRET, ADMIN_PASSWORD, DATABASE_URL
+- [ ] **Run seed on prod DB** + admin pastes first real WhatsApp rate broadcast
+- [ ] **SMS OTP (MSG91)** — sign up at msg91.com, wire MSG91_API_KEY into auth.js (10 lines), remove dev OTP `1234`
+- [ ] **LMEStrip fix** — update `d.rates` → `d.metals` in Navbar's LMEStrip component
+- [ ] **Contact page real numbers** — replace placeholder XXXXX XXXXX in Contact.jsx
+- [ ] **Cloudinary image storage** — migrate from local `backend/uploads/` (local disk wiped on Railway redeploy)
+- [ ] **Forgot password flow** — Resend.com (free 3000 emails/month) + reset token + reset page
+
+### 💰 Phase 2 — Before First Paying Users (Revenue)
+- [ ] **Razorpay Pro subscription** — wire PaywallModal (₹299/mo) to Razorpay Checkout
+- [ ] **Razorpay deal commission** — replace dev-mode instant pay in `/deals/:id/pay` with real Razorpay flow
+- [ ] **Subscription DB model** — replace PRO_EMAILS env var hack with proper Subscription table + Razorpay webhook
+- [ ] **Price alert triggers** — cron job (node-cron installed) checks thresholds every 15min, sends SMS via MSG91
+- [ ] **Email verification on signup** — Resend.com, send confirm email, gate login until verified
+
+### 📈 Phase 3 — Growth Features (Post-Launch)
+- [ ] **Analytics dashboard (Pro)** — price trend charts, marketplace GMV, volume by metal (see Analytics Feature List below)
+- [ ] **Google OAuth** — just needs GOOGLE_CLIENT_ID + GOOGLE_CLIENT_SECRET in .env (fully coded)
+- [ ] **metals-api.com real LME prices** — just needs METALS_API_KEY in .env (fully coded, auto-activates)
+- [ ] **Hindi language toggle** — major unlock for tier-2/3 city traders (real TAM)
+- [ ] **WebSocket/SSE** — replace 30s polling with real-time deal notifications
+- [ ] **KYC document upload** — PAN card photo upload for extra verification layer
+- [ ] **Dispute SLA automation** — auto-notify admin on dispute filed, escalation timer
+
+### 🧹 Phase 4 — Cleanup (Before Hiring Engineers)
+- [ ] **TypeScript migration** — add TS to frontend for team scalability
+- [ ] **Remove unused deps** — `ioredis` never used, remove before production
+- [ ] **Remove legacy components** — CitySelector.jsx, MetalCard.jsx, RateTable.jsx, LMERatesPanel.jsx
+- [ ] **Separate admin app** — decouple admin from consumer app for security
+
+### ✅ Completed
+- [x] Live LME/MCX/Forex rates (Yahoo + Stooq, no paid API needed)
+- [x] WhatsApp broadcast → instant web update (unified smart parser)
+- [x] Full B2B marketplace — negotiation + commission + dispute/escrow
+- [x] PAN-based KYC verification gates entire marketplace
+- [x] Photo/video upload (multer → local disk), Lightbox gallery
+- [x] Pro subscription paywall gate (local rates blur)
+- [x] Auth — email+password, phone OTP, Google OAuth stub
+- [x] Unified signup (email + phone + OTP mandatory)
+- [x] Deal flow — offer → counter → accept → pay → connect → complete
+- [x] Admin panel — rate management + listing verification + disputes
+- [x] T&C enforcement on offers, listings, signup
+- [x] Profile page — editable, phone OTP change, KYC inline
+- [x] Footer + static pages (About, Terms, Privacy, Contact)
+- [x] Mobile-first dark navy glass design
+
+---
+
+## Analytics Feature List (Phase 3 — Pro Tier)
+
+### Price Analytics
+- **Price trend chart** — 7d/30d/90d line chart per metal (Copper, Brass, Aluminium etc.)
+- **LME vs MCX spread** — shows import parity gap, useful for traders deciding buy/sell timing
+- **Local vs LME basis** — how much Delhi Mandoli trades above/below LME benchmark
+- **Price velocity** — rate of change (is copper rising fast or slow this week?)
+- **All-time high/low** — since MetalXpress started tracking
+
+### Marketplace Analytics
+- **GMV tracker** — total value of deals closed on platform (₹ crore)
+- **Volume by metal** — which metals are most traded (pie/bar chart)
+- **Active listings count** — live supply/demand indicator
+- **Average deal size** — per metal, per city
+- **Deal close rate** — % of offers that convert to completed deals
+
+### Market Intelligence (Business tier)
+- **City price comparison** — Delhi vs Mumbai vs Chennai for same metal
+- **Seasonal patterns** — historical price patterns by month
+- **Buyer/Seller ratio** — demand signal per metal
+- **Top traded grades** — e.g. CC Rod vs CCR vs Armature Bhatti
+
+---
+
 ## Comprehensive TODO List — All Pending Items
 
 ### Critical (before go-live)
