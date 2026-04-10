@@ -75,7 +75,7 @@ export default function Login() {
     try {
       const res = await loginEmail({ email, password });
       login(res.data.token, res.data.user);
-      navigate('/');
+      navigate(res.data.user?.emailVerified === false ? '/verify-email' : '/');
     } catch (err) {
       setError(err.response?.data?.error || 'Login failed. Check your credentials.');
     } finally { setLoading(false); }

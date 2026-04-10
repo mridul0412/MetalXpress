@@ -38,7 +38,7 @@ MetalXpress is a real-time scrap metal rate platform for Indian traders. It repl
 ```
 
 ## Current Date
-2026-03-22
+2026-04-11
 
 ## Session Log
 - **2026-03-19**: Initial UI overhaul (Replit-quality design, LME/MCX panel, hub selector, Login, Admin, Marketplace)
@@ -52,6 +52,7 @@ MetalXpress is a real-time scrap metal rate platform for Indian traders. It repl
 - **2026-03-21 (session 8)**: Auth unification, dispute flow, image support, admin verification overhaul — see Session 8 details below
 - **2026-03-22 (session 9)**: OTP fix, multi-select trader type, file uploads, offer UX, admin user, comprehensive roadmap — see Session 9 details below
 - **2026-03-22 (session 10)**: Image/video fix, Lightbox gallery, KYC overhaul (PAN-based), T&C enforcement, deal flow fixes — see Session 10 details below
+- **2026-04-11 (session 11)**: Email verification system fully working — see Session 11 details below
 
 ## Session 10 Changes (2026-03-22) — Full Detail
 
@@ -387,8 +388,8 @@ Grade names updated to match actual WhatsApp message format (so `normGrade` matc
 - **Nifty/Sensex**: ^NSEI and ^BSESN may occasionally return null (Yahoo rate limits); gracefully shows "—"
 - **LMEStrip in Navbar**: Currently uses `d.rates` fallback — should be updated to `d.metals` to match new `/live` shape
 - **Lead/Tin DB fallback**: Only served if admin-pasted LME message is ≤7 days old; otherwise shows "—"
-- **Forgot password**: Not implemented — email+password flow has no password reset. Needs: reset token generation, email sending, reset page.
-- **Email verification**: Not implemented — users can register with any email without confirming it. Needs: verification token, confirmation email, frontend flow.
+- **Forgot password**: Implemented and working (session 11) — reset email sent via Resend, token-based reset page, password complexity enforced.
+- **Email verification**: Fully implemented and working (session 11) — verification email on signup, mandatory verification, amber banner reminder, 60s resend cooldown, StrictMode-safe.
 - **Contact page**: Phone/WhatsApp numbers are placeholder "XXXXX XXXXX" in `Contact.jsx` — update with real numbers before go-live.
 - **Marketplace commission**: 0.1% negotiation-first flow working in dev mode (instant payment) — needs Razorpay integration for production.
 - **Deal notifications**: Polling-based (30s/15s intervals) — consider WebSocket or SSE for real-time updates in production.
@@ -401,6 +402,55 @@ Grade names updated to match actual WhatsApp message format (so `normGrade` matc
 - **Google OAuth**: Plug-and-play but shows greyed "Soon" when `GOOGLE_CLIENT_ID` not set.
 - **SMS OTP**: Dev mode uses hardcoded OTP `1234`. Production needs MSG91 or Twilio integration. Env vars defined in `.env.example` but not wired to auth.js.
 - **Subscription lookup**: Currently env-var based (`PRO_EMAILS`). Needs real subscription table + Razorpay webhook when payments go live.
+
+## Session 11 Changes (2026-04-11) — Full Detail
+
+### Email Verification — Fully Working End-to-End
+
+**Bugs fixed in this session:**
+
+1. **Blank /verify-email page** — `status === 'pending'` block referenced undefined `message` variable instead of `resendError`. Fixed by replacing `{message && ...}` with `{resendError && ...}`.
+
+2. **StrictMode double-fire bug (critical)** — React StrictMode runs effects twice in dev. First run consumed the token from DB (set `emailVerifyToken: null`, `emailVerified: true`). Second run found no token → showed "Link expired or already used" even though verification succeeded. Fixed with a `verifiedRef = useRef(false)` guard that aborts on the second invocation.
+
+3. **refreshUser() silently causing error state** — If `refreshUser()` threw (e.g. user not logged in when clicking link from email), the `.catch()` block fired and showed error state despite successful backend verification. Fixed by wrapping `refreshUser()` in its own try/catch: `try { if (refreshUser) await refreshUser(); } catch (_) {}`.
+
+4. **Amber banner showing even after verification** — Login endpoint returned `emailVerified` at the top level of the response (`{ token, user: {...}, emailVerified: true }`) instead of inside the `user` object. `AuthContext` stored the user without `emailVerified`, so `user.emailVerified` was always `undefined`. Banner checked `!user.emailVerified` which was always truthy. **Two fixes**: (a) moved `emailVerified` inside `user` object in login response; (b) changed banner guard to `user.emailVerified !== false` (explicit false check, not falsy).
+
+5. **Resend error message unhelpful** — When Resend API failed (e.g. sandbox can only send to registered account email), backend catch block returned generic "Failed to resend verification email". Fixed by wrapping `sendVerificationEmail()` in its own try/catch in the resend endpoint, returning the actual Resend error + explanation about sandbox limitation.
+
+6. **60-second resend cooldown + timer** — Added countdown timer on resend button (both on `/verify-email` page and in the amber banner). Backend enforces 60-second rate limit using `emailVerifyExpiry` timestamp.
+
+7. **"Skip for now" removed** — Email verification is now mandatory. Skip button removed from VerifyEmail.jsx.
+
+8. **Post-login redirect to /verify-email** — Login.jsx now redirects to `/verify-email` if `emailVerified === false` instead of going to home.
+
+### Password Complexity Rules
+- Minimum 8 characters + at least 1 number or special character (`!@#$%^&*` etc.)
+- Applied consistently in: `Signup.jsx` (frontend), `ResetPassword.jsx` (frontend), `backend /register`, `backend /reset-password`
+- Placeholder text updated: "Min 8 chars, include a number or symbol"
+- ResetPassword strength meter updated: `< 8 chars` = "Too short", no number/symbol = "Weak"
+
+### EmailVerifyBanner in App.jsx
+- Persistent amber banner between Navbar and content for unverified users
+- Shows on all pages except: `/login`, `/signup`, `/verify-email`, `/forgot-password`, `/reset-password`
+- Contains: email address, "Verify Now →" button (navigates to `/verify-email`), inline resend button with 60s cooldown
+- Only renders when `user.emailVerified === false` (explicit check — won't show for users without the field)
+
+### Resend Sandbox Limitation (Important)
+- Resend free tier with `onboarding@resend.dev` can ONLY send to the email registered on your Resend account
+- To send to any email → add a domain at resend.com/domains (takes ~5 min)
+- Production: set `EMAIL_FROM="MetalXpress <noreply@yourdomain.com>"` after domain verification
+
+### Files Modified (Session 11)
+- `frontend/src/pages/VerifyEmail.jsx` — StrictMode guard (`verifiedRef`), refreshUser try/catch, `resendError` fix, cooldown timer, removed Skip button
+- `frontend/src/App.jsx` — `EmailVerifyBanner` component added to AppShell, `emailVerified !== false` guard
+- `frontend/src/pages/Login.jsx` — redirect to `/verify-email` when `emailVerified === false`
+- `frontend/src/pages/Signup.jsx` — password complexity validation (8 chars + number/symbol)
+- `frontend/src/pages/ResetPassword.jsx` — password complexity validation + strength meter update
+- `backend/src/routes/auth.js` — `emailVerified` moved inside `user` object on login response; resend endpoint wraps email send in own try/catch with helpful error; password complexity on `/register` and `/reset-password`; 60-second resend rate limit
+
+---
 
 ## Session 9 Changes (2026-03-22) — Full Detail
 
@@ -1098,14 +1148,14 @@ const isOpen = !closedMetals.has(metalName);
 - [ ] **LMEStrip fix** — update `d.rates` → `d.metals` in Navbar's LMEStrip component
 - [ ] **Contact page real numbers** — replace placeholder XXXXX XXXXX in Contact.jsx
 - [ ] **Cloudinary image storage** — migrate from local `backend/uploads/` (local disk wiped on Railway redeploy)
-- [ ] **Forgot password flow** — Resend.com (free 3000 emails/month) + reset token + reset page
+- [x] **Forgot password flow** — Resend.com + reset token + reset page (done session 11)
 
 ### 💰 Phase 2 — Before First Paying Users (Revenue)
 - [ ] **Razorpay Pro subscription** — wire PaywallModal (₹299/mo) to Razorpay Checkout
 - [ ] **Razorpay deal commission** — replace dev-mode instant pay in `/deals/:id/pay` with real Razorpay flow
 - [ ] **Subscription DB model** — replace PRO_EMAILS env var hack with proper Subscription table + Razorpay webhook
 - [ ] **Price alert triggers** — cron job (node-cron installed) checks thresholds every 15min, sends SMS via MSG91
-- [ ] **Email verification on signup** — Resend.com, send confirm email, gate login until verified
+- [x] **Email verification on signup** — Resend.com, send confirm email, amber banner, mandatory (done session 11)
 
 ### 📈 Phase 3 — Growth Features (Post-Launch)
 - [ ] **Analytics dashboard (Pro)** — price trend charts, marketplace GMV, volume by metal (see Analytics Feature List below)

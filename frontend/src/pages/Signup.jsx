@@ -78,7 +78,9 @@ export default function Signup() {
     e.preventDefault();
     setError('');
     if (password !== confirmPassword) return setError('Passwords do not match');
-    if (password.length < 6) return setError('Password must be at least 6 characters');
+    if (password.length < 8) return setError('Password must be at least 8 characters');
+    if (!/[0-9]/.test(password) && !/[!@#$%^&*(),.?":{}|<>_\-]/.test(password))
+      return setError('Password must include at least one number or special character (e.g. !, @, #, 1, 2)');
     if (traderTypes.length === 0) return setError('Please select at least one trader type');
 
     const hasBuyer  = traderTypes.includes('BUYER');
@@ -324,7 +326,7 @@ export default function Signup() {
                 <Lock size={15} color="rgba(255,255,255,0.3)" style={{ position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }} />
                 <input type={showPassword ? 'text' : 'password'} value={password}
                   onChange={e => setPassword(e.target.value)}
-                  placeholder="Password (min 6 chars) *" required
+                  placeholder="Password (min 8 chars, include number or symbol) *" required
                   style={{ ...inputStyle, paddingLeft: 42, paddingRight: 42 }}
                   onFocus={e => e.target.style.borderColor = '#CFB53B'}
                   onBlur={e => e.target.style.borderColor = 'rgba(255,255,255,0.1)'} />

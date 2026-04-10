@@ -262,7 +262,9 @@ router.post('/register', async (req, res) => {
     const { email, password, name, traderType, city, phone, otp, skipPhoneOtp, termsAccepted, businessName, tradeCategory, panNumber, gstNumber, legalName } = req.body;
     if (!email || !password) return res.status(400).json({ error: 'Email and password required' });
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return res.status(400).json({ error: 'Invalid email format' });
-    if (password.length < 6) return res.status(400).json({ error: 'Password must be at least 6 characters' });
+    if (password.length < 8) return res.status(400).json({ error: 'Password must be at least 8 characters' });
+    if (!/[0-9]/.test(password) && !/[!@#$%^&*(),.?":{}|<>_\-]/.test(password))
+      return res.status(400).json({ error: 'Password must contain at least one number or special character' });
 
     // Phone is optional — only validate and verify if provided
     const cleanPhone = phone ? normalizePhone(phone) : null;
@@ -357,8 +359,7 @@ router.post('/login', async (req, res) => {
     res.json({
       success: true,
       token,
-      user: { id: user.id, email: user.email, name: user.name, phone: user.phone, traderType: user.traderType },
-      emailVerified: user.emailVerified,
+      user: { id: user.id, email: user.email, name: user.name, phone: user.phone, traderType: user.traderType, emailVerified: user.emailVerified },
     });
   } catch (err) {
     console.error('/api/auth/login error:', err);
@@ -409,6 +410,18 @@ router.post('/resend-verification', async (req, res) => {
     if (user.emailVerified) return res.status(400).json({ error: 'Email is already verified' });
     if (!user.email) return res.status(400).json({ error: 'No email address linked to this account' });
 
+    // Rate limit: only allow resend once every 60 seconds
+    if (user.emailVerifyExpiry) {
+      const lastSentAt = new Date(user.emailVerifyExpiry.getTime() - 24 * 60 * 60 * 1000);
+      const secondsSinceSent = Math.floor((Date.now() - lastSentAt.getTime()) / 1000);
+      if (secondsSinceSent < 60) {
+        return res.status(429).json({
+          error: `Please wait ${60 - secondsSinceSent} seconds before requesting another email.`,
+          retryAfter: 60 - secondsSinceSent,
+        });
+      }
+    }
+
     const emailVerifyToken = generateToken();
     const emailVerifyExpiry = new Date(Date.now() + 24 * 60 * 60 * 1000);
 
@@ -417,7 +430,16 @@ router.post('/resend-verification', async (req, res) => {
       data: { emailVerifyToken, emailVerifyExpiry },
     });
 
-    await sendVerificationEmail(user.email, user.name, emailVerifyToken);
+    try {
+      await sendVerificationEmail(user.email, user.name, emailVerifyToken);
+    } catch (emailErr) {
+      console.error('/api/auth/resend-verification email error:', emailErr.message);
+      // Resend sandbox can only send to the account owner's email.
+      // Surface a helpful message instead of a generic 500.
+      return res.status(502).json({
+        error: `Email delivery failed: ${emailErr.message}. In dev, Resend sandbox only sends to your registered Resend account email.`,
+      });
+    }
 
     res.json({ success: true, message: 'Verification email resent. Check your inbox.' });
   } catch (err) {
@@ -461,7 +483,9 @@ router.post('/reset-password', async (req, res) => {
   try {
     const { token, password } = req.body;
     if (!token || !password) return res.status(400).json({ error: 'Token and new password required' });
-    if (password.length < 6) return res.status(400).json({ error: 'Password must be at least 6 characters' });
+    if (password.length < 8) return res.status(400).json({ error: 'Password must be at least 8 characters' });
+    if (!/[0-9]/.test(password) && !/[!@#$%^&*(),.?":{}|<>_\-]/.test(password))
+      return res.status(400).json({ error: 'Password must contain at least one number or special character' });
 
     const user = await prisma.user.findFirst({
       where: {

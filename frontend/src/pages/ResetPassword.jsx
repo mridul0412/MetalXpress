@@ -28,16 +28,21 @@ export default function ResetPassword() {
 
   const strength = (() => {
     if (password.length === 0) return null;
-    if (password.length < 6)   return { label: 'Too short', color: '#f87171', pct: 25 };
-    if (password.length < 8)   return { label: 'Weak', color: '#fbbf24', pct: 50 };
-    if (!/[0-9]/.test(password) || !/[A-Z]/.test(password)) return { label: 'Fair', color: '#a3e635', pct: 75 };
-    return { label: 'Strong', color: '#34d399', pct: 100 };
+    if (password.length < 8)   return { label: 'Too short', color: '#f87171', pct: 25 };
+    const hasNum = /[0-9]/.test(password);
+    const hasSpecial = /[!@#$%^&*(),.?":{}|<>_\-]/.test(password);
+    const hasUpper = /[A-Z]/.test(password);
+    if (!hasNum && !hasSpecial) return { label: 'Weak — add a number or symbol', color: '#fbbf24', pct: 50 };
+    if (hasNum && hasSpecial && hasUpper) return { label: 'Strong', color: '#34d399', pct: 100 };
+    return { label: 'Good', color: '#a3e635', pct: 75 };
   })();
 
   async function handleSubmit(e) {
     e.preventDefault();
     setError('');
-    if (password.length < 6) return setError('Password must be at least 6 characters');
+    if (password.length < 8) return setError('Password must be at least 8 characters');
+    if (!/[0-9]/.test(password) && !/[!@#$%^&*(),.?":{}|<>_\-]/.test(password))
+      return setError('Password must contain at least one number or special character');
     if (password !== confirmPass) return setError('Passwords do not match');
     setLoading(true);
     try {
@@ -173,7 +178,7 @@ export default function ResetPassword() {
                       type={showPass ? 'text' : 'password'}
                       value={password}
                       onChange={e => setPassword(e.target.value)}
-                      placeholder="At least 6 characters"
+                      placeholder="Min 8 chars, include a number or symbol"
                       required
                       style={{ ...inputStyle, paddingLeft: 40, paddingRight: 40 }}
                       onFocus={e => e.target.style.borderColor = 'rgba(207,181,59,0.5)'}
