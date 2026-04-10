@@ -259,16 +259,21 @@ router.get('/subscription', async (req, res) => {
 // ── POST /api/auth/register ──────────────────────────────────────────────────
 router.post('/register', async (req, res) => {
   try {
-    const { email, password, name, traderType, city, phone, otp, termsAccepted, businessName, tradeCategory, panNumber, gstNumber, legalName } = req.body;
+    const { email, password, name, traderType, city, phone, otp, skipPhoneOtp, termsAccepted, businessName, tradeCategory, panNumber, gstNumber, legalName } = req.body;
     if (!email || !password) return res.status(400).json({ error: 'Email and password required' });
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return res.status(400).json({ error: 'Invalid email format' });
     if (password.length < 6) return res.status(400).json({ error: 'Password must be at least 6 characters' });
 
-    const cleanPhone = normalizePhone(phone);
-    if (!cleanPhone) return res.status(400).json({ error: 'Valid 10-digit Indian phone number required for verification' });
+    // Phone is optional — only validate and verify if provided
+    const cleanPhone = phone ? normalizePhone(phone) : null;
+    if (phone && !cleanPhone) {
+      return res.status(400).json({ error: 'Invalid phone number format. Use a 10-digit Indian number.' });
+    }
 
-    // Verify OTP (required)
-    if (otp) {
+    // OTP verification — only required if phone provided AND skipPhoneOtp is not set
+    let phoneVerified = false;
+    if (cleanPhone && !skipPhoneOtp) {
+      if (!otp) return res.status(400).json({ error: 'OTP required to verify your phone number' });
       const session = await prisma.oTPSession.findFirst({
         where: { phone: cleanPhone, used: false, expiresAt: { gt: new Date() } },
         orderBy: { createdAt: 'desc' },
@@ -276,16 +281,19 @@ router.post('/register', async (req, res) => {
       if (!session) return res.status(400).json({ error: 'OTP expired or not found. Request a new one.' });
       if (session.otp !== otp) return res.status(400).json({ error: 'Invalid OTP' });
       await prisma.oTPSession.update({ where: { id: session.id }, data: { used: true } });
-    } else {
-      return res.status(400).json({ error: 'Phone OTP verification required to create an account' });
+      phoneVerified = true;
     }
+    // skipPhoneOtp: phone saved but not verified (can verify later from Profile)
 
-    // Check uniqueness
+    // Check email uniqueness
     const existingEmail = await prisma.user.findUnique({ where: { email: email.toLowerCase().trim() } });
     if (existingEmail) return res.status(409).json({ error: 'An account with this email already exists' });
 
-    const existingPhone = await prisma.user.findUnique({ where: { phone: cleanPhone } });
-    if (existingPhone) return res.status(409).json({ error: 'This phone number is already registered' });
+    // Check phone uniqueness only if phone provided
+    if (cleanPhone) {
+      const existingPhone = await prisma.user.findUnique({ where: { phone: cleanPhone } });
+      if (existingPhone) return res.status(409).json({ error: 'This phone number is already registered' });
+    }
 
     // Generate email verification token
     const emailVerifyToken = generateToken();
@@ -297,8 +305,8 @@ router.post('/register', async (req, res) => {
       data: {
         email: email.toLowerCase().trim(),
         passwordHash,
-        phone: cleanPhone,
-        phoneVerified: true,
+        ...(cleanPhone ? { phone: cleanPhone } : {}),
+        phoneVerified,
         emailVerified: false,
         emailVerifyToken,
         emailVerifyExpiry,

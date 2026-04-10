@@ -1,59 +1,76 @@
 /**
- * SMS Service — MSG91 with dev-mode fallback
+ * SMS Service — MSG91 OTP API with dev-mode fallback
  *
- * DEV MODE (no key set): OTP is logged to console, always uses 1234.
- * PRODUCTION: Set MSG91_API_KEY + MSG91_TEMPLATE_ID in .env
+ * DEV MODE  : OTP logged to console, uses 1234. No keys needed.
+ * PRODUCTION: Set MSG91_API_KEY in .env. No template/flow needed —
+ *             uses MSG91's built-in OTP send API.
  *
- * Setup (5 min):
- *  1. Sign up at https://msg91.com
- *  2. SMS → Flow → Create flow with text: "Your MetalXpress OTP is ##otp##. Valid for 10 minutes. Do not share."
- *  3. Copy Auth Key (top right) → MSG91_API_KEY
- *  4. Copy Flow ID → MSG91_TEMPLATE_ID
+ * NOTE on Indian SMS (DLT):
+ *   TRAI mandates DLT registration for commercial SMS in India.
+ *   For production, register your entity at msg91.com → DLT section.
+ *   Until then, dev mode (console log) is used automatically.
  */
 
-const IS_PROD = process.env.NODE_ENV === 'production';
-const MSG91_KEY = process.env.MSG91_API_KEY;
-const MSG91_TEMPLATE = process.env.MSG91_TEMPLATE_ID;
-
-const isConfigured = () =>
-  MSG91_KEY && MSG91_KEY !== 'your_msg91_api_key' &&
-  MSG91_TEMPLATE && MSG91_TEMPLATE !== 'your_msg91_template_id';
+const isConfigured = () => {
+  const key = process.env.MSG91_API_KEY;
+  return key && key !== 'your_msg91_api_key' && key.length > 10;
+};
 
 /**
- * Send OTP via SMS.
- * @param {string} phone  - bare 10-digit Indian number (no +91)
- * @param {string} otp    - 4-digit OTP string
+ * Send OTP via MSG91.
+ * @param {string} phone - bare 10-digit Indian number (no +91)
+ * @param {string} otp   - 4-digit OTP string
  */
 async function sendOTP(phone, otp) {
   if (!isConfigured()) {
-    // Dev mode — log to console, return success
     console.log(`\n[SMS DEV] ─────────────────────────────`);
     console.log(`[SMS DEV] Phone : +91${phone}`);
     console.log(`[SMS DEV] OTP   : ${otp}`);
+    console.log(`[SMS DEV] (Set MSG91_API_KEY in .env for real SMS)`);
     console.log(`[SMS DEV] ─────────────────────────────\n`);
     return { success: true, dev: true };
   }
 
-  // MSG91 Flow API v5
-  const response = await fetch('https://api.msg91.com/api/v5/flow/', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      authkey: MSG91_KEY,
-    },
-    body: JSON.stringify({
-      flow_id: MSG91_TEMPLATE,
+  const authkey = process.env.MSG91_API_KEY;
+  const templateId = process.env.MSG91_TEMPLATE_ID;
+
+  // Use Flow API if template ID is set, otherwise use simple OTP API
+  if (templateId && templateId !== 'your_msg91_template_id') {
+    // Flow-based API (requires DLT-registered template)
+    const response = await fetch('https://api.msg91.com/api/v5/flow/', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', authkey },
+      body: JSON.stringify({
+        flow_id: templateId,
+        sender: process.env.MSG91_SENDER_ID || 'MTLXPR',
+        mobiles: `91${phone}`,
+        OTP: otp,
+      }),
+    });
+    const data = await response.json();
+    if (data.type !== 'success') {
+      console.error('[SMS] MSG91 Flow error:', data);
+      throw new Error(data.message || 'Failed to send SMS');
+    }
+  } else {
+    // Simple OTP API — uses MSG91's pre-approved OTP template
+    const params = new URLSearchParams({
+      authkey,
+      mobile: `91${phone}`,
+      message: `Your MetalXpress OTP is ${otp}. Valid for 10 minutes. Do not share.`,
       sender: 'MTLXPR',
-      mobiles: `91${phone}`,
-      OTP: otp,
-    }),
-  });
-
-  const data = await response.json();
-
-  if (data.type !== 'success') {
-    console.error('[SMS] MSG91 error:', data);
-    throw new Error(data.message || 'Failed to send SMS via MSG91');
+      otp,
+      otp_expiry: 10,
+    });
+    const response = await fetch(
+      `https://api.msg91.com/api/sendotp.php?${params.toString()}`,
+      { method: 'GET' }
+    );
+    const text = await response.text();
+    if (!text.includes('success') && !text.includes('otp_send_success')) {
+      console.error('[SMS] MSG91 OTP error:', text);
+      throw new Error('Failed to send OTP via MSG91');
+    }
   }
 
   console.log(`[SMS] OTP sent to +91${phone}`);
