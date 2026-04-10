@@ -14,6 +14,9 @@ import Terms from './pages/Terms';
 import Privacy from './pages/Privacy';
 import Contact from './pages/Contact';
 import Profile from './pages/Profile';
+import ForgotPassword from './pages/ForgotPassword';
+import ResetPassword from './pages/ResetPassword';
+import VerifyEmail from './pages/VerifyEmail';
 
 // Layout with Navbar + Footer for consumer-facing pages
 function AppShell({ children }) {
@@ -44,6 +47,9 @@ export default function App() {
           <Route path="/privacy" element={<AppShell><Privacy /></AppShell>} />
           <Route path="/contact" element={<AppShell><Contact /></AppShell>} />
           <Route path="/profile" element={<AppShell><Profile /></AppShell>} />
+          <Route path="/forgot-password" element={<AppShell><ForgotPassword /></AppShell>} />
+          <Route path="/reset-password" element={<AppShell><ResetPassword /></AppShell>} />
+          <Route path="/verify-email" element={<AppShell><VerifyEmail /></AppShell>} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </AuthProvider>

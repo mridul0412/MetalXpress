@@ -233,8 +233,20 @@ export default function Login() {
               </button>
             </form>
 
+            {/* Forgot password */}
+            <div style={{ textAlign: 'center', marginTop: 10 }}>
+              <Link to="/forgot-password" style={{
+                fontSize: 12, color: 'rgba(255,255,255,0.35)', textDecoration: 'none',
+              }}
+                onMouseEnter={e => e.currentTarget.style.color = '#CFB53B'}
+                onMouseLeave={e => e.currentTarget.style.color = 'rgba(255,255,255,0.35)'}
+              >
+                Forgot your password?
+              </Link>
+            </div>
+
             {/* Phone OTP alternative */}
-            <div style={{ textAlign: 'center', marginTop: 14 }}>
+            <div style={{ textAlign: 'center', marginTop: 10 }}>
               <button onClick={() => { setMode('phone'); setError(''); }}
                 style={{
                   background: 'none', border: 'none', cursor: 'pointer', padding: 0,

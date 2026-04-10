@@ -60,6 +60,14 @@ export const googleAuthUrl = () => `${API_BASE}/auth/google`;
 // Profile update (after OTP login or standalone)
 export const updateProfile = (data) => api.patch('/auth/profile', data);
 
+// Email verification
+export const verifyEmail = (token) => api.get(`/auth/verify-email?token=${token}`);
+export const resendVerification = () => api.post('/auth/resend-verification');
+
+// Password reset
+export const forgotPassword = (email) => api.post('/auth/forgot-password', { email });
+export const resetPassword = (data) => api.post('/auth/reset-password', data);
+
 // Subscription / paywall
 export const checkSubscription = () => api.get('/auth/subscription');
 

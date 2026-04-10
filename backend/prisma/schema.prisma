@@ -30,6 +30,11 @@ model User {
   panNumber     String?
   gstNumber     String?
   legalName     String?
+  emailVerified       Boolean   @default(false)
+  emailVerifyToken    String?
+  emailVerifyExpiry   DateTime?
+  passwordResetToken  String?
+  passwordResetExpiry DateTime?
   createdAt    DateTime    @default(now())
   updatedAt    DateTime    @updatedAt
   alerts       Alert[]

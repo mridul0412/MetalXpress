@@ -118,7 +118,7 @@ export default function Signup() {
         setStep('kyc');
       } else {
         login(res.data.token, res.data.user);
-        navigate('/');
+        navigate('/verify-email'); // Show "check your email" screen
       }
     } catch (err) {
       setError(err.response?.data?.error || 'Registration failed. Check OTP and try again.');
@@ -147,7 +147,7 @@ export default function Signup() {
         kycComplete: true,
       });
       login(pendingToken, { ...pendingUser, kycVerified: true, tradeCategory, businessName, panNumber, legalName });
-      navigate('/');
+      navigate('/verify-email'); // Show "check your email" screen after KYC
     } catch (err) {
       localStorage.removeItem('mx_token');
       setError(err.response?.data?.error || 'KYC submission failed');
@@ -156,7 +156,7 @@ export default function Signup() {
 
   const handleSkipKYC = () => {
     login(pendingToken, pendingUser);
-    navigate('/');
+    navigate('/verify-email'); // Still show verify email even if KYC skipped
   };
 
   const handleResendOTP = async () => {
