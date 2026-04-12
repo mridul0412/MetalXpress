@@ -337,7 +337,7 @@ export default function Login() {
                 letterSpacing: '0.08em', color: 'rgba(255,255,255,0.35)', display: 'block', marginBottom: 8 }}>
                 I am a <span style={{ fontWeight: 400, textTransform: 'none' }}>(select all that apply)</span>
               </label>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 6 }}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(90px, 1fr))', gap: 6 }}>
                 {TRADER_TYPES.map(t => {
                   const active = traderTypes.includes(t.value);
                   return (

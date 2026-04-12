@@ -12,6 +12,7 @@ const authRouter = require('./routes/auth');
 const marketplaceRouter = require('./routes/marketplace');
 const alertsRouter = require('./routes/alerts');
 const adminRouter = require('./routes/admin');
+const analyticsRouter = require('./routes/analytics');
 
 const alertService = require('./services/alertService');
 
@@ -52,6 +53,7 @@ app.use('/api/auth', authRouter);
 app.use('/api/marketplace', marketplaceRouter);
 app.use('/api/alerts', alertsRouter);
 app.use('/api/admin', adminRouter);
+app.use('/api/analytics', analyticsRouter);
 
 // Alert check cron job - every 30 minutes
 cron.schedule('*/30 * * * *', async () => {

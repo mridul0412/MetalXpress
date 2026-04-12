@@ -53,6 +53,73 @@ MetalXpress is a real-time scrap metal rate platform for Indian traders. It repl
 - **2026-03-22 (session 9)**: OTP fix, multi-select trader type, file uploads, offer UX, admin user, comprehensive roadmap — see Session 9 details below
 - **2026-03-22 (session 10)**: Image/video fix, Lightbox gallery, KYC overhaul (PAN-based), T&C enforcement, deal flow fixes — see Session 10 details below
 - **2026-04-11 (session 11)**: Email verification system fully working — see Session 11 details below
+- **2026-04-12 (session 12)**: Bug fixes, cleanup, Analytics page, mobile responsiveness — see Session 12 details below
+
+## Session 12 Changes (2026-04-12) — Full Detail
+
+### Bug Fixes
+
+1. **VerifyEmail blank page crash** — `VerifyEmail.jsx` referenced undefined `message` variable in pending state. Fixed by replacing with `resendError` state variable.
+
+2. **Email verification "expired" on repeat clicks** — Backend nulled `emailVerifyToken` after verification. If user clicked link again (or StrictMode double-fired), token couldn't be found → showed "expired". Fixed by keeping token in DB after verification and checking `emailVerified` status first. Repeat clicks now return success with `alreadyVerified: true`.
+
+3. **Signup button enabled with short password** — Submit button disabled check used `password.length < 6` but validation required 8 chars. Fixed to `password.length < 8`.
+
+4. **Email verification banner missing after signup** — Register endpoint didn't include `emailVerified: false` in user response. Banner check `user.emailVerified !== false` evaluated to `true` (since `undefined !== false`), so banner never showed. Fixed by adding `emailVerified: false` to register response.
+
+### LMEStrip Fix
+- Removed legacy `d.rates` fallback from LMEStrip.jsx — now uses `d.metals ?? []` only
+- The `d.rates` shape hasn't existed since session 3; the fallback was dead code
+
+### Legacy Cleanup
+- **Deleted unused components**: `CitySelector.jsx`, `MetalCard.jsx`, `RateTable.jsx`, `LMERatesPanel.jsx` — none imported anywhere
+- **Removed `ioredis`**: Was installed but never used in any backend code. `npm uninstall ioredis` removed 11 packages.
+
+### Mobile Responsiveness Fixes
+- **Marketplace listing grid**: Changed `minmax(320px, 1fr)` → `minmax(min(100%, 320px), 1fr)` to prevent overflow on 320px screens
+- **Trader type grids** (Login + Signup): Changed `1fr 1fr 1fr` → `repeat(auto-fit, minmax(90px, 1fr))` for responsive collapse
+- **Marketplace 2-column grids** (PostForm, filters, counter-offer, KYC gate): Changed all `1fr 1fr` → `repeat(auto-fit, minmax(140px, 1fr))` to collapse to single column on small screens
+
+### Analytics Page (NEW — Pro Tier Feature)
+- **Route**: `/analytics` — accessible from Navbar (desktop + mobile bottom nav)
+- **Pro gate**: Non-subscribers see lock icon + "Upgrade to Pro — ₹299/mo" CTA
+- **Backend**: `GET /api/analytics/overview` — marketplace stats, user counts, GMV, deal close rate, volume by metal, price extremes
+- **Backend**: `GET /api/analytics/price-history?metal=Copper&period=30d` — LME + MCX price history grouped by metal
+- **Backend**: `GET /api/analytics/local-history?hubSlug=delhi-mandoli&metal=Copper` — local rate history per hub
+- **Charts** (recharts library):
+  - LME price trend: Area chart with gold gradient, per-metal, 7d/30d/90d period selector
+  - MCX price trend: Line chart
+  - Metal selector pills: Copper, Aluminium, Zinc, Nickel, Lead, Tin
+- **Stats grid**: Active Listings, Total Deals, Platform GMV, Deal Close Rate, Registered Users, Completed Deals
+- **Listings by Metal**: Donut/pie chart with legend
+- **LME All-Time High/Low**: Per-metal table with green high / red low
+- **Current LME Snapshot**: Clickable metal cards showing live price + change %
+- **Dependency**: `recharts` added to frontend
+
+### Files Modified (Session 12)
+- `frontend/src/pages/VerifyEmail.jsx` — `message` → `resendError` fix
+- `frontend/src/pages/Signup.jsx` — password button check `< 6` → `< 8`, responsive trader grid
+- `frontend/src/pages/Login.jsx` — responsive trader grid
+- `frontend/src/pages/Marketplace.jsx` — responsive grids (listing, filters, PostForm, KYC gate)
+- `frontend/src/pages/Analytics.jsx` — NEW: full analytics dashboard with recharts
+- `frontend/src/components/Navbar.jsx` — added Analytics nav item with BarChart3 icon
+- `frontend/src/components/LMEStrip.jsx` — removed `d.rates` fallback
+- `frontend/src/App.jsx` — added Analytics import + route
+- `backend/src/routes/auth.js` — verify-email keeps token, handles already-verified; register returns emailVerified
+- `backend/src/routes/analytics.js` — NEW: overview, price-history, local-history endpoints
+- `backend/src/index.js` — registered analytics router
+- `backend/package.json` — removed ioredis
+- `frontend/package.json` — added recharts
+
+### Files Deleted (Session 12)
+- `frontend/src/components/CitySelector.jsx` (legacy, unused)
+- `frontend/src/components/MetalCard.jsx` (legacy, unused)
+- `frontend/src/components/RateTable.jsx` (legacy, unused)
+- `frontend/src/components/LMERatesPanel.jsx` (legacy, unused)
+
+### Dependencies Changed (Session 12)
+- Added: `recharts` (frontend) — React charting library for analytics
+- Removed: `ioredis` (backend) — Redis client, was never used
 
 ## Session 10 Changes (2026-03-22) — Full Detail
 
@@ -386,7 +453,7 @@ Grade names updated to match actual WhatsApp message format (so `normGrade` matc
 - **PaywallModal**: Not wired to actual Razorpay yet — opens with plan cards, shows "Coming soon" alert. Razorpay env vars defined in `.env.example` but not integrated.
 - **Local rates other cities**: Only Delhi Mandoli seeded. Admin must paste real WhatsApp messages per hub to populate other cities.
 - **Nifty/Sensex**: ^NSEI and ^BSESN may occasionally return null (Yahoo rate limits); gracefully shows "—"
-- **LMEStrip in Navbar**: Currently uses `d.rates` fallback — should be updated to `d.metals` to match new `/live` shape
+- **LMEStrip in Navbar**: Fixed (session 12) — uses `d.metals` only, legacy `d.rates` fallback removed
 - **Lead/Tin DB fallback**: Only served if admin-pasted LME message is ≤7 days old; otherwise shows "—"
 - **Forgot password**: Implemented and working (session 11) — reset email sent via Resend, token-based reset page, password complexity enforced.
 - **Email verification**: Fully implemented and working (session 11) — verification email on signup, mandatory verification, amber banner reminder, 60s resend cooldown, StrictMode-safe.
@@ -396,9 +463,9 @@ Grade names updated to match actual WhatsApp message format (so `normGrade` matc
 - **KYC verification**: PAN-based KYC implemented (session 10). Collects PAN number, legal name, trade category, optional GST. Gates entire marketplace. Admin can still see `kycVerified` status in listing verification panel. No document upload yet (just data entry) — could add PAN card photo upload for extra verification in future.
 - **Image storage for production**: Currently files saved to local `backend/uploads/` folder via multer. For production at scale, migrate to S3/Cloudinary with CDN. Local disk works fine for MVP/early launch.
 - **Dispute SLA**: 48-hour resolution promise is manual (admin reviews) — needs notification to admin when dispute filed.
-- **Analytics layer**: Charts, market analysis, Hindi toggle — Phase 2 feature, not yet built.
-- **Legacy components**: `CitySelector.jsx`, `MetalCard.jsx`, `RateTable.jsx`, `LMERatesPanel.jsx` — unused, can be removed.
-- **Unused dependencies**: `ioredis` installed but never used — remove before production.
+- **Analytics layer**: Built (session 12) — Pro-tier analytics dashboard with recharts. Hindi toggle still pending.
+- **Legacy components**: Removed (session 12) — CitySelector, MetalCard, RateTable, LMERatesPanel deleted.
+- **Unused dependencies**: `ioredis` removed (session 12).
 - **Google OAuth**: Plug-and-play but shows greyed "Soon" when `GOOGLE_CLIENT_ID` not set.
 - **SMS OTP**: Dev mode uses hardcoded OTP `1234`. Production needs MSG91 or Twilio integration. Env vars defined in `.env.example` but not wired to auth.js.
 - **Subscription lookup**: Currently env-var based (`PRO_EMAILS`). Needs real subscription table + Razorpay webhook when payments go live.
@@ -737,7 +804,7 @@ Used in both Signup.jsx and Profile.jsx:
 - `backend/uploads/` — 11 real scrap metal photos + 2 industrial videos (local serving)
 - `backend/src/prisma/seed.js` — Updated to use local `/uploads/` paths (not CDN), proper metal-matched images per listing
 
-## Current Status (as of 2026-03-22, session 10)
+## Current Status (as of 2026-04-12, session 12)
 - **Auth**: Unified signup (email+phone+OTP mandatory), email+password login, phone OTP login, Google OAuth — prevents duplicate accounts. Phone normalization handles +91 prefix, spaces, dashes.
 - **Subscription**: Pro test user `test@metalxpress.in` / `test1234`, Admin user `admin@metalxpress.in` / `admin1234` — pro plan via PRO_EMAILS env var
 - **Landing**: Hero section for non-logged-in users with feature cards and CTAs
@@ -756,6 +823,10 @@ Used in both Signup.jsx and Profile.jsx:
 - metals-api.com: plug-and-play (set METALS_API_KEY in .env to activate)
 - Google OAuth: plug-and-play (set GOOGLE_CLIENT_ID + GOOGLE_CLIENT_SECRET)
 - File uploads: multer → `backend/uploads/` folder, served via express.static
+- **Analytics**: Pro-tier analytics dashboard at `/analytics` with recharts — LME/MCX price trend charts (area + line), metal selector pills, period filters (7d/30d/90d), stat cards (GMV, deals, users, close rate), listings-by-metal pie chart, all-time high/low table, live price snapshot. Backend API: `/api/analytics/overview`, `/api/analytics/price-history`, `/api/analytics/local-history`.
+- **Email verification**: Fully working — verification link survives repeat clicks (token kept in DB), amber banner on all pages for unverified users, 60-second resend cooldown, mandatory (no skip), login redirects to `/verify-email` if unverified.
+- **Legacy cleanup**: Removed unused components (CitySelector, MetalCard, RateTable, LMERatesPanel) and `ioredis` dependency.
+- **Mobile responsive**: Fixed grid layouts (Marketplace listings, trader type selectors, PostForm, filters) to collapse properly on 320px screens.
 
 ## Live Data Sources
 ### Metals (backend/src/services/livePriceFetcher.js)
@@ -864,23 +935,23 @@ frontend/src/
     Marketplace.jsx                ← 4-tab UI (Browse/Sell/My Listings/My Deals), OfferModal,
                                       DealDetailPanel (chat-style negotiation), MyDealsTab, MyListingsTab
     Alerts.jsx                     ← Price alerts (basic, old style — not updated yet)
+    Analytics.jsx                  ← Pro-tier analytics dashboard: LME/MCX charts, stats grid, pie chart, price extremes
     Admin.jsx                      ← Standalone layout, unified smart parser + Marketplace admin (verify/reject)
     Profile.jsx                    ← Subscription status, personal info form, trader type, save/sign-out
     About.jsx                      ← Company info, What We Do, Data Sources, Mission
     Terms.jsx                      ← Terms of Service (placeholder legal text)
     Privacy.jsx                    ← Privacy Policy (placeholder legal text)
     Contact.jsx                    ← Contact cards (Email, WhatsApp, Phone, Office) + FAQ
+    ForgotPassword.jsx             ← Request password reset email
+    ResetPassword.jsx              ← Token-based password reset with complexity rules
+    VerifyEmail.jsx                ← Email verification flow (pending/success/error states, resend cooldown)
   components/
-    Navbar.jsx                     ← Sticky glass header + LMEStrip + mobile bottom nav
+    Navbar.jsx                     ← Sticky glass header + LMEStrip + mobile bottom nav (5 items: Rates/Market/Analytics/Alerts/Admin)
     Footer.jsx                     ← Site-wide footer (Company + Legal links) — rendered in AppShell
     HeroSection.jsx                ← Landing hero for unauthenticated users (gold gradient + feature cards)
     LocalRatesGate.jsx             ← Blur overlay + paywall CTA for non-subscribers
-    LMEStrip.jsx                   ← Marquee ticker fetching /api/rates/live (uses d.rates fallback — update to d.metals)
+    LMEStrip.jsx                   ← Marquee ticker fetching /api/rates/live (uses d.metals)
     PaywallModal.jsx               ← Free/Pro/Business plan gate, Razorpay stub
-    CitySelector.jsx               ← (legacy)
-    MetalCard.jsx                  ← (legacy)
-    RateTable.jsx                  ← (legacy)
-    LMERatesPanel.jsx              ← (legacy)
   utils/
     api.js                         ← Axios instance + all endpoints incl. registerEmail, loginEmail, checkSubscription,
                                       fetchDealDetail, counterOffer, acceptOffer, rejectDeal, fetchMyDeals,
@@ -898,6 +969,7 @@ backend/src/
                                       + GET /subscription + Google OAuth (with email dedup)
     cities.js                      ← GET /api/cities (returns plain array [{id,name,hubs:[]}])
     metals.js, alerts.js, admin.js
+    analytics.js                   ← GET /api/analytics/overview, /price-history, /local-history (Pro-tier data)
     marketplace.js                 ← Full deal flow: POST /deals, /counter, /accept, /reject, /pay, /complete
                                       GET /my-deals, /notifications, /pending (admin). Lazy deal expiry.
                                       Listings: GET/POST/DELETE, PATCH verify (admin), metal name filter
@@ -1158,7 +1230,7 @@ const isOpen = !closedMetals.has(metalName);
 - [x] **Email verification on signup** — Resend.com, send confirm email, amber banner, mandatory (done session 11)
 
 ### 📈 Phase 3 — Growth Features (Post-Launch)
-- [ ] **Analytics dashboard (Pro)** — price trend charts, marketplace GMV, volume by metal (see Analytics Feature List below)
+- [x] **Analytics dashboard (Pro)** — price trend charts, marketplace GMV, volume by metal (done session 12)
 - [ ] **Google OAuth** — just needs GOOGLE_CLIENT_ID + GOOGLE_CLIENT_SECRET in .env (fully coded)
 - [ ] **metals-api.com real LME prices** — just needs METALS_API_KEY in .env (fully coded, auto-activates)
 - [ ] **Hindi language toggle** — major unlock for tier-2/3 city traders (real TAM)
@@ -1168,8 +1240,8 @@ const isOpen = !closedMetals.has(metalName);
 
 ### 🧹 Phase 4 — Cleanup (Before Hiring Engineers)
 - [ ] **TypeScript migration** — add TS to frontend for team scalability
-- [ ] **Remove unused deps** — `ioredis` never used, remove before production
-- [ ] **Remove legacy components** — CitySelector.jsx, MetalCard.jsx, RateTable.jsx, LMERatesPanel.jsx
+- [x] **Remove unused deps** — `ioredis` removed (session 12)
+- [x] **Remove legacy components** — CitySelector, MetalCard, RateTable, LMERatesPanel deleted (session 12)
 - [ ] **Separate admin app** — decouple admin from consumer app for security
 
 ### ✅ Completed
@@ -1335,7 +1407,7 @@ git push origin claude/great-goldwasser:main
 - `ioredis` / Redis installed but unused — remove before production (`npm uninstall ioredis`)
 - Admin page is standalone: NEVER render inside AppShell (no consumer Navbar)
 - Home.jsx uses `d.metals` (not `d.rates`) from `/api/rates/live` — breaking change from old shape
-- LMEStrip in Navbar still uses `d.rates` fallback — **TODO: update to `d.metals`**
+- LMEStrip in Navbar: Fixed (session 12) — uses `d.metals` only
 - WhatsApp bold Unicode: `𝐂𝐂𝐑` decodes with spaces → use `normGrade()` (strips all non-alphanumeric) for matching
 - ⏰ emoji between date/time in timestamps → use `[^\d]+` not `\s+` in timestamp regex
 - Admin-pasted LME change values are absolute (e.g., −100 USD/MT), NOT percentage → always use `absToChangePct()` before returning from `/live`

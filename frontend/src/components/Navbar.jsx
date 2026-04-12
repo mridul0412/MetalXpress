@@ -1,13 +1,14 @@
 import { Link, useLocation } from 'react-router-dom';
-import { Activity, Bell, Briefcase, Settings } from 'lucide-react';
+import { Activity, Bell, Briefcase, Settings, BarChart3 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import LMEStrip from './LMEStrip';
 
 const NAV_ITEMS = [
-  { href: '/',            label: 'Rates',  icon: Activity  },
-  { href: '/marketplace', label: 'Market', icon: Briefcase },
-  { href: '/alerts',      label: 'Alerts', icon: Bell      },
-  { href: '/admin',       label: 'Admin',  icon: Settings  },
+  { href: '/',            label: 'Rates',     icon: Activity   },
+  { href: '/marketplace', label: 'Market',    icon: Briefcase  },
+  { href: '/analytics',   label: 'Analytics', icon: BarChart3  },
+  { href: '/alerts',      label: 'Alerts',    icon: Bell       },
+  { href: '/admin',       label: 'Admin',     icon: Settings   },
 ];
 
 export default function Navbar() {

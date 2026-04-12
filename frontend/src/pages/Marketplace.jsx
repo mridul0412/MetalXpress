@@ -208,7 +208,7 @@ function BrowseTab({ listings, loading, filterMetal, setFilterMetal, filterCity,
   return (
     <div>
       {/* Filters */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 20 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: 12, marginBottom: 20 }}>
         <div style={{ position: 'relative' }}>
           <select value={filterMetal} onChange={e => setFilterMetal(e.target.value)} style={selectStyle}>
             <option value="" style={optionStyle}>All Metals</option>
@@ -243,7 +243,7 @@ function BrowseTab({ listings, loading, filterMetal, setFilterMetal, filterCity,
       ) : loading ? <p style={{ color: 'rgba(255,255,255,0.3)', textAlign: 'center', padding: 40 }}>Loading…</p>
       : listings.length === 0
         ? <p style={{ color: 'rgba(255,255,255,0.3)', textAlign: 'center', padding: 40 }}>No listings found. Be the first to post!</p>
-        : <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: 16 }}>
+        : <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(min(100%, 320px), 1fr))', gap: 16 }}>
             {listings.map(l => {
               const existingDealId = user ? activeDealMap[l.id] : null;
               return (
@@ -787,7 +787,7 @@ function DealDetailPanel({ dealId, user, onClose }) {
               <p style={{ fontSize: 11, color: 'rgba(255,255,255,0.3)', margin: '0 0 8px' }}>
                 Edit both price and quantity to counter-offer:
               </p>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginBottom: 8 }}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: 8, marginBottom: 8 }}>
                 <div>
                   <label style={{ ...labelStyle, marginBottom: 4 }}>Price (₹/kg) *</label>
                   <input type="number" value={counterPrice} onChange={e => setCounterPrice(e.target.value)}
@@ -1265,7 +1265,7 @@ function PostForm({ user, onSuccess }) {
         Your listing will be reviewed before going live. Buyers negotiate and pay a small commission to connect.
       </p>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 12 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: 12, marginBottom: 12 }}>
         <div>
           <label style={labelStyle}>Metal *</label>
           <select value={metalId} onChange={e => { setMetalId(e.target.value); setGradeId(''); }} style={selectStyle}>
@@ -1282,7 +1282,7 @@ function PostForm({ user, onSuccess }) {
         </div>
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 12 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: 12, marginBottom: 12 }}>
         <div>
           <label style={labelStyle}>Quantity (kg) *</label>
           <input type="number" value={qty} onChange={e => setQty(e.target.value)} placeholder="1000" style={inputStyle} />
@@ -1293,7 +1293,7 @@ function PostForm({ user, onSuccess }) {
         </div>
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 12 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: 12, marginBottom: 12 }}>
         <div>
           <label style={labelStyle}>Location *</label>
           <input value={location} onChange={e => setLocation(e.target.value)} placeholder="e.g. Mandoli, Delhi" style={inputStyle} />
@@ -1443,7 +1443,7 @@ function KycGate({ user, navigate }) {
       </p>
 
       {/* Trust indicators */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, maxWidth: 360, margin: '0 auto 28px', textAlign: 'left' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: 10, maxWidth: 360, margin: '0 auto 28px', textAlign: 'left' }}>
         {[
           'PAN-based identity check',
           'End-to-end encrypted',

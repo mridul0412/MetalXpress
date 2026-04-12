@@ -17,6 +17,7 @@ import Profile from './pages/Profile';
 import ForgotPassword from './pages/ForgotPassword';
 import ResetPassword from './pages/ResetPassword';
 import VerifyEmail from './pages/VerifyEmail';
+import Analytics from './pages/Analytics';
 import { resendVerification } from './utils/api';
 
 const COOLDOWN = 60;
@@ -142,6 +143,7 @@ export default function App() {
           <Route path="/forgot-password" element={<AppShell><ForgotPassword /></AppShell>} />
           <Route path="/reset-password" element={<AppShell><ResetPassword /></AppShell>} />
           <Route path="/verify-email" element={<AppShell><VerifyEmail /></AppShell>} />
+          <Route path="/analytics" element={<AppShell><Analytics /></AppShell>} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </AuthProvider>

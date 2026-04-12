@@ -334,7 +334,7 @@ router.post('/register', async (req, res) => {
     res.json({
       success: true,
       token,
-      user: { id: user.id, email: user.email, name: user.name, phone: user.phone, traderType: user.traderType },
+      user: { id: user.id, email: user.email, name: user.name, phone: user.phone, traderType: user.traderType, emailVerified: false },
       emailVerificationSent: true,
     });
   } catch (err) {
@@ -373,28 +373,36 @@ router.get('/verify-email', async (req, res) => {
     const { token } = req.query;
     if (!token) return res.status(400).json({ error: 'Verification token required' });
 
+    // Find user with this token (regardless of verified status)
     const user = await prisma.user.findFirst({
-      where: {
-        emailVerifyToken: token,
-        emailVerifyExpiry: { gt: new Date() },
-        emailVerified: false,
-      },
+      where: { emailVerifyToken: token },
     });
 
     if (!user) {
       return res.status(400).json({ error: 'Invalid or expired verification link. Please request a new one.' });
     }
 
+    // Already verified (e.g. double-click, StrictMode) — still return success
+    if (user.emailVerified) {
+      return res.json({ success: true, message: 'Email already verified!', alreadyVerified: true });
+    }
+
+    // Check expiry
+    if (user.emailVerifyExpiry && user.emailVerifyExpiry < new Date()) {
+      return res.status(400).json({ error: 'Verification link has expired. Please request a new one.' });
+    }
+
     await prisma.user.update({
       where: { id: user.id },
       data: {
         emailVerified: true,
-        emailVerifyToken: null,
+        // Keep the token so repeat clicks still resolve to this user
+        // Token will be replaced on next resend anyway
         emailVerifyExpiry: null,
       },
     });
 
-    res.json({ success: true, message: 'Email verified successfully! You can now log in.' });
+    res.json({ success: true, message: 'Email verified successfully!' });
   } catch (err) {
     console.error('/api/auth/verify-email error:', err);
     res.status(500).json({ error: 'Verification failed' });

@@ -352,7 +352,7 @@ export default function Signup() {
                 <label style={{ fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', color: 'rgba(255,255,255,0.35)', display: 'block', marginBottom: 8 }}>
                   I am a <span style={{ fontWeight: 400, textTransform: 'none' }}>(select all that apply)</span>
                 </label>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 6 }}>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(90px, 1fr))', gap: 6 }}>
                   {TRADER_TYPES.map(t => {
                     const active = traderTypes.includes(t.value);
                     return (
@@ -389,13 +389,13 @@ export default function Signup() {
               </label>
 
               <button type="submit"
-                disabled={loading || !email || password.length < 6 || traderTypes.length === 0 || !termsAccepted}
+                disabled={loading || !email || password.length < 8 || traderTypes.length === 0 || !termsAccepted}
                 style={{
                   width: '100%', padding: '13px', borderRadius: 12, fontWeight: 700, fontSize: 14,
                   background: '#CFB53B', color: '#000', border: 'none', cursor: 'pointer',
                   boxShadow: '0 4px 16px rgba(207,181,59,0.25)',
                   display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
-                  opacity: (loading || !email || password.length < 6 || traderTypes.length === 0 || !termsAccepted) ? 0.5 : 1,
+                  opacity: (loading || !email || password.length < 8 || traderTypes.length === 0 || !termsAccepted) ? 0.5 : 1,
                 }}>
                 {loading ? 'Creating Account...' : 'Create Account'}
                 {!loading && <ArrowRight size={16} />}
