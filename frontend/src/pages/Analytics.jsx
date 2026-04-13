@@ -216,14 +216,23 @@ export default function Analytics() {
   // Market depth
   const depthData = overview?.marketplace?.volumeByMetal || [];
 
+  // Y-axis bounds — zoom into actual price range with 3% padding
+  const lmePrices = lmeRangeSeries.flatMap(d => d.y);
+  const lmeYMin = lmePrices.length ? Math.floor(Math.min(...lmePrices) * 0.97) : undefined;
+  const lmeYMax = lmePrices.length ? Math.ceil(Math.max(...lmePrices) * 1.03) : undefined;
+  const mcxPricesAll = mcxRangeSeries.flatMap(d => d.y);
+  const mcxYMin = mcxPricesAll.length ? Math.floor(Math.min(...mcxPricesAll) * 0.97) : undefined;
+  const mcxYMax = mcxPricesAll.length ? Math.ceil(Math.max(...mcxPricesAll) * 1.03) : undefined;
+
   // Shared chart base options
   const baseChartOptions = {
     chart: {
       background: 'transparent',
       toolbar: { show: false },
-      zoom: { enabled: false },
+      zoom: { enabled: true, type: 'x', autoScaleYaxis: true },
       animations: { enabled: true, easing: 'easeinout', speed: 500 },
       fontFamily: '"JetBrains Mono", monospace',
+      width: '100%',
     },
     theme: { mode: 'dark' },
     grid: {
@@ -272,6 +281,9 @@ export default function Analytics() {
       stroke: { color: color, width: 1, dashArray: 4 },
     },
     yaxis: {
+      min: lmeYMin,
+      max: lmeYMax,
+      forceNiceScale: false,
       crosshairs: {
         show: true, position: 'front',
         stroke: { color: 'rgba(255,255,255,0.1)', width: 1, dashArray: 3 },
@@ -306,7 +318,9 @@ export default function Analytics() {
       stroke: { color: '#E8CC5A', width: 1, dashArray: 4 },
     },
     yaxis: {
-      ...baseChartOptions.yaxis,
+      min: mcxYMin,
+      max: mcxYMax,
+      forceNiceScale: false,
       labels: {
         style: { colors: 'rgba(255,255,255,0.3)', fontSize: '10px', fontFamily: 'monospace' },
         formatter: (v) => `₹${v >= 1000 ? (v / 1000).toFixed(1) + 'K' : v?.toFixed(0)}`,
