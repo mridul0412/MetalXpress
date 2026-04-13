@@ -10,10 +10,10 @@ const PLANS = [
     badge: 'Current Plan',
     badgeColor: 'rgba(255,255,255,0.15)',
     features: [
-      'LME & MCX rates (live)',
-      'Forex & indices',
-      'Marketplace browsing',
-      'Price alerts (3 max)',
+      'Live LME & MCX rates',
+      'Updated throughout the day',
+      'Price alerts',
+      'All metal types covered',
     ],
     cta: null,
     highlight: false,
@@ -21,38 +21,21 @@ const PLANS = [
   {
     id: 'pro',
     name: 'Pro',
-    price: '₹299',
+    price: '\u20B9299',
     period: '/month',
     badge: 'Most Popular',
     badgeColor: 'rgba(207,181,59,0.25)',
     badgeTextColor: '#CFB53B',
     features: [
       'Everything in Free',
-      'Local spot rates — all cities',
-      '10 contact reveals / month',
-      'Unlimited price alerts',
-      'Rate history (30 days)',
+      'Local spot rates \u2014 all cities',
+      'Full marketplace access',
+      'Candlestick charts & analytics',
+      'LME-MCX spread tracking',
+      'Verified traders & materials',
     ],
     cta: 'Subscribe',
     highlight: true,
-  },
-  {
-    id: 'business',
-    name: 'Business',
-    price: '₹999',
-    period: '/month',
-    badge: 'Power Traders',
-    badgeColor: 'rgba(99,102,241,0.2)',
-    badgeTextColor: '#818cf8',
-    features: [
-      'Everything in Pro',
-      'Unlimited contact reveals',
-      'Bulk listing creation',
-      'Priority support',
-      'Custom rate alerts',
-    ],
-    cta: 'Contact Us',
-    highlight: false,
   },
 ];
 
@@ -78,18 +61,12 @@ export default function PaywallModal({ isOpen, onClose, trigger = 'local_rates' 
 
   const subheadline = trigger === 'listing_contact'
     ? 'Subscribe to reveal phone numbers and WhatsApp links for marketplace listings.'
-    : 'Access local spot rates for all cities across India — updated daily by verified traders.';
+    : 'Access local spot rates, verified marketplace, and advanced analytics.';
 
-  const handleSubscribe = (planId) => {
-    if (planId === 'business') {
-      // TODO: redirect to contact form or WhatsApp
-      window.open('https://wa.me/917007789160?text=Hi%2C+I%27m+interested+in+MetalXpress+Business+plan', '_blank');
-    } else {
-      // Payment integration coming soon
-      onClose();
-      // Show toast — in future: open Razorpay modal
-      alert('Payment integration coming soon via Razorpay. We\'ll notify you when available!');
-    }
+  const handleSubscribe = () => {
+    // Payment integration coming soon
+    onClose();
+    alert('Payment integration coming soon via Razorpay. We\'ll notify you when available!');
   };
 
   return (
@@ -123,7 +100,7 @@ export default function PaywallModal({ isOpen, onClose, trigger = 'local_rates' 
             }}
           >
             <div style={{
-              width: '100%', maxWidth: 680, borderRadius: 24, padding: '32px 28px',
+              width: '100%', maxWidth: 520, borderRadius: 24, padding: '32px 28px',
               background: 'rgba(13,20,32,0.97)', backdropFilter: 'blur(24px)',
               border: '1px solid rgba(255,255,255,0.09)',
               borderTop: '2px solid rgba(207,181,59,0.4)',
@@ -167,7 +144,7 @@ export default function PaywallModal({ isOpen, onClose, trigger = 'local_rates' 
               </div>
 
               {/* Plan cards */}
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 12, marginBottom: 20 }}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 12, marginBottom: 20 }}>
                 {PLANS.map(plan => (
                   <div key={plan.id} style={{
                     borderRadius: 16, padding: '20px 16px',
@@ -222,7 +199,7 @@ export default function PaywallModal({ isOpen, onClose, trigger = 'local_rates' 
 
                     {/* CTA */}
                     {plan.cta ? (
-                      <button onClick={() => handleSubscribe(plan.id)} style={{
+                      <button onClick={handleSubscribe} style={{
                         width: '100%', padding: '11px', borderRadius: 10, fontWeight: 700, fontSize: 13,
                         border: 'none', cursor: 'pointer',
                         background: plan.highlight ? '#CFB53B' : 'rgba(255,255,255,0.08)',

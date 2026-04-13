@@ -13,24 +13,48 @@ const METAL_COLORS = {
 
 const FAQ_ITEMS = [
   {
-    q: 'Where do the local spot rates come from?',
-    a: 'Rates are sourced directly from real-time market broadcast messages — the same ones traders share via WhatsApp groups. Our admin team verifies and publishes them within minutes, covering Delhi Mandoli, Ahmedabad, Mumbai, Ludhiana, and more hubs.',
+    q: 'What is MetalXpress?',
+    a: "MetalXpress is India's metal trading platform. Live LME & MCX rates, local spot prices, and a verified B2B marketplace \u2014 all in one place. Built for traders who are tired of relying on WhatsApp broadcasts and phone calls to get rates and find buyers.",
   },
   {
-    q: 'How is the marketplace different from WhatsApp groups?',
-    a: 'Every trader on the marketplace is PAN-verified through our KYC process. You negotiate price and quantity in-app before any contact details are shared. Commission (0.1% of agreed value) is only charged after both parties agree — no upfront fees.',
+    q: 'What metals are covered?',
+    a: 'All types \u2014 ferrous, non-ferrous, scrap, alloys, and more. Copper, Aluminium, Zinc, Nickel, Lead, Tin, and the list keeps growing. If you trade it, we cover it.',
   },
   {
-    q: 'Are the LME and MCX prices accurate?',
-    a: 'LME prices are fetched from Yahoo Finance and Stooq every 15 minutes. MCX prices are calculated using the live USD/INR rate. When an admin pastes a fresh broadcast, those values take priority for immediate accuracy.',
+    q: 'How are local rates sourced?',
+    a: 'From real market broadcasts \u2014 the same sources dealers and brokers rely on daily. These are actual buy/sell prices from active market participants in each city, not estimates or recycled data.',
   },
   {
-    q: 'What do I get with the Pro plan?',
-    a: 'Pro unlocks local city spot rates (grade-wise buy/sell), the full B2B marketplace (post listings, negotiate, connect), market analytics (candlestick charts, trend signals, period highs/lows), and unlimited price alerts. Free users get live LME/MCX rates and basic alerts.',
+    q: 'How accurate are the rates?',
+    a: "Same rates you'd get on WhatsApp \u2014 but updated frequently from exchange data feeds, formatted properly, and always available. No stale screenshots from two days ago, no confusion about which rate is current.",
   },
   {
-    q: 'Is my data safe? Do you report to any authorities?',
-    a: 'Your identity details are stored with bank-grade encryption and used solely for trader verification on MetalXpress. We never share your information with external parties. Deal amounts remain strictly between you and your counterparty.',
+    q: 'Is this better than WhatsApp groups?',
+    a: "Same market information, but hassle-free. No scrolling through 200 messages to find one rate. No forwarded screenshots you can't trust. Everything live, organized, accurate, and in one place. Plus a proper marketplace to actually close deals \u2014 not just talk about them.",
+  },
+  {
+    q: 'Are sellers and metals verified?',
+    a: "Yes. Every trader on MetalXpress is verified before they can list or negotiate. And the metal being sold is checked too. Person verified. Material verified. You always know who you're dealing with and what you're buying.",
+  },
+  {
+    q: 'How does commission work on deals?',
+    a: "You're charged a commission of 0.1% on the deal value only after both buyer and seller agree on price and quantity. Browsing, listing, negotiating \u2014 all completely free. You pay only when a deal is confirmed and both sides are happy.",
+  },
+  {
+    q: 'What does the Pro plan include?',
+    a: 'Full marketplace access to post and negotiate deals, local city spot rates for Delhi Mandoli, Mumbai, Ahmedabad, Ludhiana, Chennai, candlestick charts, trend analysis, momentum signals, and LME-MCX spread tracking. All for \u20B9299/month.',
+  },
+  {
+    q: 'Which cities do you cover?',
+    a: "Delhi Mandoli, Mumbai, Ahmedabad, Ludhiana, Chennai \u2014 with more cities being added every month. If your market isn't listed yet, tell us and we'll prioritise it.",
+  },
+  {
+    q: 'Is my data private and secure?',
+    a: 'Yes. Your activity, listings, and personal details are never shared with anyone. Contact information is revealed only when both parties agree to a deal. We don\'t sell your data, ever.',
+  },
+  {
+    q: 'Can I use this on mobile?',
+    a: 'Yes. MetalXpress works on any smartphone \u2014 Android or iPhone, no heavy app download needed. Same live rates, same marketplace, same analytics. Trade from anywhere.',
   },
 ];
 
@@ -100,7 +124,7 @@ export default function Landing() {
           color: 'rgba(207,181,59,0.11)', fontWeight: 900,
           pointerEvents: 'none', userSelect: 'none', zIndex: 1,
           filter: 'blur(0.5px)',
-        }}>ॐ</div>
+        }}>{'\u0950'}</div>
 
         <div style={{ position: 'relative', zIndex: 2, maxWidth: 660, margin: '0 auto' }}>
           {/* Live badge */}
@@ -122,7 +146,7 @@ export default function Landing() {
             background: 'linear-gradient(145deg, #fff 0%, #E8CC5A 55%, #A89028 100%)',
             WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent',
           }}>
-            Metal Rates.<br />Local to Global.
+            India's Biggest<br />Metal Trading Platform
           </h1>
 
           {/* City emphasis line */}
@@ -131,18 +155,18 @@ export default function Landing() {
             color: '#CFB53B', margin: '0 auto 14px', letterSpacing: '0.06em',
             fontWeight: 700, textTransform: 'uppercase',
           }}>
-            Delhi · Mumbai · Ahmedabad · Ludhiana · and more
+            Live spot rates from: Delhi Mandoli · Mumbai · Ahmedabad · Ludhiana · Chennai · +more
           </p>
 
           {/* Sub */}
           <p style={{
             fontSize: 'clamp(13px, 2vw, 15px)', color: 'rgba(255,255,255,0.4)',
-            maxWidth: 500, margin: '0 auto 36px', lineHeight: 1.8,
+            maxWidth: 540, margin: '0 auto 36px', lineHeight: 1.8,
           }}>
-            Accurate local spot rates updated from real market broadcasts.
-            Live LME & MCX benchmarks every 15 minutes.
-            A verified B2B marketplace where you negotiate, agree, then connect.
-            Pro analytics with price trends, signals, and period highs.
+            The same rates you get on WhatsApp — but faster, cleaner, and always accurate.
+            Live LME & MCX prices updated throughout the day.
+            A verified marketplace where every trader and every metal is checked.
+            Ferrous, non-ferrous, scrap, alloys — all in one place.
           </p>
 
           {/* CTAs */}
@@ -153,7 +177,7 @@ export default function Landing() {
               boxShadow: '0 4px 28px rgba(207,181,59,0.28)',
               display: 'inline-flex', alignItems: 'center', gap: 8,
             }}>
-              Start for Free <ChevronRight size={16} />
+              Join MetalXpress Free <ChevronRight size={16} />
             </Link>
             <Link to="/login" style={{
               padding: '13px 28px', borderRadius: 12, fontWeight: 700, fontSize: 14,
@@ -170,7 +194,7 @@ export default function Landing() {
             display: 'flex', gap: 20, justifyContent: 'center', flexWrap: 'wrap',
             fontSize: 11, color: 'rgba(255,255,255,0.22)', letterSpacing: '0.03em',
           }}>
-            {['Verified traders only', 'Live every 15 min', '0.1% commission on deals', 'PAN-verified KYC'].map(t => (
+            {['Real-time rate updates', 'Every trader verified', 'Every metal checked', 'Trusted by traders across India'].map(t => (
               <span key={t} style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
                 <CheckCircle size={11} color="#34d399" strokeWidth={2.5} /> {t}
               </span>
@@ -209,7 +233,7 @@ export default function Landing() {
           </div>
           <p style={{ fontSize: 10, textAlign: 'center', color: 'rgba(255,255,255,0.15)', marginTop: 10 }}>
             <Link to="/signup" style={{ color: '#CFB53B', textDecoration: 'none' }}>Sign up free</Link>
-            {' '}to unlock local city rates, MCX prices, and market analytics
+            {' '}to unlock local city rates, marketplace, and market analytics
           </p>
         </section>
       )}
@@ -218,13 +242,13 @@ export default function Landing() {
       <section style={{ padding: '64px 16px', maxWidth: 920, margin: '0 auto' }}>
         <p style={{ textAlign: 'center', fontSize: 10, color: 'rgba(255,255,255,0.28)', letterSpacing: '0.12em', textTransform: 'uppercase', marginBottom: 10 }}>How it works</p>
         <h2 style={{ textAlign: 'center', fontSize: 26, fontWeight: 700, color: '#fff', margin: '0 0 40px' }}>
-          Set up in <span style={{ color: '#CFB53B' }}>minutes</span>
+          How <span style={{ color: '#CFB53B' }}>MetalXpress</span> Works
         </h2>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 14 }}>
           {[
-            { step: '01', icon: Users, title: 'Create your account', desc: 'Sign up free with your email. No credit card needed. Verify your email to get started.' },
-            { step: '02', icon: TrendingUp, title: 'Explore live rates', desc: 'LME, MCX, and local hub prices refreshed every 15 minutes. Forex, indices, crude — all in one view.' },
-            { step: '03', icon: BarChart3, title: 'Trade & analyse', desc: 'Post buy/sell listings, negotiate deals in-app, and track price trends with Pro analytics.' },
+            { step: '01', icon: TrendingUp, title: 'Check Live Rates', desc: 'No more waiting for someone to forward today\'s rate. Live LME, MCX, and local spot prices for Copper, Aluminium, Zinc, Nickel, Lead, Tin and more. Updated throughout the day. Set price alerts and get notified the moment rates cross your number.' },
+            { step: '02', icon: Briefcase, title: 'Buy & Sell on the Marketplace', desc: 'Post your listing \u2014 ferrous, non-ferrous, scrap, alloys, anything. Every seller is verified. Every metal listed is checked. Negotiate price and quantity in-app. Contacts revealed only after both parties agree.' },
+            { step: '03', icon: BarChart3, title: 'Upgrade for the Full Edge', desc: 'Unlock city-level spot rates, advanced analytics with candlestick charts and momentum signals, LME vs MCX spread tracking, and unlimited listings. Everything a serious trader needs \u2014 starting at \u20B9299/month.' },
           ].map(({ step, icon: Icon, title, desc }) => (
             <div key={step} style={{
               padding: '28px 22px', borderRadius: 18,
@@ -251,11 +275,11 @@ export default function Landing() {
           </h2>
 
           {/* FREE */}
-          <p style={{ fontSize: 11, fontWeight: 700, color: '#34d399', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 10 }}>✓ Always Free</p>
+          <p style={{ fontSize: 11, fontWeight: 700, color: '#34d399', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 10 }}>{'\u2713'} Free Plan — Start Instantly</p>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(210px, 1fr))', gap: 10, marginBottom: 36 }}>
             {[
-              { icon: TrendingUp, title: 'LME / MCX Live Rates', desc: 'Global metal prices in $/MT and ₹/kg. Auto-refreshed from Yahoo Finance & Stooq.' },
-              { icon: Bell, title: 'Price Alerts', desc: 'Set price thresholds and get notified when a metal crosses your target.' },
+              { icon: TrendingUp, title: 'LME / MCX Live Rates', desc: 'Live metal prices for all major metals, updated throughout the day. All metal types \u2014 ferrous, non-ferrous, scrap, alloys.' },
+              { icon: Bell, title: 'Price Alerts', desc: 'Set price thresholds and get notified when a metal crosses your target. Works on any phone or browser.' },
             ].map(({ icon: Icon, title, desc }) => (
               <div key={title} style={{
                 padding: '18px 20px', borderRadius: 14,
@@ -274,12 +298,12 @@ export default function Landing() {
           </div>
 
           {/* PRO */}
-          <p style={{ fontSize: 11, fontWeight: 700, color: '#CFB53B', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 10 }}>⚡ Pro — ₹299/month</p>
+          <p style={{ fontSize: 11, fontWeight: 700, color: '#CFB53B', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 10 }}>{'\u26A1'} Pro — {'\u20B9'}299/month</p>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(210px, 1fr))', gap: 10 }}>
             {[
-              { icon: MapPin, title: 'Local Spot Rates', desc: 'City-wise buy/sell prices per grade, sourced from trade broadcast messages in real time.' },
-              { icon: Briefcase, title: 'Metal Marketplace', desc: 'Post buy/sell listings, negotiate deals in-app. Commission only charged after both parties agree.' },
-              { icon: BarChart3, title: 'Market Analytics', desc: 'Candlestick & line charts, period highs/lows, momentum signals, MCX spread analysis.' },
+              { icon: MapPin, title: 'Local Spot Rates', desc: 'City-wise buy/sell prices per grade: Delhi Mandoli, Mumbai, Ahmedabad, Ludhiana, Chennai. Sourced from real market broadcasts.' },
+              { icon: Briefcase, title: 'Verified Marketplace', desc: 'Post buy/sell listings, negotiate deals in-app. Every trader verified. Every metal checked. Commission only after both parties agree.' },
+              { icon: BarChart3, title: 'Market Analytics', desc: 'Candlestick charts, trend analysis, momentum signals, and LME vs MCX spread tracking.' },
             ].map(({ icon: Icon, title, desc }) => (
               <div key={title} style={{
                 padding: '18px 20px', borderRadius: 14,
@@ -300,23 +324,18 @@ export default function Landing() {
       </section>
 
       {/* ── 5. PRICING ── */}
-      <section style={{ padding: '64px 16px', maxWidth: 920, margin: '0 auto' }}>
+      <section style={{ padding: '64px 16px', maxWidth: 700, margin: '0 auto' }}>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: 16 }}>
           {[
             {
-              name: 'Free', price: '₹0', period: 'forever',
-              features: ['LME / MCX live rates', 'Forex & indices', 'Price alerts (3 active)', 'Mobile-first access'],
-              cta: 'Get Started', ctaLink: '/signup', highlight: false,
+              name: 'Free', price: '\u20B90', period: 'forever',
+              features: ['Live LME & MCX rates', 'Updated throughout the day', 'Price alerts', 'All metal types covered', 'Works on any phone or browser'],
+              cta: 'Start Free \u2192', ctaLink: '/signup', highlight: false,
             },
             {
-              name: 'Pro', price: '₹299', period: 'per month',
-              features: ['Everything in Free', 'Local city spot rates', 'Metal marketplace', 'Market analytics & charts', 'Unlimited price alerts'],
-              cta: 'Start Pro', ctaLink: '/signup', highlight: true,
-            },
-            {
-              name: 'Business', price: '₹999', period: 'per month',
-              features: ['Everything in Pro', 'Bulk listings', 'Unlimited deal contacts', 'API access (coming soon)', 'Dedicated account manager'],
-              cta: 'Contact Us', ctaLink: '/contact', highlight: false,
+              name: 'Pro', price: '\u20B9299', period: 'per month',
+              features: ['Everything in Free', 'Full marketplace access', 'Local spot rates by city', 'Candlestick charts & advanced analytics', 'LME-MCX spread tracking', 'Verified traders & materials'],
+              cta: 'Go Pro \u2192', ctaLink: '/signup', highlight: true,
             },
           ].map(({ name, price, period, features, cta, ctaLink, highlight }) => (
             <div key={name} style={{
@@ -360,9 +379,9 @@ export default function Landing() {
 
       {/* ── 6. FAQ ── */}
       <section style={{ padding: '64px 16px', maxWidth: 720, margin: '0 auto' }}>
-        <p style={{ textAlign: 'center', fontSize: 10, color: 'rgba(255,255,255,0.28)', letterSpacing: '0.12em', textTransform: 'uppercase', marginBottom: 10 }}>Questions?</p>
+        <p style={{ textAlign: 'center', fontSize: 10, color: 'rgba(255,255,255,0.28)', letterSpacing: '0.12em', textTransform: 'uppercase', marginBottom: 10 }}>Got questions?</p>
         <h2 style={{ textAlign: 'center', fontSize: 24, fontWeight: 700, color: '#fff', margin: '0 0 32px' }}>
-          Frequently asked
+          Questions Traders Ask Us
         </h2>
         <FAQAccordion />
       </section>
@@ -370,17 +389,18 @@ export default function Landing() {
       {/* ── 7. FINAL CTA ── */}
       <section style={{ padding: '0 16px 96px', textAlign: 'center' }}>
         <div style={{
-          maxWidth: 560, margin: '0 auto', padding: '52px 32px',
+          maxWidth: 600, margin: '0 auto', padding: '52px 32px',
           background: 'rgba(13,20,32,0.7)', borderRadius: 24,
           border: '1px solid rgba(207,181,59,0.13)',
           boxShadow: '0 0 80px rgba(207,181,59,0.04)',
         }}>
-          <h2 style={{ fontSize: 24, fontWeight: 700, color: '#fff', margin: '0 0 12px' }}>
-            Stay ahead of the market
+          <h2 style={{ fontSize: 22, fontWeight: 700, color: '#fff', margin: '0 0 12px', lineHeight: 1.35 }}>
+            Stop Trading on WhatsApp.<br />Start Trading on MetalXpress.
           </h2>
           <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.38)', margin: '0 0 30px', lineHeight: 1.7 }}>
-            Join traders across India who use MetalXpress to track prices,
-            discover deals, and make smarter decisions.
+            Same rates you trust. A better, verified platform.
+            Every trader checked. Every metal checked. Every deal transparent.
+            Join India's fastest-growing metal trading platform — free to start, no card needed.
           </p>
           <Link to="/signup" style={{
             display: 'inline-flex', alignItems: 'center', gap: 9,
@@ -388,7 +408,7 @@ export default function Landing() {
             background: '#CFB53B', color: '#000', textDecoration: 'none',
             boxShadow: '0 4px 28px rgba(207,181,59,0.22)',
           }}>
-            Create Free Account <ArrowRight size={15} />
+            Join MetalXpress Free <ArrowRight size={15} />
           </Link>
           <p style={{ fontSize: 11, color: 'rgba(255,255,255,0.18)', marginTop: 14 }}>No credit card required</p>
         </div>
