@@ -106,54 +106,13 @@ export default function Landing() {
 
       {/* ── 1. HERO ── */}
       <section style={{
-        position: 'relative', textAlign: 'center',
+        minHeight: '100vh', display: 'flex', flexDirection: 'column',
+        position: 'relative', textAlign: 'center', padding: '48px 16px 0',
         overflow: 'hidden',
       }}>
 
-        {/* ── OM ZONE — the very first thing, clean, nothing on top ── */}
-        <div style={{
-          position: 'relative',
-          display: 'flex', alignItems: 'center', justifyContent: 'center',
-          paddingTop: 'clamp(80px, 12vh, 140px)',
-          paddingBottom: 0,
-          minHeight: 'clamp(280px, 45vh, 500px)',
-        }}>
-          {/* Powerful radial glow emanating FROM the OM — the divine light */}
-          <div style={{
-            position: 'absolute', top: '45%', left: '50%',
-            transform: 'translate(-50%, -50%)',
-            width: 'min(110vw, 900px)', height: 'min(110vw, 900px)',
-            borderRadius: '50%',
-            background: 'radial-gradient(circle, rgba(207,181,59,0.18) 0%, rgba(207,181,59,0.10) 20%, rgba(207,181,59,0.04) 45%, transparent 70%)',
-            pointerEvents: 'none', zIndex: 1,
-          }} />
-          {/* Secondary outer glow — softer, wider reach */}
-          <div style={{
-            position: 'absolute', top: '45%', left: '50%',
-            transform: 'translate(-50%, -50%)',
-            width: 'min(150vw, 1200px)', height: 'min(120vw, 1000px)',
-            borderRadius: '50%',
-            background: 'radial-gradient(ellipse 60% 70% at 50% 40%, rgba(207,181,59,0.06) 0%, transparent 70%)',
-            pointerEvents: 'none', zIndex: 0,
-          }} />
-
-          {/* OM symbol — massive, clean, unobstructed, the centerpiece */}
-          <div style={{
-            position: 'relative', zIndex: 2,
-            fontSize: 'clamp(240px, 50vw, 480px)', lineHeight: 0.82,
-            background: 'linear-gradient(180deg, rgba(207,181,59,0.22) 0%, rgba(207,181,59,0.10) 100%)',
-            WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent',
-            fontWeight: 900,
-            pointerEvents: 'none', userSelect: 'none',
-            filter: 'drop-shadow(0 0 60px rgba(207,181,59,0.12)) drop-shadow(0 0 120px rgba(207,181,59,0.06))',
-          }}>{'\u0950'}</div>
-        </div>
-
-        {/* ── Text zone — sits below the OM, within its glow ── */}
-        <div style={{
-          position: 'relative', zIndex: 3, maxWidth: 660, margin: '0 auto',
-          padding: '0 16px 64px',
-        }}>
+        {/* ── Text zone (top) ── */}
+        <div style={{ position: 'relative', zIndex: 3, maxWidth: 660, margin: '0 auto', paddingTop: 24 }}>
           {/* Live badge */}
           <div style={{
             display: 'inline-flex', alignItems: 'center', gap: 7,
@@ -227,6 +186,32 @@ export default function Landing() {
               </span>
             ))}
           </div>
+        </div>
+
+        {/* ── OM zone (bottom of hero) — clean, nothing overlapping ── */}
+        <div style={{
+          flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center',
+          position: 'relative', minHeight: 'clamp(200px, 30vh, 380px)',
+        }}>
+          {/* Radial glow emanating FROM the OM outward */}
+          <div style={{
+            position: 'absolute', top: '50%', left: '50%',
+            transform: 'translate(-50%, -50%)',
+            width: 'min(90vw, 700px)', height: 'min(90vw, 700px)',
+            borderRadius: '50%',
+            background: 'radial-gradient(circle, rgba(207,181,59,0.12) 0%, rgba(207,181,59,0.05) 35%, transparent 70%)',
+            pointerEvents: 'none', zIndex: 1,
+          }} />
+
+          {/* OM symbol — clean, unobstructed */}
+          <div style={{
+            position: 'relative', zIndex: 2,
+            fontSize: 'clamp(200px, 40vw, 420px)', lineHeight: 0.85,
+            color: 'rgba(207,181,59,0.14)', fontWeight: 900,
+            pointerEvents: 'none', userSelect: 'none',
+            filter: 'blur(0.3px)',
+            textShadow: '0 0 80px rgba(207,181,59,0.08), 0 0 160px rgba(207,181,59,0.04)',
+          }}>{'\u0950'}</div>
         </div>
       </section>
 
