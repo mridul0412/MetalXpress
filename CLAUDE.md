@@ -1,7 +1,7 @@
 # MetalXpress — Project Context & Requirements
 
 ## What This App Is
-MetalXpress is a real-time scrap metal rate platform for Indian traders. It replaces WhatsApp broadcast messages with a clean, organized mobile-first web app. End consumers see live rates; admin pastes WhatsApp messages to update them.
+MetalXpress is a real-time metal intelligence platform for Indian traders. It replaces WhatsApp broadcast messages with a clean, organized mobile-first web app. Features: live LME/MCX rates, local spot rates by city, verified B2B marketplace with negotiation flow, and pro analytics. Admin pastes WhatsApp messages to update local rates.
 
 ## Owner Preferences (MUST FOLLOW)
 - **Accent**: Gold (`#CFB53B`) + Black (`#0D0D0D`). Blue only for secondary actions.
@@ -54,7 +54,7 @@ MetalXpress is a real-time scrap metal rate platform for Indian traders. It repl
 - **2026-03-22 (session 10)**: Image/video fix, Lightbox gallery, KYC overhaul (PAN-based), T&C enforcement, deal flow fixes — see Session 10 details below
 - **2026-04-11 (session 11)**: Email verification system fully working — see Session 11 details below
 - **2026-04-12 (session 12)**: Bug fixes, cleanup, Analytics page, mobile responsiveness — see Session 12 details below
-- **2026-04-13 (session 13)**: Analytics full redesign (ApexCharts candlestick+line, cron price feed, OHLC, chart toggle, period H/L) — see Session 13 details below
+- **2026-04-13 (session 13)**: Analytics full redesign (ApexCharts candlestick+line, cron price feed, OHLC, chart toggle, period H/L), landing page redesign (marketing page, FAQ, conditional nav), PRO gates (Analytics+Marketplace), signup simplification (removed KYC step), rebrand scrap→metal — see Session 13 details below
 
 ## Session 13 Changes (2026-04-13) — Full Detail
 
@@ -108,6 +108,52 @@ MetalXpress is a real-time scrap metal rate platform for Indian traders. It repl
 - `backend/prisma/schema.prisma` — added `source String @default("admin")` to `LMERate` and `MCXRate`
 - `backend/src/scripts/seedPriceHistory.js` — NEW: 90-day price history seed script
 - `CLAUDE.md` — updated current date, added session 13 changes
+
+### Landing Page Redesign (Session 13 — continued)
+- **New `Landing.jsx`** — full marketing landing page for non-logged-in users, replaces HeroSection
+- **Sections**: Hero with OM watermark, live price preview (fetched from API), How It Works (3 steps), What You Get (Free/Pro), Pricing cards (Free/Pro/Business), FAQ accordion, Final CTA
+- **OM watermark**: Unicode ॐ at `top: 58%`, `fontSize: min(72vw, 560px)`, `opacity: 0.11` — positioned below navbar to avoid overlap
+- **Headline**: "Metal Rates. Local to Global." with gold city line (DELHI · MUMBAI · AHMEDABAD · LUDHIANA · AND MORE)
+- **Sub-copy**: Highlights all features — local spot rates, LME/MCX benchmarks, verified B2B marketplace, pro analytics
+- **Trust strip**: "Verified traders only | Live every 15 min | 0.1% commission on deals | PAN-verified KYC"
+- **FAQ accordion**: 5 items covering local rate sourcing, marketplace safety, LME/MCX accuracy, Pro plan features, data privacy
+- **Home.jsx**: `if (!user) return <Landing />;` — non-logged-in users see landing page, logged-in users see rates dashboard
+
+### Navigation Overhaul (Session 13 — continued)
+- **Desktop nav conditional**: `user ? NAV_ITEMS.map(...)` (app nav: Rates/Market/Analytics/Alerts/Admin) : marketing nav (About/Contact)
+- **Auth section for visitors**: Login (text link) + Sign Up (gold button) side by side
+- **Mobile bottom nav**: Hidden for non-logged-in users (`{user && <nav>...</nav>}`)
+- **Rationale**: Visitors can't use app features (Rates/Market/Analytics/Alerts/Admin), so showing dead-end links is bad UX. Marketing nav guides them to About/Contact instead.
+
+### Rebranding — "Scrap Metal" → "Metal" (Session 13 — continued)
+- Removed "scrap" from all user-facing text across the app
+- **Files updated**: Login.jsx, Signup.jsx, Profile.jsx (trader type descriptions), Marketplace.jsx ("Sell Your Metal"), About.jsx, Terms.jsx, Footer.jsx
+- **Page title**: "MetalXpress ⚡ Real-Time Metal Intelligence for India"
+- **Meta description**: Updated to mention marketplace, analytics, local rates
+
+### PRO Gates (Session 13 — continued)
+- **Analytics**: PRO-only (existing gate from session 12)
+- **Marketplace**: PRO subscription gate added BEFORE KYC gate — non-PRO users see "Upgrade to Pro" CTA
+- **KYC/PAN gate**: Only blocks Marketplace (not signup). Moved KYC step OUT of signup flow entirely — signup is now single-step (details + OTP). Users complete KYC from Profile page or when they first access Marketplace.
+
+### Signup Simplification (Session 13 — continued)
+- Removed entire KYC step 2 from signup flow (tradeCategory, businessName, panNumber, legalName, gstNumber)
+- Signup is now: Details (name, email, phone, password, trader type) → OTP verification → done
+- KYC can be completed later from Profile page or on first Marketplace access
+
+### Additional Files Modified (Session 13 — continued)
+- `frontend/src/pages/Landing.jsx` — NEW: full marketing landing page
+- `frontend/src/pages/Home.jsx` — renders Landing for non-logged-in users
+- `frontend/src/components/Navbar.jsx` — conditional nav (marketing vs app), hidden mobile nav for visitors
+- `frontend/src/components/HeroSection.jsx` — feature cards reordered, Marketplace badge → PRO
+- `frontend/src/components/Footer.jsx` — rebranded description
+- `frontend/src/pages/Signup.jsx` — removed KYC step, simplified to single-step + OTP
+- `frontend/src/pages/Marketplace.jsx` — PRO gate before KYC gate, rebranded text
+- `frontend/src/pages/Login.jsx` — trader type desc rebranded
+- `frontend/src/pages/Profile.jsx` — trader type desc rebranded
+- `frontend/src/pages/About.jsx` — rebranded text
+- `frontend/src/pages/Terms.jsx` — rebranded text
+- `frontend/index.html` — updated title and meta description
 
 ## Session 12 Changes (2026-04-12) — Full Detail
 
