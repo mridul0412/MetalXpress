@@ -106,54 +106,27 @@ export default function Landing() {
 
       {/* ── 1. HERO ── */}
       <section style={{
-        position: 'relative', textAlign: 'center',
-        overflow: 'hidden',
+        minHeight: '88vh', display: 'flex', alignItems: 'center', justifyContent: 'center',
+        position: 'relative', textAlign: 'center', padding: '60px 16px 48px',
       }}>
-
-        {/* ── OM ZONE — the very first thing, clean, nothing on top ── */}
+        {/* Gold radial glow */}
         <div style={{
-          position: 'relative',
-          display: 'flex', alignItems: 'center', justifyContent: 'center',
-          paddingTop: 'clamp(80px, 12vh, 140px)',
-          paddingBottom: 0,
-          minHeight: 'clamp(280px, 45vh, 500px)',
-        }}>
-          {/* Powerful radial glow emanating FROM the OM — the divine light */}
-          <div style={{
-            position: 'absolute', top: '45%', left: '50%',
-            transform: 'translate(-50%, -50%)',
-            width: 'min(110vw, 900px)', height: 'min(110vw, 900px)',
-            borderRadius: '50%',
-            background: 'radial-gradient(circle, rgba(207,181,59,0.18) 0%, rgba(207,181,59,0.10) 20%, rgba(207,181,59,0.04) 45%, transparent 70%)',
-            pointerEvents: 'none', zIndex: 1,
-          }} />
-          {/* Secondary outer glow — softer, wider reach */}
-          <div style={{
-            position: 'absolute', top: '45%', left: '50%',
-            transform: 'translate(-50%, -50%)',
-            width: 'min(150vw, 1200px)', height: 'min(120vw, 1000px)',
-            borderRadius: '50%',
-            background: 'radial-gradient(ellipse 60% 70% at 50% 40%, rgba(207,181,59,0.06) 0%, transparent 70%)',
-            pointerEvents: 'none', zIndex: 0,
-          }} />
+          position: 'absolute', inset: 0,
+          background: 'radial-gradient(ellipse 70% 55% at 50% 0%, rgba(207,181,59,0.08) 0%, transparent 70%)',
+          pointerEvents: 'none',
+        }} />
 
-          {/* OM symbol — massive, clean, unobstructed, the centerpiece */}
-          <div style={{
-            position: 'relative', zIndex: 2,
-            fontSize: 'clamp(240px, 50vw, 480px)', lineHeight: 0.82,
-            background: 'linear-gradient(180deg, rgba(207,181,59,0.22) 0%, rgba(207,181,59,0.10) 100%)',
-            WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent',
-            fontWeight: 900,
-            pointerEvents: 'none', userSelect: 'none',
-            filter: 'drop-shadow(0 0 60px rgba(207,181,59,0.12)) drop-shadow(0 0 120px rgba(207,181,59,0.06))',
-          }}>{'\u0950'}</div>
-        </div>
-
-        {/* ── Text zone — sits below the OM, within its glow ── */}
+        {/* OM watermark — sits above the glow, below the text, clearly visible */}
         <div style={{
-          position: 'relative', zIndex: 3, maxWidth: 660, margin: '0 auto',
-          padding: '0 16px 64px',
-        }}>
+          position: 'absolute', top: '58%', left: '50%',
+          transform: 'translate(-50%, -50%)',
+          fontSize: 'min(72vw, 560px)', lineHeight: 1,
+          color: 'rgba(207,181,59,0.11)', fontWeight: 900,
+          pointerEvents: 'none', userSelect: 'none', zIndex: 1,
+          filter: 'blur(0.5px)',
+        }}>{'\u0950'}</div>
+
+        <div style={{ position: 'relative', zIndex: 2, maxWidth: 660, margin: '0 auto' }}>
           {/* Live badge */}
           <div style={{
             display: 'inline-flex', alignItems: 'center', gap: 7,
@@ -188,7 +161,7 @@ export default function Landing() {
           {/* Sub */}
           <p style={{
             fontSize: 'clamp(13px, 2vw, 15px)', color: 'rgba(255,255,255,0.4)',
-            maxWidth: 540, margin: '0 auto 32px', lineHeight: 1.8,
+            maxWidth: 540, margin: '0 auto 36px', lineHeight: 1.8,
           }}>
             The same rates you get on WhatsApp — but faster, cleaner, and always accurate.
             Live LME & MCX prices updated throughout the day.
@@ -197,7 +170,7 @@ export default function Landing() {
           </p>
 
           {/* CTAs */}
-          <div style={{ display: 'flex', gap: 12, justifyContent: 'center', flexWrap: 'wrap', marginBottom: 24 }}>
+          <div style={{ display: 'flex', gap: 12, justifyContent: 'center', flexWrap: 'wrap', marginBottom: 48 }}>
             <Link to="/signup" style={{
               padding: '13px 28px', borderRadius: 12, fontWeight: 700, fontSize: 14,
               background: '#CFB53B', color: '#000', textDecoration: 'none',
