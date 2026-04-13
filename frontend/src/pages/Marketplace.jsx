@@ -48,11 +48,68 @@ export default function Marketplace() {
   const [filterCity, setFilterCity] = useState('');
   const [offerListing, setOfferListing] = useState(null); // listing to make offer on
   const [activeDeal, setActiveDeal] = useState(null);     // deal detail view
-  const { user } = useAuth();
+  const { user, subscription } = useAuth();
   const navigate = useNavigate();
 
   const isOnCooldown = user?.cooldownUntil && new Date(user.cooldownUntil) > new Date();
   const cooldownDate = isOnCooldown ? new Date(user.cooldownUntil).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }) : null;
+
+  // PRO gate — Marketplace requires Pro subscription
+  if (user && subscription !== undefined && subscription?.plan !== 'pro' && subscription?.plan !== 'business') {
+    return (
+      <div className="max-w-5xl mx-auto px-4 py-5 pb-24 md:pb-8">
+        <div style={{ marginBottom: 20 }}>
+          <h2 style={{ fontSize: 24, fontWeight: 700, color: '#fff', margin: 0 }}>
+            Metal <span style={{ color: '#CFB53B' }}>Marketplace</span>
+          </h2>
+          <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.35)', margin: '2px 0 0' }}>
+            Trade metals · Negotiate · Connect
+          </p>
+        </div>
+        <div style={{
+          maxWidth: 460, margin: '60px auto', textAlign: 'center', padding: '48px 32px',
+          background: '#0D1420', border: '1px solid rgba(255,255,255,0.07)',
+          borderTop: '2px solid rgba(207,181,59,0.4)', borderRadius: 20,
+        }}>
+          <div style={{
+            width: 64, height: 64, borderRadius: '50%', margin: '0 auto 22px',
+            background: 'rgba(207,181,59,0.08)', border: '1px solid rgba(207,181,59,0.2)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+          }}>
+            <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#CFB53B" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+            </svg>
+          </div>
+          <h3 style={{ fontSize: 20, fontWeight: 700, color: '#fff', margin: '0 0 10px', fontFamily: 'monospace' }}>
+            Pro Feature
+          </h3>
+          <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.42)', margin: '0 0 28px', lineHeight: 1.7 }}>
+            The Metal Marketplace is available on the Pro plan. Post listings, negotiate deals, and connect with verified traders.
+          </p>
+          <div style={{ display: 'flex', gap: 10, justifyContent: 'center', flexWrap: 'wrap' }}>
+            <button onClick={() => window.dispatchEvent(new CustomEvent('open-paywall'))} style={{
+              padding: '12px 24px', borderRadius: 12, fontSize: 14, fontWeight: 700,
+              background: '#CFB53B', color: '#000', border: 'none', cursor: 'pointer',
+              fontFamily: 'monospace', flex: 1, maxWidth: 200,
+            }}>
+              Upgrade to Pro
+            </button>
+            <button onClick={() => window.history.back()} style={{
+              padding: '12px 24px', borderRadius: 12, fontSize: 14, fontWeight: 600,
+              background: 'rgba(255,255,255,0.05)', color: 'rgba(255,255,255,0.5)',
+              border: '1px solid rgba(255,255,255,0.1)', cursor: 'pointer', fontFamily: 'monospace',
+              flex: 1, maxWidth: 200,
+            }}>
+              Go Back
+            </button>
+          </div>
+          <p style={{ fontSize: 11, color: 'rgba(255,255,255,0.2)', marginTop: 20 }}>
+            Pro plan — ₹299/month · No commitment
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   // KYC gate — blocks entire marketplace for unverified users
   if (user && !user.kycVerified) {
@@ -60,10 +117,10 @@ export default function Marketplace() {
       <div className="max-w-5xl mx-auto px-4 py-5 pb-24 md:pb-8">
         <div style={{ marginBottom: 20 }}>
           <h2 style={{ fontSize: 24, fontWeight: 700, color: '#fff', margin: 0 }}>
-            Scrap <span style={{ color: '#CFB53B' }}>Marketplace</span>
+            Metal <span style={{ color: '#CFB53B' }}>Marketplace</span>
           </h2>
           <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.35)', margin: '2px 0 0' }}>
-            Sell scrap metal · Negotiate · Connect
+            Trade metals · Negotiate · Connect
           </p>
         </div>
         <KycGate user={user} navigate={navigate} />
@@ -118,7 +175,7 @@ export default function Marketplace() {
 
   const TABS = [
     ['browse', 'Browse'],
-    ['post', 'Sell Scrap'],
+    ['post', 'Sell Metal'],
     ...(user ? [['my-listings', 'My Listings'], ['my-deals', 'My Deals']] : []),
   ];
 
@@ -129,10 +186,10 @@ export default function Marketplace() {
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12 }}>
           <div>
             <h2 style={{ fontSize: 24, fontWeight: 700, color: '#fff', margin: 0 }}>
-              Scrap <span style={{ color: '#CFB53B' }}>Marketplace</span>
+              Metal <span style={{ color: '#CFB53B' }}>Marketplace</span>
             </h2>
             <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.35)', margin: '2px 0 0' }}>
-              Sell scrap metal · Negotiate · Connect
+              Trade metals · Negotiate · Connect
             </p>
           </div>
           <div style={{ display: 'flex', padding: 4, borderRadius: 12, background: 'rgba(255,255,255,0.05)',
@@ -224,7 +281,7 @@ function BrowseTab({ listings, loading, filterMetal, setFilterMetal, filterCity,
         <div style={{ textAlign: 'center', padding: '60px 20px' }}>
           <Package size={48} style={{ color: 'rgba(207,181,59,0.2)', marginBottom: 16 }} />
           <h3 style={{ fontSize: 18, fontWeight: 700, color: '#fff', margin: '0 0 8px' }}>
-            Browse Scrap Metal Listings
+            Browse Metal Listings
           </h3>
           <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: 14, marginBottom: 20, maxWidth: 340, marginInline: 'auto' }}>
             Sign up or login to view listings, make offers, and connect with verified traders across India.

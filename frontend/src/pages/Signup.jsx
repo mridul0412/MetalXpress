@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Shield, Mail, Lock, User, Eye, EyeOff, ArrowRight, Smartphone, CheckCircle } from 'lucide-react';
+import { Shield, Mail, Lock, User, Eye, EyeOff, ArrowRight, Smartphone } from 'lucide-react';
 import { registerEmail } from '../utils/api';
 import { useAuth } from '../context/AuthContext';
 
@@ -13,15 +13,6 @@ const TRADER_TYPES = [
   { value: 'CHECKING_RATES', label: 'Just Checking', desc: 'Market observer' },
 ];
 
-const TRADE_CATEGORIES = [
-  'Scrap Collector / Kabadiwala',
-  'Scrap Dealer / Merchant',
-  'Factory / Manufacturer',
-  'Recycler / Smelter',
-  'Individual Trader',
-  'Broker / Agent',
-  'Other',
-];
 
 function GoogleIcon() {
   return (
@@ -42,10 +33,6 @@ const inputStyle = {
 };
 
 export default function Signup() {
-  // Steps: 'details' → 'kyc' (buyers/sellers only) → done
-  const [step, setStep] = useState('details');
-
-  // Step 1 fields
   const [name, setName]                     = useState('');
   const [email, setEmail]                   = useState('');
   const [phone, setPhone]                   = useState('');
@@ -54,18 +41,6 @@ export default function Signup() {
   const [showPassword, setShowPassword]     = useState(false);
   const [traderTypes, setTraderTypes]       = useState(['CHECKING_RATES']);
   const [termsAccepted, setTermsAccepted]   = useState(false);
-
-  // KYC fields (Step 2)
-  const [tradeCategory, setTradeCategory]   = useState('');
-  const [businessName, setBusinessName]     = useState('');
-  const [panNumber, setPanNumber]           = useState('');
-  const [legalName, setLegalName]           = useState('');
-  const [gstNumber, setGstNumber]           = useState('');
-
-  // Temp state between steps
-  const [pendingToken, setPendingToken]     = useState(null);
-  const [pendingUser, setPendingUser]       = useState(null);
-
   const [loading, setLoading]               = useState(false);
   const [error, setError]                   = useState('');
 
@@ -111,62 +86,14 @@ export default function Signup() {
         termsAccepted: true,
       });
 
-      if (hasBuyer || hasSeller) {
-        setPendingToken(res.data.token);
-        setPendingUser(res.data.user);
-        setStep('kyc');
-      } else {
-        login(res.data.token, res.data.user);
-        navigate('/verify-email');
-      }
+      login(res.data.token, res.data.user);
+      navigate('/verify-email');
     } catch (err) {
       setError(err.response?.data?.error || 'Registration failed. Please try again.');
     } finally {
       setLoading(false);
     }
   };
-
-  // ── Step 2: KYC submission ────────────────────────────────────────────────
-  const handleKYCSubmit = async (e) => {
-    e.preventDefault();
-    setError('');
-    if (!panNumber || !/^[A-Z]{5}[0-9]{4}[A-Z]$/.test(panNumber.toUpperCase())) {
-      return setError('Valid PAN Card number required (e.g. ABCDE1234F)');
-    }
-    if (!legalName.trim()) return setError('Legal name (as on PAN) is required');
-    if (!tradeCategory)    return setError('Please select your trade category');
-
-    setLoading(true);
-    try {
-      localStorage.setItem('mx_token', pendingToken);
-      const { updateProfile } = await import('../utils/api');
-      await updateProfile({
-        tradeCategory,
-        businessName: businessName || undefined,
-        panNumber: panNumber.toUpperCase().trim(),
-        legalName: legalName.trim(),
-        gstNumber: gstNumber ? gstNumber.toUpperCase().trim() : undefined,
-        kycComplete: true,
-      });
-      login(pendingToken, { ...pendingUser, kycVerified: true, tradeCategory, businessName, panNumber, legalName });
-      navigate('/verify-email');
-    } catch (err) {
-      localStorage.removeItem('mx_token');
-      setError(err.response?.data?.error || 'KYC submission failed. Try again.');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleSkipKYC = () => {
-    login(pendingToken, pendingUser);
-    navigate('/verify-email');
-  };
-
-  // ── Step indicators ───────────────────────────────────────────────────────
-  const steps    = ['Account Details', 'Trade Profile'];
-  const stepKeys = ['details', 'kyc'];
-  const currentIdx = stepKeys.indexOf(step);
 
   return (
     <div style={{
@@ -197,47 +124,15 @@ export default function Signup() {
             display: 'flex', alignItems: 'center', justifyContent: 'center',
             boxShadow: '0 8px 24px rgba(207,181,59,0.3)',
           }}>
-            {step === 'kyc'
-              ? <CheckCircle size={24} color="#000" strokeWidth={2.5} />
-              : <Shield size={24} color="#000" strokeWidth={2.5} />}
+            <Shield size={24} color="#000" strokeWidth={2.5} />
           </div>
           <h1 style={{ fontSize: 22, fontWeight: 700, color: '#fff', margin: '0 0 4px' }}>
-            {step === 'kyc' ? 'Almost Done!' : 'Create Your Account'}
+            Create Your Account
           </h1>
           <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.4)', margin: 0 }}>
-            {step === 'kyc' ? 'Tell us about your trade — 30 seconds' : 'Free to join, takes 30 seconds'}
+            Free to join, takes 30 seconds
           </p>
         </div>
-
-        {/* Step indicator — only show when there are 2 steps (buyer/seller path) */}
-        {(step === 'kyc' || pendingToken) && (
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, marginBottom: 20 }}>
-            {steps.map((label, i) => {
-              const done   = i < currentIdx;
-              const active = i === currentIdx;
-              return (
-                <div key={label} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                    <div style={{
-                      width: 24, height: 24, borderRadius: '50%', fontSize: 11, fontWeight: 700,
-                      display: 'flex', alignItems: 'center', justifyContent: 'center',
-                      background: done ? '#34d399' : active ? '#CFB53B' : 'rgba(255,255,255,0.1)',
-                      color: (done || active) ? '#000' : 'rgba(255,255,255,0.3)',
-                    }}>
-                      {done ? <CheckCircle size={14} /> : i + 1}
-                    </div>
-                    <span style={{ fontSize: 11, color: active ? 'rgba(255,255,255,0.7)' : 'rgba(255,255,255,0.4)' }}>
-                      {label}
-                    </span>
-                  </div>
-                  {i < steps.length - 1 && (
-                    <div style={{ width: 24, height: 1, background: 'rgba(255,255,255,0.1)' }} />
-                  )}
-                </div>
-              );
-            })}
-          </div>
-        )}
 
         {/* Error */}
         <AnimatePresence>
@@ -255,9 +150,8 @@ export default function Signup() {
           )}
         </AnimatePresence>
 
-        {/* ── Step 1: Account Details ── */}
-        {step === 'details' && (
-          <>
+        {/* ── Account Details ── */}
+        <>
             {/* Google OAuth */}
             <div style={{ marginBottom: 16 }}>
               {googleAvailable ? (
@@ -407,107 +301,6 @@ export default function Signup() {
               <Link to="/login" style={{ color: '#CFB53B', fontWeight: 700, textDecoration: 'none' }}>Login</Link>
             </p>
           </>
-        )}
-
-        {/* ── Step 2: KYC ── */}
-        {step === 'kyc' && (
-          <form onSubmit={handleKYCSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-            {/* Privacy promise */}
-            <div style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 12, padding: '14px 16px' }}>
-              <p style={{ fontSize: 11, color: 'rgba(255,255,255,0.5)', margin: 0, lineHeight: 1.7 }}>
-                🛡️ <strong style={{ color: 'rgba(255,255,255,0.7)' }}>Your data is secure.</strong> Identity details are stored with bank-grade encryption and used solely for trader verification on MetalXpress. We never share your information with external parties.
-              </p>
-            </div>
-
-            {/* PAN */}
-            <div>
-              <label style={{ fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', color: 'rgba(255,255,255,0.35)', display: 'block', marginBottom: 8 }}>
-                PAN Card Number <span style={{ color: '#f87171' }}>*</span>
-              </label>
-              <input value={panNumber} onChange={e => setPanNumber(e.target.value.toUpperCase())}
-                placeholder="ABCDE1234F" maxLength={10}
-                style={{ ...inputStyle, fontFamily: 'monospace', letterSpacing: '0.1em', textTransform: 'uppercase' }}
-                onFocus={e => e.target.style.borderColor = '#CFB53B'}
-                onBlur={e => e.target.style.borderColor = 'rgba(255,255,255,0.1)'} />
-              {panNumber.length > 0 && !/^[A-Z]{5}[0-9]{4}[A-Z]$/.test(panNumber) && (
-                <p style={{ fontSize: 10, color: '#f87171', margin: '4px 0 0' }}>Format: 5 letters + 4 digits + 1 letter (e.g. ABCDE1234F)</p>
-              )}
-            </div>
-
-            {/* Legal Name */}
-            <div>
-              <label style={{ fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', color: 'rgba(255,255,255,0.35)', display: 'block', marginBottom: 8 }}>
-                Legal Name <span style={{ color: '#f87171' }}>*</span>{' '}
-                <span style={{ fontWeight: 400, textTransform: 'none' }}>(as on PAN card)</span>
-              </label>
-              <input value={legalName} onChange={e => setLegalName(e.target.value)}
-                placeholder="Full name as printed on your PAN card"
-                style={inputStyle}
-                onFocus={e => e.target.style.borderColor = '#CFB53B'}
-                onBlur={e => e.target.style.borderColor = 'rgba(255,255,255,0.1)'} />
-            </div>
-
-            {/* Trade Category */}
-            <div>
-              <label style={{ fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', color: 'rgba(255,255,255,0.35)', display: 'block', marginBottom: 8 }}>
-                Trade Category <span style={{ color: '#f87171' }}>*</span>
-              </label>
-              <select value={tradeCategory} onChange={e => setTradeCategory(e.target.value)}
-                style={{ width: '100%', padding: '12px 14px', borderRadius: 10, fontSize: 13, background: '#0a1020', border: '1px solid rgba(255,255,255,0.1)', color: tradeCategory ? '#fff' : 'rgba(255,255,255,0.4)', outline: 'none', boxSizing: 'border-box', fontFamily: 'inherit' }}>
-                <option value="" style={{ background: '#0D1420' }}>Select your trade type…</option>
-                {TRADE_CATEGORIES.map(c => <option key={c} value={c} style={{ background: '#0D1420' }}>{c}</option>)}
-              </select>
-            </div>
-
-            {/* Business Name — optional */}
-            <div>
-              <label style={{ fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', color: 'rgba(255,255,255,0.35)', display: 'block', marginBottom: 8 }}>
-                Business / Trade Name{' '}
-                <span style={{ fontWeight: 400, textTransform: 'none', color: 'rgba(255,255,255,0.3)' }}>(optional)</span>
-              </label>
-              <input value={businessName} onChange={e => setBusinessName(e.target.value)}
-                placeholder="e.g. Ram Kumar Scrap Traders"
-                style={inputStyle}
-                onFocus={e => e.target.style.borderColor = '#CFB53B'}
-                onBlur={e => e.target.style.borderColor = 'rgba(255,255,255,0.1)'} />
-            </div>
-
-            {/* GSTIN — optional */}
-            <div>
-              <label style={{ fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', color: 'rgba(255,255,255,0.35)', display: 'block', marginBottom: 8 }}>
-                GSTIN{' '}
-                <span style={{ fontWeight: 400, textTransform: 'none', color: 'rgba(255,255,255,0.3)' }}>(optional — GST-registered businesses)</span>
-              </label>
-              <input value={gstNumber} onChange={e => setGstNumber(e.target.value.toUpperCase())}
-                placeholder="22ABCDE1234F1Z5" maxLength={15}
-                style={{ ...inputStyle, fontFamily: 'monospace', letterSpacing: '0.05em', textTransform: 'uppercase' }}
-                onFocus={e => e.target.style.borderColor = '#CFB53B'}
-                onBlur={e => e.target.style.borderColor = 'rgba(255,255,255,0.1)'} />
-            </div>
-
-            <button type="submit"
-              disabled={loading || !panNumber || !/^[A-Z]{5}[0-9]{4}[A-Z]$/.test(panNumber) || !legalName || !tradeCategory}
-              style={{
-                width: '100%', padding: '13px', borderRadius: 12, fontWeight: 700, fontSize: 14,
-                background: '#CFB53B', color: '#000', border: 'none', cursor: 'pointer',
-                opacity: (loading || !panNumber || !/^[A-Z]{5}[0-9]{4}[A-Z]$/.test(panNumber) || !legalName || !tradeCategory) ? 0.5 : 1,
-              }}>
-              {loading ? 'Saving...' : 'Complete Verification & Enter →'}
-            </button>
-
-            <button type="button" onClick={handleSkipKYC}
-              style={{
-                width: '100%', padding: '10px', borderRadius: 10, fontWeight: 600, fontSize: 12,
-                background: 'transparent', color: 'rgba(255,255,255,0.3)',
-                border: '1px solid rgba(255,255,255,0.08)', cursor: 'pointer',
-              }}>
-              Skip for now — I'll verify later
-            </button>
-            <p style={{ textAlign: 'center', fontSize: 11, color: 'rgba(255,255,255,0.2)', margin: 0 }}>
-              Marketplace access requires verification. You can complete this from your Profile page.
-            </p>
-          </form>
-        )}
       </motion.div>
     </div>
   );

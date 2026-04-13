@@ -32,7 +32,7 @@ export default function Footer() {
               </span>
             </div>
             <p style={{ fontSize: 11, color: 'rgba(255,255,255,0.3)', lineHeight: 1.5, margin: 0 }}>
-              India's real-time scrap metal rate platform for traders.
+              Real-time metal intelligence for Indian traders.
             </p>
           </div>
 

@@ -2,10 +2,10 @@ import { Link } from 'react-router-dom';
 import { TrendingUp, MapPin, Briefcase, Bell, ChevronRight } from 'lucide-react';
 
 const FEATURES = [
-  { icon: TrendingUp, label: 'LME / MCX Live', desc: 'Real-time global metal prices', badge: 'FREE', badgeColor: '#34d399' },
-  { icon: MapPin,     label: 'Local Spot Rates', desc: 'City-wise buy/sell prices', badge: 'PRO', badgeColor: '#CFB53B' },
-  { icon: Briefcase,  label: 'Marketplace',      desc: 'Buy & sell scrap metal', badge: 'FREE', badgeColor: '#34d399' },
-  { icon: Bell,       label: 'Price Alerts',     desc: 'Get notified on price moves', badge: 'FREE', badgeColor: '#34d399' },
+  { icon: TrendingUp, label: 'LME / MCX Live',   desc: 'Real-time global metal prices',   badge: 'FREE', badgeColor: '#34d399' },
+  { icon: Bell,       label: 'Price Alerts',      desc: 'Get notified on price moves',      badge: 'FREE', badgeColor: '#34d399' },
+  { icon: MapPin,     label: 'Local Spot Rates',  desc: 'City-wise buy/sell prices',        badge: 'PRO',  badgeColor: '#CFB53B' },
+  { icon: Briefcase,  label: 'Marketplace',       desc: 'B2B metal trading platform',       badge: 'PRO',  badgeColor: '#CFB53B' },
 ];
 
 export default function HeroSection() {
@@ -18,16 +18,14 @@ export default function HeroSection() {
         pointerEvents: 'none', zIndex: 0, overflow: 'hidden',
       }} />
 
-      {/* ॐ watermark — overlay layer, pointer-events:none so clicks pass through */}
+      {/* ॐ watermark */}
       <div style={{
-        position: 'absolute', top: 0, left: 0, right: 0, bottom: 0,
-        pointerEvents: 'none', userSelect: 'none', zIndex: 2,
-        mixBlendMode: 'screen',
-        backgroundImage: `url("data:image/svg+xml,${encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 260"><text x="100" y="200" text-anchor="middle" font-size="180" font-weight="800" fill="rgba(207,181,59,0.18)">ॐ</text></svg>')}")`,
-        backgroundRepeat: 'no-repeat',
-        backgroundPosition: 'center center',
-        backgroundSize: 'contain',
-      }} />
+        position: 'absolute', top: '50%', left: '50%',
+        transform: 'translate(-50%, -50%)',
+        fontSize: 'min(85vw, 320px)', lineHeight: 1,
+        color: 'rgba(207,181,59,0.05)', fontWeight: 900,
+        pointerEvents: 'none', userSelect: 'none', zIndex: 0,
+      }}>ॐ</div>
 
       <div style={{ position: 'relative', zIndex: 1 }}>
         <h1 style={{
@@ -36,10 +34,10 @@ export default function HeroSection() {
           WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent',
           letterSpacing: '-0.02em',
         }}>
-          India's Real-Time<br />Scrap Metal Rate Platform
+          India's Metal<br />Intelligence Platform
         </h1>
         <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.45)', maxWidth: 380, margin: '0 auto 20px', lineHeight: 1.5 }}>
-          Live LME, MCX, and local spot rates. Updated every 5 minutes. Trusted by Indian scrap metal traders.
+          Live LME & MCX prices, local spot rates, B2B marketplace, and analytics. Built for India's metal trade.
         </p>
 
         <div className="flex items-center justify-center gap-3 mb-6">

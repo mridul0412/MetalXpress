@@ -6,7 +6,7 @@ import {
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { useAuth } from '../context/AuthContext';
-import HeroSection from '../components/HeroSection';
+import Landing from './Landing';
 import LocalRatesGate from '../components/LocalRatesGate';
 
 const METAL_META = {
@@ -155,11 +155,11 @@ export default function Home() {
 
   const currentHubSlug = selectedCity?.hubs?.[0]?.slug;
 
+  // Non-logged-in users see the full landing page
+  if (!user) return <Landing />;
+
   return (
     <div className="max-w-5xl mx-auto px-4 py-5 pb-24 md:pb-8 flex flex-col gap-6" style={{ position: 'relative' }}>
-
-      {/* ── Hero for non-logged-in users ───────────────── */}
-      {!user && <HeroSection />}
 
       {/* ── LME / MCX Table ────────────────────────────── */}
       <section id="lme-section">
