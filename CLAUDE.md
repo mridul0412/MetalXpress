@@ -38,7 +38,7 @@ MetalXpress is a real-time metal intelligence platform for Indian traders. It re
 ```
 
 ## Current Date
-2026-04-13
+2026-04-14
 
 ## Session Log
 - **2026-03-19**: Initial UI overhaul (Replit-quality design, LME/MCX panel, hub selector, Login, Admin, Marketplace)
@@ -55,6 +55,85 @@ MetalXpress is a real-time metal intelligence platform for Indian traders. It re
 - **2026-04-11 (session 11)**: Email verification system fully working — see Session 11 details below
 - **2026-04-12 (session 12)**: Bug fixes, cleanup, Analytics page, mobile responsiveness — see Session 12 details below
 - **2026-04-13 (session 13)**: Analytics full redesign (ApexCharts candlestick+line, cron price feed, OHLC, chart toggle, period H/L), landing page redesign (marketing page, FAQ, conditional nav), PRO gates (Analytics+Marketplace), signup simplification (removed KYC step), rebrand scrap→metal — see Session 13 details below
+- **2026-04-14 (session 14)**: Landing page copy overhaul (new headline, hero, FAQ x11, 2-tier pricing), About page rewrite, font standardization, PaywallModal simplified, "Mandoli" removed — see Session 14 details below
+
+## Session 14 Changes (2026-04-14) — Full Detail
+
+### Landing Page Copy Overhaul
+- **Headline**: Changed from "Metal Rates. Local to Global." → "India's Biggest Metal Trading Platform"
+- **Hero description**: Rewritten to emphasize WhatsApp replacement value — "The same rates you get on WhatsApp — but faster, cleaner, and always accurate."
+- **City line**: "Live spot rates from: Delhi · Mumbai · Ahmedabad · Ludhiana · Chennai · +more" (removed "Mandoli" from all references)
+- **Trust strip**: Changed from specific metrics to broader trust signals — "Real-time rate updates · Every trader verified · Every metal checked · Trusted by traders across India"
+- **CTA button**: "Start for Free" → "Join MetalXpress Free"
+- **How It Works**: Rewritten with detailed step descriptions — Check Live Rates / Buy & Sell on the Marketplace / Upgrade for the Full Edge
+- **What You Get**: Free tier updated (no "basic charts" — analytics is PRO-only). Pro tier highlights verified marketplace.
+- **FAQ**: Expanded from 5 → 11 questions covering: What is MetalXpress, metals covered, local rate sourcing, rate accuracy, WhatsApp comparison, seller/metal verification, commission, Pro plan, cities, data privacy, mobile access
+- **Final CTA**: "Stop Trading on WhatsApp. Start Trading on MetalXpress." with expanded trust copy
+- **FAQ heading**: "Frequently asked" → "Questions Traders Ask Us"
+
+### Pricing Simplified — 3 Tiers → 2 Tiers
+- **Removed Business/Vyapaar Plus tier** (₹999/month) from Landing.jsx and PaywallModal.jsx
+- **Rationale**: Not enough distinct features to justify 3 tiers at launch. "Dedicated account manager" was a promise without infrastructure.
+- **Remaining tiers**: Free (₹0/forever) and Pro (₹299/month)
+- **Free features**: Live LME & MCX rates, updated throughout the day, price alerts, all metal types, works on any device
+- **Pro features**: Everything in Free + full marketplace + local spot rates + candlestick charts & analytics + LME-MCX spread tracking + verified traders & materials
+
+### About Page Rewrite
+- **Tagline added**: "India's Biggest Metal Trading Platform" below heading
+- **Sub-description**: "Live rates. Verified marketplace. Pro analytics. Built for traders who need accuracy — not WhatsApp forwards."
+- **What We Do**: Rewritten to cover all metal types (ferrous, non-ferrous, scrap, alloys), WhatsApp replacement value, city coverage
+- **Live Data**: Renamed from "Live Data Sources" — simplified to trader-facing language, removed technical implementation details
+- **Our Mission**: Updated from "scrap metal trading" → "metal trading", added "tier-1 cities to tier-3 mandis" line
+- **Body text**: Bumped from 13px → 14px for readability
+
+### Font Standardization (Landing.jsx)
+- **Problem**: Font sizes ranged from 9px to 34px with inconsistent body text (11px next to 12px next to 13px)
+- **New consistent scale**:
+  - 11px: Section labels (uppercase), metal names, footnotes
+  - 12px: Trust strip, price %, plan name, period, captions
+  - 13px: All body/description text, FAQ answers, pricing features
+  - 14px: FAQ questions, card titles, hero CTAs, final CTA body
+  - 15px: How It Works card titles
+  - 22-26px: Section headings
+  - 34px: Decorative elements (step numbers, price display)
+- **Text opacity**: Bumped body text from `0.35/0.38` → `0.42` for better readability
+
+### "Mandoli" Removed
+- Removed "Mandoli" from all city references across the app — now just "Delhi" everywhere
+- **Files affected**: Landing.jsx, About.jsx (already clean in FAQ items and other sections)
+
+### PaywallModal Simplified
+- Removed Business tier card (was 3 cards, now 2)
+- Updated Pro features to match new landing page copy
+- Removed `handleSubscribe` business tier logic (WhatsApp redirect)
+- Updated subheadline: "Access local spot rates, verified marketplace, and advanced analytics."
+- Modal maxWidth reduced from 680px → 520px (better proportions with 2 cards)
+
+### Rebranding Completion — "Scrap Metal" → "Metal"
+- **Login.jsx**: "I buy scrap metal" → "I buy metals", "I sell scrap metal" → "I sell metals"
+- **Signup.jsx**: Same trader type description changes
+- **Profile.jsx**: Same trader type description changes
+- **Marketplace.jsx**: "Sell Your Scrap Metal" → "Sell Your Metal", "Login to sell your scrap metal" → "Login to sell your metal"
+- **Terms.jsx**: "verified scrap metal traders" → "verified metal traders"
+- **About.jsx**: Full rewrite (see above)
+- **index.html**: Title → "MetalXpress ⚡ Real-Time Metal Intelligence for India", meta description updated
+
+### OM Symbol Design
+- Tested multiple layouts: watermark behind text (approved), OM-first at top (rejected — navbar overlap), OM at bottom of hero
+- **Final approved version**: OM watermark at `top: 58%`, `fontSize: min(72vw, 560px)`, `opacity: 0.11`, positioned behind hero text
+- **Backups saved**: `Landing.backup.jsx` and `Landing.backup-v1.jsx` for rollback reference
+
+### Files Modified (Session 14)
+- `frontend/src/pages/Landing.jsx` — complete copy rewrite, 2-tier pricing, 11 FAQs, font standardization, Mandoli removed
+- `frontend/src/pages/About.jsx` — full rewrite with new copy and 14px body text
+- `frontend/src/components/PaywallModal.jsx` — removed Business tier, updated Pro features
+- `frontend/src/pages/Login.jsx` — trader type "scrap metal" → "metals"
+- `frontend/src/pages/Signup.jsx` — trader type "scrap metal" → "metals"
+- `frontend/src/pages/Profile.jsx` — trader type "scrap metal" → "metals"
+- `frontend/src/pages/Marketplace.jsx` — "Scrap Metal" → "Metal" in sell tab
+- `frontend/src/pages/Terms.jsx` — "scrap metal traders" → "metal traders"
+- `frontend/index.html` — updated title and meta description
+- `CLAUDE.md` — session 14 changes, updated date to 2026-04-14
 
 ## Session 13 Changes (2026-04-13) — Full Detail
 
