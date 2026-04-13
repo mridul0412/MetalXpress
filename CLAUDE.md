@@ -54,7 +54,7 @@ MetalXpress is a real-time scrap metal rate platform for Indian traders. It repl
 - **2026-03-22 (session 10)**: Image/video fix, Lightbox gallery, KYC overhaul (PAN-based), T&C enforcement, deal flow fixes — see Session 10 details below
 - **2026-04-11 (session 11)**: Email verification system fully working — see Session 11 details below
 - **2026-04-12 (session 12)**: Bug fixes, cleanup, Analytics page, mobile responsiveness — see Session 12 details below
-- **2026-04-13 (session 13)**: Analytics full redesign (ApexCharts, trader-centric), backend overview fix — see Session 13 details below
+- **2026-04-13 (session 13)**: Analytics full redesign (ApexCharts candlestick+line, cron price feed, OHLC, chart toggle, period H/L) — see Session 13 details below
 
 ## Session 13 Changes (2026-04-13) — Full Detail
 
@@ -64,13 +64,34 @@ MetalXpress is a real-time scrap metal rate platform for Indian traders. It repl
 - **New sections**:
   - **Metal selector cards** — 6 clickable metal cards showing live price + change %, active card highlighted with metal color and glow
   - **Live price hero** — selected metal's LME price (large), change % badge with colored background, MCX equivalent, USD/INR rate
-  - **LME area chart** — ApexCharts smooth gradient area chart, datetime x-axis, period toggle (7D/30D/90D)
-  - **MCX line chart** — shown only when MCX history data available
-  - **Signal cards** (3 columns): vs 30-day average (with avg price), 7-day momentum (with interpretation: "Falling — potential buy zone"), current MCX price
-  - **Marketplace Activity by Metal** — horizontal bar chart showing relative listing volume per metal with colour per metal
-  - **All-time high/low table** — LME $/MT high and low per metal from admin-pasted history
-  - **Live LME snapshot** — bottom row of clickable metal cards to switch chart focus
+  - **Chart type toggle** — `LineChart` / `CandlestickChart` lucide icons; Line is default
+  - **LME Line chart (default)** — mixed ApexCharts chart: `rangeArea` H-L band (subtle 9% opacity shadow) behind an `area` close line (gradient glow in metal color). Tooltip shows Close/High/Low
+  - **LME Candlestick chart (optional)** — ApexCharts `candlestick` with green/red candles, wicks, custom HTML tooltip showing O/H/L/C + change%
+  - **MCX chart** — same Line/Candle toggle as LME, shown when MCX history available
+  - **Signal cards** (4 columns): vs 30-day average, 7-day momentum, today's High, MCX price
+  - **Marketplace Activity by Metal** — relative bar chart per metal
+  - **Period High/Low table** — computed from actual fetched price data (accurate per selected period, all 6 metals). Renamed from "All-Time" which was misleading
+  - **Live LME snapshot** — bottom row of clickable metal cards
 - **Backend fix**: Removed broken `listingType` groupBy (field doesn't exist in Listing schema). Simplified to single `groupBy(['metalId'])` with total count + qty
+
+### Price Cron Job (Session 13)
+- **Auto-fetch every 15 min**: `takePriceSnapshot()` in `backend/src/index.js` — saves Yahoo Finance prices to `LMERate`/`MCXRate` with `source: 'cron'`
+- **Runs on startup**: Called immediately when backend starts, not just on schedule
+- **Admin priority preserved**: CUTOFF check filters `source: 'admin'` only — cron rows don't interfere with the 15-min admin paste priority window
+- **`source` field added** to `LMERate` and `MCXRate` schema: `String @default("admin")` — distinguishes admin pastes from auto-fetches
+
+### Daily OHLC (Session 13)
+- **Backend `toDailyOHLC()`** in `analytics.js` — groups all price rows per metal per day into `{ date, open, high, low, close }` buckets
+- **Fetches all metals at once** — no `?metal=` filter on `/api/analytics/price-history` from frontend, so Period H/L table shows all 6 metals accurately
+
+### Seed Script (Session 13)
+- **`backend/src/scripts/seedPriceHistory.js`** — seeds 90 days × 8 pts/day × 6 metals of realistic price data (random walk with volatility per metal). Deletes old `source: 'cron'` rows first. Run: `node src/scripts/seedPriceHistory.js`
+
+### Chart Design Details (Session 13)
+- **Y-axis auto-scaled**: `yMin = Math.floor(min * 0.97)`, `yMax = Math.ceil(max * 1.03)` — 3% padding so candles fill the pane
+- **Per-metal color theming**: Each metal has its own color (`METAL_COLORS` map) used for active card glow, chart gradients, toggle button highlight
+- **Chart height**: LME 380px, MCX 280px
+- **`key` prop** on charts forces remount on metal/period/type change — prevents stale data rendering
 
 ### Bug Fixes (Session 13)
 - **Analytics overview API** — was crashing with `PrismaClientValidationError` on `listingType` field that doesn't exist in Listing schema. Fixed by removing the buy/sell split groupBy, using single metalId groupBy instead
@@ -81,8 +102,11 @@ MetalXpress is a real-time scrap metal rate platform for Indian traders. It repl
 - Added: `react-apexcharts ^2.1.0`, `apexcharts ^5.10.6` (frontend)
 
 ### Files Modified (Session 13)
-- `frontend/src/pages/Analytics.jsx` — complete redesign with ApexCharts, trader-centric layout
-- `backend/src/routes/analytics.js` — removed broken listingType groupBy, simplified volumeByMetal query
+- `frontend/src/pages/Analytics.jsx` — complete redesign: ApexCharts candlestick + line/area combo, chart type toggle (lucide icons), period H/L table, per-metal colors
+- `backend/src/routes/analytics.js` — removed broken listingType groupBy; `toDailyOHLC()` for OHLC aggregation; all-metals fetch (no metal filter)
+- `backend/src/index.js` — `takePriceSnapshot()` function, runs on startup + every 15 min; `source: 'cron'` on saved rows; admin priority CUTOFF filters `source: 'admin'` only
+- `backend/prisma/schema.prisma` — added `source String @default("admin")` to `LMERate` and `MCXRate`
+- `backend/src/scripts/seedPriceHistory.js` — NEW: 90-day price history seed script
 - `CLAUDE.md` — updated current date, added session 13 changes
 
 ## Session 12 Changes (2026-04-12) — Full Detail
