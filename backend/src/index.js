@@ -68,14 +68,9 @@ cron.schedule('*/30 * * * *', async () => {
   }
 });
 
-// ── Price snapshot cron — every 15 minutes ─────────────────────────────────
-// Fetches Yahoo Finance / Stooq prices and saves to LMERate + MCXRate with
-// source='cron'. Skipped if an admin paste exists within the last 15 minutes
-// (admin priority window). This gives ~96 data points/day for analytics charts
-// and daily high/low computation.
-cron.schedule('*/15 * * * *', async () => {
+// ── Price snapshot function — called on startup + every 15 min ───────────────
+async function takePriceSnapshot() {
   try {
-    // Check if admin pasted in the last 15 min — if so, skip (admin has priority)
     const CUTOFF_15M = new Date(Date.now() - 15 * 60 * 1000);
     const recentAdminPaste = await prisma.lMERate.findFirst({
       where: { createdAt: { gte: CUTOFF_15M }, source: 'admin' },
@@ -109,7 +104,11 @@ cron.schedule('*/15 * * * *', async () => {
   } catch (err) {
     console.error('[CRON] Price snapshot failed:', err.message);
   }
-});
+}
+
+// Run once immediately on startup, then every 15 minutes
+takePriceSnapshot();
+cron.schedule('*/15 * * * *', takePriceSnapshot);
 
 // Error handler
 app.use((err, req, res, next) => {
