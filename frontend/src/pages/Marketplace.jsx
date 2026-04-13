@@ -377,8 +377,18 @@ function ListingCard({ listing: l, onAction, actionLabel, showStatus, onDelete }
   const toSrc = (url) => url.startsWith('/uploads/') ? `${BACKEND}${url}` : url;
   const isVideo = (url) => /\.(mp4|mov|webm)$/i.test(url);
 
+  const [cardHovered, setCardHovered] = useState(false);
   return (
-    <div style={{ background: '#0D1420', borderRadius: 14, border: '1px solid rgba(255,255,255,0.07)', padding: 18, display: 'flex', flexDirection: 'column' }}>
+    <div
+      onMouseEnter={() => setCardHovered(true)}
+      onMouseLeave={() => setCardHovered(false)}
+      style={{
+        background: '#0D1420', borderRadius: 14, padding: 18, display: 'flex', flexDirection: 'column',
+        border: `1px solid ${cardHovered ? 'rgba(255,255,255,0.13)' : 'rgba(255,255,255,0.07)'}`,
+        boxShadow: cardHovered ? '0 8px 32px rgba(0,0,0,0.4), 0 2px 8px rgba(0,0,0,0.3)' : '0 2px 12px rgba(0,0,0,0.25)',
+        transform: cardHovered ? 'translateY(-2px)' : 'none',
+        transition: 'all 0.18s ease',
+      }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 8 }}>
         <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', alignItems: 'center' }}>
           <span style={{ fontSize: 10, fontWeight: 700, padding: '2px 8px', borderRadius: 6,
@@ -462,15 +472,23 @@ function ListingCard({ listing: l, onAction, actionLabel, showStatus, onDelete }
       <div style={{ marginTop: 'auto', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         {totalVal && <span style={{ fontSize: 12, color: 'rgba(255,255,255,0.3)' }}>Total: ₹{fmt(totalVal)}</span>}
         <div style={{ display: 'flex', gap: 8, marginLeft: 'auto' }}>
-          {onDelete && <button onClick={onDelete} style={{
-            padding: '8px 14px', borderRadius: 8, fontSize: 12, fontWeight: 700,
-            border: '1px solid rgba(248,113,113,0.3)', background: 'transparent', color: '#f87171', cursor: 'pointer',
-          }}><Trash2 size={12} /></button>}
-          {onAction && <button onClick={onAction} style={{
-            padding: '8px 18px', borderRadius: 8, fontSize: 12, fontWeight: 700,
-            background: '#CFB53B', color: '#000', border: 'none', cursor: 'pointer',
-            display: 'flex', alignItems: 'center', gap: 6,
-          }}>{actionLabel || 'View'} <ArrowRight size={14} /></button>}
+          {onDelete && <button onClick={onDelete}
+            onMouseEnter={e => { e.currentTarget.style.background = 'rgba(248,113,113,0.1)'; e.currentTarget.style.borderColor = 'rgba(248,113,113,0.5)'; }}
+            onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.borderColor = 'rgba(248,113,113,0.3)'; }}
+            style={{
+              padding: '8px 14px', borderRadius: 8, fontSize: 12, fontWeight: 700,
+              border: '1px solid rgba(248,113,113,0.3)', background: 'transparent', color: '#f87171', cursor: 'pointer',
+              transition: 'all 0.15s',
+            }}><Trash2 size={12} /></button>}
+          {onAction && <button onClick={onAction}
+            onMouseEnter={e => { e.currentTarget.style.background = '#D4A830'; e.currentTarget.style.boxShadow = '0 4px 16px rgba(207,181,59,0.35)'; }}
+            onMouseLeave={e => { e.currentTarget.style.background = '#CFB53B'; e.currentTarget.style.boxShadow = 'none'; }}
+            style={{
+              padding: '8px 18px', borderRadius: 8, fontSize: 12, fontWeight: 700,
+              background: '#CFB53B', color: '#000', border: 'none', cursor: 'pointer',
+              display: 'flex', alignItems: 'center', gap: 6,
+              transition: 'all 0.15s',
+            }}>{actionLabel || 'View'} <ArrowRight size={14} /></button>}
         </div>
       </div>
     </div>

@@ -171,15 +171,16 @@ router.get('/lme', async (req, res) => {
 router.get('/live', async (req, res) => {
   try {
     const CUTOFF_10M = new Date(Date.now() - 10 * 60 * 1000);
-    const CUTOFF_15M = new Date(Date.now() - 15 * 60 * 1000);
+    const CUTOFF_15M = new Date(Date.now() - 60 * 60 * 1000); // 60 min — admin paste takes priority for 1 hour, then COMEX kicks in
     const CUTOFF_7D  = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
     const ALL_METALS = ['Copper', 'Aluminium', 'Zinc', 'Nickel', 'Lead', 'Tin'];
 
     // Fetch Yahoo + all DB tables in parallel
+    // IMPORTANT: for admin-priority check, only look at source='admin' rows (not cron auto-saves)
     const [yahooData, lmeRates, mcxRates, forexRates] = await Promise.all([
       fetchLivePrices(),
-      prisma.lMERate.findMany({ where: { createdAt: { gte: CUTOFF_15M } }, orderBy: { createdAt: 'desc' } }).catch(() => []),
-      prisma.mCXRate.findMany({ where: { createdAt: { gte: CUTOFF_10M } }, orderBy: { createdAt: 'desc' } }).catch(() => []),
+      prisma.lMERate.findMany({ where: { createdAt: { gte: CUTOFF_15M }, source: 'admin' }, orderBy: { createdAt: 'desc' } }).catch(() => []),
+      prisma.mCXRate.findMany({ where: { createdAt: { gte: CUTOFF_10M }, source: 'admin' }, orderBy: { createdAt: 'desc' } }).catch(() => []),
       prisma.forexRate.findMany({ where: { createdAt: { gte: CUTOFF_10M } }, orderBy: { createdAt: 'desc' } }).catch(() => []),
     ]);
 
@@ -273,7 +274,7 @@ router.get('/live', async (req, res) => {
       for (const metalName of ['Lead', 'Tin']) {
         if (covered.has(metalName)) continue;
         const dbRate = await prisma.lMERate.findFirst({
-          where: { metal: { contains: metalName }, createdAt: { gte: CUTOFF_7D } },
+          where: { metal: { contains: metalName }, createdAt: { gte: CUTOFF_7D }, source: 'admin' },
           orderBy: { createdAt: 'desc' },
         }).catch(() => null);
         if (dbRate) {

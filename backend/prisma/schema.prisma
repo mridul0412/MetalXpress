@@ -138,6 +138,7 @@ model LMERate {
   price     Float
   change    Float    @default(0)
   unit      String   @default("$/MT")
+  source    String   @default("admin")  // "admin" = admin paste | "cron" = auto Yahoo fetch
   createdAt DateTime @default(now())
 }
 
@@ -147,6 +148,7 @@ model MCXRate {
   price     Float
   change    Float    @default(0)
   unit      String   @default("₹/Kg")
+  source    String   @default("admin")  // "admin" = admin paste | "cron" = auto Yahoo fetch
   createdAt DateTime @default(now())
 }
 

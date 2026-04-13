@@ -15,7 +15,10 @@ const adminRouter = require('./routes/admin');
 const analyticsRouter = require('./routes/analytics');
 
 const alertService = require('./services/alertService');
+const { fetchLivePrices } = require('./services/livePriceFetcher');
+const { PrismaClient } = require('@prisma/client');
 
+const prisma = new PrismaClient();
 const app = express();
 const PORT = process.env.PORT || 3001;
 
@@ -62,6 +65,49 @@ cron.schedule('*/30 * * * *', async () => {
     await alertService.checkAlerts();
   } catch (err) {
     console.error('[CRON] Alert check failed:', err.message);
+  }
+});
+
+// ── Price snapshot cron — every 15 minutes ─────────────────────────────────
+// Fetches Yahoo Finance / Stooq prices and saves to LMERate + MCXRate with
+// source='cron'. Skipped if an admin paste exists within the last 15 minutes
+// (admin priority window). This gives ~96 data points/day for analytics charts
+// and daily high/low computation.
+cron.schedule('*/15 * * * *', async () => {
+  try {
+    // Check if admin pasted in the last 15 min — if so, skip (admin has priority)
+    const CUTOFF_15M = new Date(Date.now() - 15 * 60 * 1000);
+    const recentAdminPaste = await prisma.lMERate.findFirst({
+      where: { createdAt: { gte: CUTOFF_15M }, source: 'admin' },
+    }).catch(() => null);
+
+    if (recentAdminPaste) {
+      console.log('[CRON] Price snapshot skipped — admin paste active');
+      return;
+    }
+
+    const data = await fetchLivePrices();
+    const usdInr = data.usdInr || 84;
+    const ALL_METALS = ['Copper', 'Aluminium', 'Zinc', 'Nickel', 'Lead', 'Tin'];
+
+    let lmeSaved = 0, mcxSaved = 0;
+    for (const m of data.metals || []) {
+      const metalName = ALL_METALS.find(n => n.toLowerCase() === m.metal.toLowerCase()) || m.metal;
+      await prisma.lMERate.create({
+        data: { metal: metalName, price: m.priceUsd, change: m.change, unit: '$/MT', source: 'cron' },
+      }).catch(() => {});
+      lmeSaved++;
+
+      const priceMcx = m.priceMcx ?? parseFloat(((m.priceUsd * usdInr) / 1000).toFixed(2));
+      await prisma.mCXRate.create({
+        data: { metal: metalName, price: priceMcx, change: m.change, unit: '₹/Kg', source: 'cron' },
+      }).catch(() => {});
+      mcxSaved++;
+    }
+
+    console.log(`[CRON] Price snapshot saved — LME: ${lmeSaved}, MCX: ${mcxSaved}`);
+  } catch (err) {
+    console.error('[CRON] Price snapshot failed:', err.message);
   }
 });
 

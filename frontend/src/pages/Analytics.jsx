@@ -172,61 +172,60 @@ export default function Analytics() {
   const changeUp = (currentMetal?.change || 0) > 0;
   const changeDn = (currentMetal?.change || 0) < 0;
 
-  // Chart data — LME
-  const lmeSeries = (priceHistory?.lme?.[selectedMetal] || []).map(d => ({
+  // Daily OHLC chart data — LME
+  const lmeOHLC = priceHistory?.lme?.[selectedMetal] || [];
+  // Range band series: y: [low, high] shows daily volatility
+  const lmeRangeSeries = lmeOHLC.map(d => ({
     x: new Date(d.date).getTime(),
-    y: parseFloat(d.price.toFixed(2)),
+    y: [parseFloat(d.low.toFixed(2)), parseFloat(d.high.toFixed(2))],
+  }));
+  // Close line series: y: close price
+  const lmeCloseSeries = lmeOHLC.map(d => ({
+    x: new Date(d.date).getTime(),
+    y: parseFloat(d.close.toFixed(2)),
   }));
 
-  // Chart data — MCX
-  const mcxSeries = (priceHistory?.mcx?.[selectedMetal] || []).map(d => ({
+  // Daily OHLC chart data — MCX
+  const mcxOHLC = priceHistory?.mcx?.[selectedMetal] || [];
+  const mcxRangeSeries = mcxOHLC.map(d => ({
     x: new Date(d.date).getTime(),
-    y: parseFloat(d.price.toFixed(2)),
+    y: [parseFloat(d.low.toFixed(2)), parseFloat(d.high.toFixed(2))],
+  }));
+  const mcxCloseSeries = mcxOHLC.map(d => ({
+    x: new Date(d.date).getTime(),
+    y: parseFloat(d.close.toFixed(2)),
   }));
 
-  // Compute trend vs avg
-  const prices = lmeSeries.map(d => d.y);
-  const avg30 = prices.length ? prices.reduce((a, b) => a + b, 0) / prices.length : null;
-  const latestPrice = prices[prices.length - 1] || currentMetal?.priceUsd;
+  // Signal computations from close prices
+  const closePrices = lmeCloseSeries.map(d => d.y);
+  const avg30 = closePrices.length ? closePrices.reduce((a, b) => a + b, 0) / closePrices.length : null;
+  const latestPrice = closePrices[closePrices.length - 1] || currentMetal?.priceUsd;
   const vsAvg = avg30 && latestPrice ? ((latestPrice - avg30) / avg30 * 100).toFixed(1) : null;
 
-  // 7-day momentum
-  const recent7 = prices.slice(-7);
+  // 7-day momentum (last 7 data points)
+  const recent7 = closePrices.slice(-7);
   const momentum = recent7.length >= 2
     ? ((recent7[recent7.length - 1] - recent7[0]) / recent7[0] * 100).toFixed(2)
     : null;
 
-  // LME vs MCX spread
-  const mcxPrices = mcxSeries.map(d => d.y);
-  const latestMcx = mcxPrices[mcxPrices.length - 1];
-  const impliedMcx = currentMetal?.priceMcx;
+  // Today's high/low from latest OHLC day
+  const todayOHLC = lmeOHLC[lmeOHLC.length - 1];
+  const todayHigh = todayOHLC?.high;
+  const todayLow = todayOHLC?.low;
 
   // Market depth
   const depthData = overview?.marketplace?.volumeByMetal || [];
 
-  // ApexCharts options
-  const chartOptions = {
+  // Shared chart base options
+  const baseChartOptions = {
     chart: {
-      type: 'area',
       background: 'transparent',
       toolbar: { show: false },
-      zoom: { enabled: true, type: 'x' },
-      animations: { enabled: true, easing: 'easeinout', speed: 600 },
+      zoom: { enabled: false },
+      animations: { enabled: true, easing: 'easeinout', speed: 500 },
       fontFamily: '"JetBrains Mono", monospace',
     },
     theme: { mode: 'dark' },
-    colors: [color],
-    fill: {
-      type: 'gradient',
-      gradient: {
-        shadeIntensity: 1, opacityFrom: 0.35, opacityTo: 0.02,
-        stops: [0, 100], colorStops: [
-          { offset: 0, color, opacity: 0.35 },
-          { offset: 100, color, opacity: 0.02 },
-        ],
-      },
-    },
-    stroke: { curve: 'smooth', width: 2.5, colors: [color] },
     grid: {
       borderColor: 'rgba(255,255,255,0.05)',
       xaxis: { lines: { show: false } },
@@ -237,51 +236,90 @@ export default function Analytics() {
       labels: {
         style: { colors: 'rgba(255,255,255,0.3)', fontSize: '10px', fontFamily: 'monospace' },
         datetimeUTC: false,
-        format: period === '7d' ? 'dd MMM' : 'dd MMM',
       },
       axisBorder: { show: false },
       axisTicks: { show: false },
+      crosshairs: {
+        show: true,
+        stroke: { color: 'rgba(255,255,255,0.18)', width: 1, dashArray: 0 },
+      },
+      tooltip: { enabled: true, style: { fontSize: '10px', fontFamily: 'monospace' } },
+    },
+    dataLabels: { enabled: false },
+    legend: { show: false },
+  };
+
+  // LME combined chart: rangeArea (high/low band) + line (close)
+  const lmeChartOptions = {
+    ...baseChartOptions,
+    chart: { ...baseChartOptions.chart, type: 'rangeArea', stacked: false },
+    colors: [`${color}50`, color],   // band is semi-transparent, close is solid
+    fill: {
+      opacity: [0.25, 1],
+    },
+    stroke: {
+      curve: 'smooth',
+      width: [0, 2.5],
+      colors: [`${color}00`, color],
+    },
+    markers: {
+      size: [0, 0],
+      hover: { size: 5 },
+    },
+    crosshairs: {
+      show: true,
+      position: 'front',
+      stroke: { color: color, width: 1, dashArray: 4 },
     },
     yaxis: {
+      crosshairs: {
+        show: true, position: 'front',
+        stroke: { color: 'rgba(255,255,255,0.1)', width: 1, dashArray: 3 },
+      },
       labels: {
         style: { colors: 'rgba(255,255,255,0.3)', fontSize: '10px', fontFamily: 'monospace' },
-        formatter: (v) => `$${v >= 1000 ? (v / 1000).toFixed(1) + 'K' : v.toFixed(0)}`,
+        formatter: (v) => `$${v >= 1000 ? (v / 1000).toFixed(1) + 'K' : v?.toFixed(0)}`,
       },
     },
     tooltip: {
       theme: 'dark',
+      shared: true,
       x: { format: 'dd MMM yyyy' },
-      y: { formatter: (v) => `$${fmt(v)} /MT` },
-      style: { fontSize: '12px', fontFamily: 'monospace' },
-      marker: { show: true },
+      y: [
+        { formatter: (v) => v != null ? `Range: $${fmt(v[0])} – $${fmt(v[1])}` : '' },
+        { formatter: (v) => v != null ? `Close: $${fmt(v)} /MT` : '' },
+      ],
+      style: { fontSize: '11px', fontFamily: 'monospace' },
     },
-    markers: { size: 0, hover: { size: 5, sizeOffset: 2 } },
-    dataLabels: { enabled: false },
   };
 
+  // MCX combined chart
   const mcxChartOptions = {
-    ...chartOptions,
-    colors: ['#E8CC5A'],
-    fill: {
-      type: 'gradient',
-      gradient: {
-        colorStops: [
-          { offset: 0, color: '#E8CC5A', opacity: 0.25 },
-          { offset: 100, color: '#E8CC5A', opacity: 0.02 },
-        ],
-      },
+    ...baseChartOptions,
+    chart: { ...baseChartOptions.chart, type: 'rangeArea', stacked: false },
+    colors: [`#E8CC5A50`, '#E8CC5A'],
+    fill: { opacity: [0.22, 1] },
+    stroke: { curve: 'smooth', width: [0, 2], colors: [`#E8CC5A00`, '#E8CC5A'] },
+    markers: { size: [0, 0], hover: { size: 5 } },
+    crosshairs: {
+      show: true, position: 'front',
+      stroke: { color: '#E8CC5A', width: 1, dashArray: 4 },
     },
-    stroke: { curve: 'smooth', width: 2, colors: ['#E8CC5A'] },
     yaxis: {
-      ...chartOptions.yaxis,
+      ...baseChartOptions.yaxis,
       labels: {
-        ...chartOptions.yaxis.labels,
-        formatter: (v) => `₹${v >= 1000 ? (v / 1000).toFixed(1) + 'K' : v.toFixed(0)}`,
+        style: { colors: 'rgba(255,255,255,0.3)', fontSize: '10px', fontFamily: 'monospace' },
+        formatter: (v) => `₹${v >= 1000 ? (v / 1000).toFixed(1) + 'K' : v?.toFixed(0)}`,
       },
     },
     tooltip: {
-      ...chartOptions.tooltip,
-      y: { formatter: (v) => `₹${fmt(v)} /kg` },
+      theme: 'dark', shared: true,
+      x: { format: 'dd MMM yyyy' },
+      y: [
+        { formatter: (v) => v != null ? `Range: ₹${fmt(v[0])} – ₹${fmt(v[1])}` : '' },
+        { formatter: (v) => v != null ? `Close: ₹${fmt(v)} /kg` : '' },
+      ],
+      style: { fontSize: '11px', fontFamily: 'monospace' },
     },
   };
 
@@ -404,42 +442,67 @@ export default function Analytics() {
         background: '#0D1420', border: '1px solid rgba(255,255,255,0.07)',
         borderRadius: 20, padding: '20px 16px 8px', marginBottom: 16, position: 'relative',
       }}>
-        <p style={{ fontSize: 11, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.08em', color: 'rgba(255,255,255,0.35)', margin: '0 0 4px 8px' }}>
-          {selectedMetal} — LME Price Trend ($/MT)
-        </p>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 8px 2px' }}>
+          <p style={{ fontSize: 11, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.08em', color: 'rgba(255,255,255,0.35)', margin: 0 }}>
+            {selectedMetal} — LME Daily High/Low + Close ($/MT)
+          </p>
+          {todayOHLC && (
+            <div style={{ display: 'flex', gap: 14, fontSize: 11, fontFamily: 'monospace' }}>
+              <span style={{ color: '#34d399' }}>H: ${fmt(todayHigh)}</span>
+              <span style={{ color: '#f87171' }}>L: ${fmt(todayLow)}</span>
+            </div>
+          )}
+        </div>
         {chartLoading ? (
-          <div style={{ height: 280, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <div style={{ height: 300, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             <Activity size={20} color={color} style={{ animation: 'spin 1s linear infinite' }} />
           </div>
-        ) : lmeSeries.length > 1 ? (
+        ) : lmeRangeSeries.length > 1 ? (
           <ReactApexChart
-            options={chartOptions}
-            series={[{ name: `${selectedMetal} LME`, data: lmeSeries }]}
-            type="area" height={280}
+            options={lmeChartOptions}
+            series={[
+              { name: `${selectedMetal} Daily Range`, type: 'rangeArea', data: lmeRangeSeries },
+              { name: `${selectedMetal} Close`, type: 'line', data: lmeCloseSeries },
+            ]}
+            type="rangeArea" height={300}
           />
         ) : (
-          <div style={{ height: 280, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
+          <div style={{ height: 300, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
             <BarChart3 size={28} color="rgba(255,255,255,0.1)" />
             <p style={{ color: 'rgba(255,255,255,0.25)', fontSize: 12, margin: 0, textAlign: 'center' }}>
-              No price history yet.<br />Paste LME broadcasts in Admin to build charts.
+              No price history yet.<br />Auto-fetching every 15 min · Paste LME broadcasts in Admin to backfill.
             </p>
           </div>
         )}
       </div>
 
       {/* ── MCX Chart (if data) ── */}
-      {mcxSeries.length > 1 && (
+      {mcxRangeSeries.length > 1 && (
         <div style={{
           background: '#0D1420', border: '1px solid rgba(255,255,255,0.07)',
           borderRadius: 20, padding: '20px 16px 8px', marginBottom: 24,
         }}>
-          <p style={{ fontSize: 11, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.08em', color: 'rgba(255,255,255,0.35)', margin: '0 0 4px 8px' }}>
-            {selectedMetal} — MCX Price Trend (₹/kg)
-          </p>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 8px 2px' }}>
+            <p style={{ fontSize: 11, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.08em', color: 'rgba(255,255,255,0.35)', margin: 0 }}>
+              {selectedMetal} — MCX Daily High/Low + Close (₹/kg)
+            </p>
+            {mcxOHLC.length > 0 && (() => {
+              const last = mcxOHLC[mcxOHLC.length - 1];
+              return (
+                <div style={{ display: 'flex', gap: 14, fontSize: 11, fontFamily: 'monospace' }}>
+                  <span style={{ color: '#34d399' }}>H: ₹{fmt(last.high)}</span>
+                  <span style={{ color: '#f87171' }}>L: ₹{fmt(last.low)}</span>
+                </div>
+              );
+            })()}
+          </div>
           <ReactApexChart
             options={mcxChartOptions}
-            series={[{ name: `${selectedMetal} MCX`, data: mcxSeries }]}
-            type="area" height={220}
+            series={[
+              { name: `${selectedMetal} MCX Range`, type: 'rangeArea', data: mcxRangeSeries },
+              { name: `${selectedMetal} MCX Close`, type: 'line', data: mcxCloseSeries },
+            ]}
+            type="rangeArea" height={240}
           />
         </div>
       )}
@@ -452,21 +515,28 @@ export default function Analytics() {
         <SignalCard
           label="vs 30-Day Average"
           value={vsAvg != null ? `${vsAvg > 0 ? '+' : ''}${vsAvg}%` : '—'}
-          sub={avg30 ? `Avg: $${fmt(avg30)}` : 'Not enough data'}
+          sub={avg30 ? `30D avg: $${fmt(avg30)}` : 'Not enough data'}
           color={vsAvg > 0 ? '#34d399' : vsAvg < 0 ? '#f87171' : '#CFB53B'}
           icon={vsAvg > 0 ? TrendingUp : TrendingDown}
         />
         <SignalCard
-          label={`7-Day Momentum`}
+          label="7-Day Momentum"
           value={momentum != null ? `${momentum > 0 ? '+' : ''}${momentum}%` : '—'}
-          sub={momentum > 1 ? 'Rising fast — watch for correction' : momentum < -1 ? 'Falling — potential buy zone' : 'Sideways movement'}
+          sub={momentum > 1 ? 'Rising — watch for correction' : momentum < -1 ? 'Falling — potential buy zone' : 'Sideways range'}
           color={momentum > 0 ? '#34d399' : momentum < 0 ? '#f87171' : '#8B9DC3'}
           icon={Zap}
         />
         <SignalCard
-          label="Current MCX Price"
+          label="Today's High"
+          value={todayHigh ? `$${fmt(todayHigh)}` : '—'}
+          sub={todayLow ? `Low: $${fmt(todayLow)} · Range: $${fmt(todayHigh - todayLow)}` : 'Daily range not available'}
+          color="#34d399"
+          icon={TrendingUp}
+        />
+        <SignalCard
+          label="MCX Price"
           value={currentMetal?.priceMcx ? `₹${fmt(currentMetal.priceMcx)}` : '—'}
-          sub={currentMetal?.priceMcx ? `Per kg · Import parity via USD/INR` : 'No MCX data'}
+          sub={currentMetal?.priceMcx ? `Per kg · via USD/INR ${fmt(liveData?.forex?.usdInr, 2)}` : 'No MCX data'}
           color="#E8CC5A"
           icon={Activity}
         />

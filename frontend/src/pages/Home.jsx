@@ -199,7 +199,8 @@ export default function Home() {
           </div>
         </div>
 
-        <div style={{ borderRadius: 12, overflow: 'hidden', border: '1px solid rgba(255,255,255,0.07)', background: '#0d1420' }}>
+        <div style={{ borderRadius: 12, overflow: 'hidden', border: '1px solid rgba(255,255,255,0.09)', background: '#0d1420',
+          boxShadow: '0 4px 24px rgba(0,0,0,0.35)' }}>
           <div style={{ display: 'grid', gridTemplateColumns: '2fr 2fr 2fr 1.2fr',
             padding: '10px 16px', background: 'rgba(255,255,255,0.025)', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
             {['Metal', 'LME ($/MT)', 'MCX (₹/kg)', 'Chg%'].map((h, i) => (
@@ -223,10 +224,11 @@ export default function Home() {
                 const meta = getMeta(rate.metal);
                 const up = rate.change > 0, dn = rate.change < 0;
                 return (
-                  <div key={rate.metal} style={{
+                  <div key={rate.metal} className="lme-row" style={{
                     display: 'grid', gridTemplateColumns: '2fr 2fr 2fr 1.2fr',
                     padding: '12px 16px', alignItems: 'center',
                     borderBottom: idx < lmeRates.length - 1 ? '1px solid rgba(255,255,255,0.04)' : 'none',
+                    transition: 'background 0.15s',
                   }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                       <span style={{ width: 6, height: 6, borderRadius: '50%', flexShrink: 0, background: meta.dot }} />
@@ -383,11 +385,20 @@ export default function Home() {
                     initial={{ opacity: 0, y: 8 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: idx * 0.04, duration: 0.2 }}
-                    style={{ borderRadius: 12, overflow: 'hidden', border: '1px solid rgba(255,255,255,0.07)', background: '#0d1420' }}
+                    style={{
+                      borderRadius: 12, overflow: 'hidden',
+                      border: `1px solid rgba(255,255,255,${isOpen ? '0.1' : '0.07'})`,
+                      background: '#0d1420',
+                      boxShadow: isOpen ? `0 4px 24px rgba(0,0,0,0.35), 0 0 0 1px ${meta.color}15` : '0 2px 12px rgba(0,0,0,0.25)',
+                      transition: 'box-shadow 0.2s, border-color 0.2s',
+                    }}
                   >
                     <button onClick={() => toggleMetal(metalName)}
                       style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                        padding: '12px 16px', background: 'transparent', border: 'none', cursor: 'pointer' }}>
+                        padding: '12px 16px', background: 'transparent', border: 'none', cursor: 'pointer',
+                        transition: 'background 0.15s' }}
+                      onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.03)'}
+                      onMouseLeave={e => e.currentTarget.style.background = 'transparent'}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                         <span style={{ fontSize: 16 }}>{meta.emoji}</span>
                         <span style={{ fontSize: 13, fontWeight: 700, letterSpacing: '0.05em',
@@ -423,11 +434,15 @@ export default function Home() {
                               const primary = rate.buyPrice ?? rate.sellPrice;
                               const secondary = rate.buyPrice && rate.sellPrice ? rate.sellPrice : null;
                               return (
-                                <div key={grade.id} style={{
+                                <div key={grade.id}
+                                  onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.025)'}
+                                  onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
+                                  style={{
                                   display: 'flex', alignItems: 'center', justifyContent: 'space-between',
                                   padding: '10px 16px',
                                   borderTop: gi === 0 ? '1px solid rgba(255,255,255,0.05)' : 'none',
                                   borderBottom: gi < grades.length - 1 ? '1px solid rgba(255,255,255,0.04)' : 'none',
+                                  transition: 'background 0.12s',
                                 }}>
                                   <div>
                                     <p style={{ fontSize: 13, fontWeight: 600, color: 'rgba(255,255,255,0.88)', margin: 0 }}>
@@ -481,6 +496,7 @@ export default function Home() {
       <style>{`
         @keyframes spin  { to { transform: rotate(360deg); } }
         @keyframes pulse { 0%,100% { opacity:1; } 50% { opacity:0.5; } }
+        .lme-row:hover { background: rgba(255,255,255,0.025) !important; }
       `}</style>
     </div>
   );
@@ -489,11 +505,19 @@ export default function Home() {
 // ── Small forex/index card ───────────────────────────────────────────────────
 function ForexCard({ label, value, change, highlight }) {
   const up = change > 0, dn = change < 0;
+  const [hovered, setHovered] = useState(false);
   return (
-    <div style={{
-      borderRadius: 10, padding: '10px 14px',
-      background: '#0d1420', border: `1px solid ${highlight ? 'rgba(207,181,59,0.2)' : 'rgba(255,255,255,0.07)'}`,
-    }}>
+    <div
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+      style={{
+        borderRadius: 10, padding: '10px 14px',
+        background: hovered ? (highlight ? 'rgba(207,181,59,0.06)' : 'rgba(255,255,255,0.03)') : '#0d1420',
+        border: `1px solid ${highlight ? (hovered ? 'rgba(207,181,59,0.35)' : 'rgba(207,181,59,0.2)') : (hovered ? 'rgba(255,255,255,0.14)' : 'rgba(255,255,255,0.07)')}`,
+        boxShadow: hovered ? '0 4px 20px rgba(0,0,0,0.3)' : '0 2px 10px rgba(0,0,0,0.2)',
+        transition: 'all 0.15s ease',
+        cursor: 'default',
+      }}>
       <p style={{ fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em',
         color: 'rgba(255,255,255,0.3)', margin: '0 0 4px' }}>
         {label}

@@ -17,7 +17,7 @@ function verifyJWT(req) {
 }
 
 // ── GET /api/analytics/price-history ─────────────────────────────────────────
-// Returns LME price history for charting
+// Returns LME/MCX price history with daily OHLC (open/high/low/close) for charting
 // Query: ?metal=Copper&period=7d (7d|30d|90d|all)
 router.get('/price-history', async (req, res) => {
   try {
@@ -29,30 +29,45 @@ router.get('/price-history', async (req, res) => {
     const where = { createdAt: { gte: since } };
     if (metal) where.metal = metal;
 
-    const lmeRates = await prisma.lMERate.findMany({
-      where,
-      orderBy: { createdAt: 'asc' },
-      select: { metal: true, price: true, change: true, createdAt: true },
-    });
+    const [lmeRates, mcxRates] = await Promise.all([
+      prisma.lMERate.findMany({
+        where,
+        orderBy: { createdAt: 'asc' },
+        select: { metal: true, price: true, change: true, createdAt: true },
+      }),
+      prisma.mCXRate.findMany({
+        where,
+        orderBy: { createdAt: 'asc' },
+        select: { metal: true, price: true, change: true, createdAt: true },
+      }),
+    ]);
 
-    const mcxRates = await prisma.mCXRate.findMany({
-      where,
-      orderBy: { createdAt: 'asc' },
-      select: { metal: true, price: true, change: true, createdAt: true },
-    });
+    // Aggregate rows into daily OHLC buckets
+    // Key: "YYYY-MM-DD", value: { open, high, low, close, date }
+    function toDailyOHLC(rows) {
+      const byMetal = {};
+      for (const r of rows) {
+        if (!byMetal[r.metal]) byMetal[r.metal] = {};
+        const day = r.createdAt.toISOString().slice(0, 10); // "2026-04-11"
+        if (!byMetal[r.metal][day]) {
+          byMetal[r.metal][day] = { open: r.price, high: r.price, low: r.price, close: r.price, date: day };
+        } else {
+          const d = byMetal[r.metal][day];
+          if (r.price > d.high) d.high = r.price;
+          if (r.price < d.low) d.low = r.price;
+          d.close = r.price; // last price of the day
+        }
+      }
+      // Convert to sorted arrays per metal
+      const result = {};
+      for (const [metalName, days] of Object.entries(byMetal)) {
+        result[metalName] = Object.values(days).sort((a, b) => a.date.localeCompare(b.date));
+      }
+      return result;
+    }
 
-    // Group by metal for multi-line charts
-    const lmeByMetal = {};
-    lmeRates.forEach(r => {
-      if (!lmeByMetal[r.metal]) lmeByMetal[r.metal] = [];
-      lmeByMetal[r.metal].push({ date: r.createdAt, price: r.price, change: r.change });
-    });
-
-    const mcxByMetal = {};
-    mcxRates.forEach(r => {
-      if (!mcxByMetal[r.metal]) mcxByMetal[r.metal] = [];
-      mcxByMetal[r.metal].push({ date: r.createdAt, price: r.price, change: r.change });
-    });
+    const lmeByMetal = toDailyOHLC(lmeRates);
+    const mcxByMetal = toDailyOHLC(mcxRates);
 
     res.json({ lme: lmeByMetal, mcx: mcxByMetal, period, since });
   } catch (err) {
