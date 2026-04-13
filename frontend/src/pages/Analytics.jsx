@@ -130,6 +130,7 @@ export default function Analytics() {
   const [period, setPeriod] = useState('30d');
   const [loading, setLoading] = useState(true);
   const [chartLoading, setChartLoading] = useState(false);
+  const [chartType, setChartType] = useState('candle'); // 'candle' | 'line'
 
   const isPro = subscription?.plan === 'pro' || subscription?.plan === 'business';
 
@@ -328,6 +329,74 @@ export default function Analytics() {
     ttFmt: (v) => `₹${fmt(v)} /kg`,
   });
 
+  // ── Line / Area chart data (close prices only) ────────────────────────────
+  const lmeLineData = lmeOHLC.map(d => ({ x: new Date(d.date).getTime(), y: parseFloat(d.close.toFixed(2)) }));
+  const mcxLineData = mcxOHLC.map(d => ({ x: new Date(d.date).getTime(), y: parseFloat(d.close.toFixed(2)) }));
+
+  function makeAreaOptions({ yMin, yMax, metalColor, yFmt, unit }) {
+    return {
+      chart: {
+        type: 'area', background: 'transparent',
+        toolbar: { show: false },
+        zoom: { enabled: true, type: 'x', autoScaleYaxis: true },
+        animations: { enabled: false },
+        fontFamily: '"JetBrains Mono", monospace',
+      },
+      stroke: { curve: 'smooth', width: 2 },
+      colors: [metalColor],
+      fill: {
+        type: 'gradient',
+        gradient: {
+          type: 'vertical',
+          shadeIntensity: 1,
+          colorStops: [
+            { offset: 0,   color: metalColor, opacity: 0.38 },
+            { offset: 55,  color: metalColor, opacity: 0.12 },
+            { offset: 100, color: metalColor, opacity: 0.01 },
+          ],
+        },
+      },
+      markers: { size: 0 },
+      grid: {
+        borderColor: 'rgba(255,255,255,0.05)',
+        xaxis: { lines: { show: false } },
+        yaxis: { lines: { show: true } },
+      },
+      xaxis: {
+        type: 'datetime',
+        labels: { style: { colors: 'rgba(255,255,255,0.3)', fontSize: '10px', fontFamily: 'monospace' }, datetimeUTC: false },
+        axisBorder: { show: false }, axisTicks: { show: false },
+        crosshairs: { show: true, stroke: { color: 'rgba(255,255,255,0.2)', width: 1 } },
+      },
+      yaxis: {
+        min: yMin, max: yMax,
+        labels: { style: { colors: 'rgba(255,255,255,0.3)', fontSize: '10px', fontFamily: 'monospace' }, formatter: yFmt },
+        crosshairs: { show: true, position: 'front', stroke: { color: 'rgba(255,255,255,0.12)', width: 1, dashArray: 3 } },
+        tooltip: { enabled: true },
+      },
+      tooltip: {
+        theme: 'dark',
+        x: { format: 'dd MMM yyyy' },
+        y: { formatter: (v) => `${yFmt(v)} ${unit}` },
+        marker: { fillColors: [metalColor] },
+      },
+      dataLabels: { enabled: false },
+      legend: { show: false },
+      theme: { mode: 'dark' },
+    };
+  }
+
+  const lmeAreaOptions = makeAreaOptions({
+    yMin: lmeYMin, yMax: lmeYMax, metalColor: color,
+    yFmt: (v) => `$${v >= 1000 ? (v / 1000).toFixed(1) + 'K' : v?.toFixed(0)}`,
+    unit: '/MT',
+  });
+  const mcxAreaOptions = makeAreaOptions({
+    yMin: mcxYMin, yMax: mcxYMax, metalColor: color,
+    yFmt: (v) => `₹${v >= 1000 ? (v / 1000).toFixed(1) + 'K' : v?.toFixed(0)}`,
+    unit: '/kg',
+  });
+
   return (
     <div style={{
       maxWidth: 1100, margin: '0 auto', padding: '24px 16px 100px',
@@ -447,30 +516,53 @@ export default function Analytics() {
         background: '#0D1420', border: '1px solid rgba(255,255,255,0.07)',
         borderRadius: 20, padding: '20px 16px 8px', marginBottom: 16, position: 'relative',
       }}>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 8px 2px' }}>
-          <p style={{ fontSize: 11, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.08em', color: 'rgba(255,255,255,0.35)', margin: 0 }}>
-            {selectedMetal} — LME Candlestick ($/MT)
-          </p>
-          {todayOHLC && (
-            <div style={{ display: 'flex', gap: 14, fontSize: 11, fontFamily: 'monospace' }}>
-              <span style={{ color: '#34d399' }}>H: ${fmt(todayHigh)}</span>
-              <span style={{ color: '#f87171' }}>L: ${fmt(todayLow)}</span>
-            </div>
-          )}
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 8px 10px', flexWrap: 'wrap', gap: 8 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
+            <p style={{ fontSize: 11, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.08em', color: 'rgba(255,255,255,0.35)', margin: 0 }}>
+              {selectedMetal} — LME {chartType === 'candle' ? 'Candlestick' : 'Area'} ($/MT)
+            </p>
+            {todayOHLC && chartType === 'candle' && (
+              <div style={{ display: 'flex', gap: 12, fontSize: 11, fontFamily: 'monospace' }}>
+                <span style={{ color: '#34d399' }}>H: ${fmt(todayHigh)}</span>
+                <span style={{ color: '#f87171' }}>L: ${fmt(todayLow)}</span>
+              </div>
+            )}
+          </div>
+          {/* Chart type toggle */}
+          <div style={{ display: 'flex', gap: 2, background: 'rgba(255,255,255,0.04)', borderRadius: 8, padding: 3 }}>
+            {[{ v: 'candle', label: '🕯 Candle' }, { v: 'line', label: '📈 Area' }].map(opt => (
+              <button key={opt.v} onClick={() => setChartType(opt.v)} style={{
+                padding: '5px 12px', borderRadius: 6, fontSize: 10, fontWeight: 700,
+                background: chartType === opt.v ? color : 'transparent',
+                color: chartType === opt.v ? '#000' : 'rgba(255,255,255,0.4)',
+                border: 'none', cursor: 'pointer', fontFamily: 'monospace',
+                transition: 'all 0.15s',
+              }}>{opt.label}</button>
+            ))}
+          </div>
         </div>
         {chartLoading ? (
-          <div style={{ height: 300, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <div style={{ height: 380, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             <Activity size={20} color={color} style={{ animation: 'spin 1s linear infinite' }} />
           </div>
         ) : lmeCandleData.length > 1 ? (
-          <ReactApexChart
-            key={`lme-${selectedMetal}-${period}`}
-            options={lmeChartOptions}
-            series={[{ name: `${selectedMetal} LME`, data: lmeCandleData }]}
-            type="candlestick" height={300}
-          />
+          chartType === 'candle' ? (
+            <ReactApexChart
+              key={`lme-candle-${selectedMetal}-${period}`}
+              options={lmeChartOptions}
+              series={[{ name: `${selectedMetal} LME`, data: lmeCandleData }]}
+              type="candlestick" height={380}
+            />
+          ) : (
+            <ReactApexChart
+              key={`lme-area-${selectedMetal}-${period}`}
+              options={lmeAreaOptions}
+              series={[{ name: `${selectedMetal} LME`, data: lmeLineData }]}
+              type="area" height={380}
+            />
+          )
         ) : (
-          <div style={{ height: 300, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
+          <div style={{ height: 380, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
             <BarChart3 size={28} color="rgba(255,255,255,0.1)" />
             <p style={{ color: 'rgba(255,255,255,0.25)', fontSize: 12, margin: 0, textAlign: 'center' }}>
               No price history yet.<br />Auto-fetching every 15 min · Paste LME broadcasts in Admin to backfill.
@@ -487,7 +579,7 @@ export default function Analytics() {
         }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 8px 2px' }}>
             <p style={{ fontSize: 11, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.08em', color: 'rgba(255,255,255,0.35)', margin: 0 }}>
-              {selectedMetal} — MCX Candlestick (₹/kg)
+              {selectedMetal} — MCX {chartType === 'candle' ? 'Candlestick' : 'Area'} (₹/kg)
             </p>
             {mcxOHLC.length > 0 && (() => {
               const last = mcxOHLC[mcxOHLC.length - 1];
@@ -499,12 +591,21 @@ export default function Analytics() {
               );
             })()}
           </div>
-          <ReactApexChart
-            key={`mcx-${selectedMetal}-${period}`}
-            options={mcxChartOptions}
-            series={[{ name: `${selectedMetal} MCX`, data: mcxCandleData }]}
-            type="candlestick" height={240}
-          />
+          {chartType === 'candle' ? (
+            <ReactApexChart
+              key={`mcx-candle-${selectedMetal}-${period}`}
+              options={mcxChartOptions}
+              series={[{ name: `${selectedMetal} MCX`, data: mcxCandleData }]}
+              type="candlestick" height={280}
+            />
+          ) : (
+            <ReactApexChart
+              key={`mcx-area-${selectedMetal}-${period}`}
+              options={mcxAreaOptions}
+              series={[{ name: `${selectedMetal} MCX`, data: mcxLineData }]}
+              type="area" height={280}
+            />
+          )}
         </div>
       )}
 
