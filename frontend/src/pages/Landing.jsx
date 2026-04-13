@@ -33,16 +33,17 @@ export default function Landing() {
           pointerEvents: 'none',
         }} />
 
-        {/* OM watermark — large, properly centered, behind everything */}
+        {/* OM watermark — sits above the glow, below the text, clearly visible */}
         <div style={{
-          position: 'absolute', top: '50%', left: '50%',
+          position: 'absolute', top: '52%', left: '50%',
           transform: 'translate(-50%, -50%)',
-          fontSize: 'min(55vw, 420px)', lineHeight: 1,
-          color: 'rgba(207,181,59,0.045)', fontWeight: 900,
-          pointerEvents: 'none', userSelect: 'none', zIndex: 0,
+          fontSize: 'min(72vw, 560px)', lineHeight: 1,
+          color: 'rgba(207,181,59,0.11)', fontWeight: 900,
+          pointerEvents: 'none', userSelect: 'none', zIndex: 1,
+          filter: 'blur(0.5px)',
         }}>ॐ</div>
 
-        <div style={{ position: 'relative', zIndex: 1, maxWidth: 660, margin: '0 auto' }}>
+        <div style={{ position: 'relative', zIndex: 2, maxWidth: 660, margin: '0 auto' }}>
           {/* Live badge */}
           <div style={{
             display: 'inline-flex', alignItems: 'center', gap: 7,
@@ -62,16 +63,25 @@ export default function Landing() {
             background: 'linear-gradient(145deg, #fff 0%, #E8CC5A 55%, #A89028 100%)',
             WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent',
           }}>
-            Real-Time Metal Intelligence.<br />For Indian Traders.
+            Metal Rates.<br />Local to Global.
           </h1>
+
+          {/* City emphasis line */}
+          <p style={{
+            fontSize: 'clamp(11px, 1.6vw, 14px)',
+            color: '#CFB53B', margin: '0 auto 14px', letterSpacing: '0.06em',
+            fontWeight: 700, textTransform: 'uppercase',
+          }}>
+            Delhi · Mumbai · Ahmedabad · Ludhiana · and more
+          </p>
 
           {/* Sub */}
           <p style={{
-            fontSize: 'clamp(13px, 2vw, 16px)', color: 'rgba(255,255,255,0.42)',
-            maxWidth: 500, margin: '0 auto 36px', lineHeight: 1.75,
+            fontSize: 'clamp(13px, 2vw, 15px)', color: 'rgba(255,255,255,0.4)',
+            maxWidth: 480, margin: '0 auto 36px', lineHeight: 1.8,
           }}>
-            Live LME & MCX spot prices, city-wise local rates, B2B metal marketplace,
-            and deep market analytics — one platform built for India's metal trade.
+            Accurate local spot rates direct from the market. Live LME & MCX benchmarks.
+            B2B marketplace and analytics — all in one platform.
           </p>
 
           {/* CTAs */}
@@ -230,10 +240,6 @@ export default function Landing() {
 
       {/* ── 5. PRICING ── */}
       <section style={{ padding: '64px 16px', maxWidth: 920, margin: '0 auto' }}>
-        <p style={{ textAlign: 'center', fontSize: 10, color: 'rgba(255,255,255,0.28)', letterSpacing: '0.12em', textTransform: 'uppercase', marginBottom: 10 }}>Pricing</p>
-        <h2 style={{ textAlign: 'center', fontSize: 26, fontWeight: 700, color: '#fff', margin: '0 0 40px' }}>
-          Simple, transparent <span style={{ color: '#CFB53B' }}>pricing</span>
-        </h2>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: 16 }}>
           {[
             {
