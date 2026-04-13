@@ -38,7 +38,7 @@ MetalXpress is a real-time scrap metal rate platform for Indian traders. It repl
 ```
 
 ## Current Date
-2026-04-11
+2026-04-13
 
 ## Session Log
 - **2026-03-19**: Initial UI overhaul (Replit-quality design, LME/MCX panel, hub selector, Login, Admin, Marketplace)
@@ -54,6 +54,36 @@ MetalXpress is a real-time scrap metal rate platform for Indian traders. It repl
 - **2026-03-22 (session 10)**: Image/video fix, Lightbox gallery, KYC overhaul (PAN-based), T&C enforcement, deal flow fixes — see Session 10 details below
 - **2026-04-11 (session 11)**: Email verification system fully working — see Session 11 details below
 - **2026-04-12 (session 12)**: Bug fixes, cleanup, Analytics page, mobile responsiveness — see Session 12 details below
+- **2026-04-13 (session 13)**: Analytics full redesign (ApexCharts, trader-centric), backend overview fix — see Session 13 details below
+
+## Session 13 Changes (2026-04-13) — Full Detail
+
+### Analytics Page — Full Redesign (Trader-Centric)
+- **Charting library**: Switched from `recharts` to `react-apexcharts` + `apexcharts` — canvas-based, faster, better animations, richer tooltips, zoom/pan support
+- **Focus shift**: Removed all company/platform metrics (GMV, user counts, commission, deal close rate) — these were company dashboard metrics, not useful for traders
+- **New sections**:
+  - **Metal selector cards** — 6 clickable metal cards showing live price + change %, active card highlighted with metal color and glow
+  - **Live price hero** — selected metal's LME price (large), change % badge with colored background, MCX equivalent, USD/INR rate
+  - **LME area chart** — ApexCharts smooth gradient area chart, datetime x-axis, period toggle (7D/30D/90D)
+  - **MCX line chart** — shown only when MCX history data available
+  - **Signal cards** (3 columns): vs 30-day average (with avg price), 7-day momentum (with interpretation: "Falling — potential buy zone"), current MCX price
+  - **Marketplace Activity by Metal** — horizontal bar chart showing relative listing volume per metal with colour per metal
+  - **All-time high/low table** — LME $/MT high and low per metal from admin-pasted history
+  - **Live LME snapshot** — bottom row of clickable metal cards to switch chart focus
+- **Backend fix**: Removed broken `listingType` groupBy (field doesn't exist in Listing schema). Simplified to single `groupBy(['metalId'])` with total count + qty
+
+### Bug Fixes (Session 13)
+- **Analytics overview API** — was crashing with `PrismaClientValidationError` on `listingType` field that doesn't exist in Listing schema. Fixed by removing the buy/sell split groupBy, using single metalId groupBy instead
+- **VerifyEmail blank page** — `message` variable referenced but never defined in pending state block. Fixed to `resendError`
+- **Admin + test accounts deleted** — re-created `admin@metalxpress.in` / `admin1234` and `test@metalxpress.in` / `test1234` with emailVerified + kycVerified = true after user DB wipe
+
+### Dependencies Changed (Session 13)
+- Added: `react-apexcharts ^2.1.0`, `apexcharts ^5.10.6` (frontend)
+
+### Files Modified (Session 13)
+- `frontend/src/pages/Analytics.jsx` — complete redesign with ApexCharts, trader-centric layout
+- `backend/src/routes/analytics.js` — removed broken listingType groupBy, simplified volumeByMetal query
+- `CLAUDE.md` — updated current date, added session 13 changes
 
 ## Session 12 Changes (2026-04-12) — Full Detail
 
