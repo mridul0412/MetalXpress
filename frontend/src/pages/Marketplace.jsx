@@ -1335,7 +1335,7 @@ function PostForm({ user, onSuccess }) {
 
   return (
     <div style={{ background: '#0D1420', borderRadius: 16, border: '1px solid rgba(207,181,59,0.15)', padding: 24, maxWidth: 600 }}>
-      <h3 style={{ fontSize: 18, fontWeight: 700, color: '#fff', margin: '0 0 4px' }}>Sell Your Scrap Metal</h3>
+      <h3 style={{ fontSize: 18, fontWeight: 700, color: '#fff', margin: '0 0 4px' }}>Sell Your Metal</h3>
       <p style={{ fontSize: 12, color: 'rgba(255,255,255,0.35)', margin: '0 0 20px' }}>
         Your listing will be reviewed before going live. Buyers negotiate and pay a small commission to connect.
       </p>
@@ -1483,7 +1483,7 @@ function LoginPrompt({ navigate }) {
   return (
     <div style={{ textAlign: 'center', padding: '60px 20px' }}>
       <Package size={40} style={{ color: 'rgba(255,255,255,0.1)', marginBottom: 12 }} />
-      <p style={{ color: 'rgba(255,255,255,0.3)', fontSize: 14, marginBottom: 12 }}>Login to sell your scrap metal</p>
+      <p style={{ color: 'rgba(255,255,255,0.3)', fontSize: 14, marginBottom: 12 }}>Login to sell your metal</p>
       <button onClick={() => navigate('/login')} style={{
         padding: '12px 32px', borderRadius: 10, fontSize: 14, fontWeight: 700,
         background: '#CFB53B', color: '#000', border: 'none', cursor: 'pointer',

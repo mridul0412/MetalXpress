@@ -38,9 +38,9 @@ export default function Navbar() {
             <span className="sm:hidden text-base font-bold tracking-widest metallic-text">MX⚡</span>
           </Link>
 
-          {/* Desktop nav */}
+          {/* Desktop nav — app nav for logged-in, marketing links for visitors */}
           <nav className="hidden md:flex items-center gap-1">
-            {NAV_ITEMS.map(({ href, label, icon: Icon }) => {
+            {user ? NAV_ITEMS.map(({ href, label, icon: Icon }) => {
               const active = location.pathname === href;
               return (
                 <Link key={href} to={href} style={{
@@ -61,7 +61,21 @@ export default function Navbar() {
                   {label}
                 </Link>
               );
-            })}
+            }) : (
+              <>
+                {[
+                  { href: '/about', label: 'About' },
+                  { href: '/contact', label: 'Contact' },
+                ].map(({ href, label }) => (
+                  <Link key={href} to={href} style={{
+                    padding: '6px 14px', borderRadius: '8px', fontSize: '12px', fontWeight: 600,
+                    textDecoration: 'none', color: 'rgba(255,255,255,0.45)', transition: 'color 0.15s',
+                  }}>
+                    {label}
+                  </Link>
+                ))}
+              </>
+            )}
           </nav>
 
           {/* Auth */}
@@ -86,19 +100,21 @@ export default function Navbar() {
                 </button>
               </>
             ) : (
-              <Link to="/login" style={{
-                fontSize: '12px',
-                padding: '6px 14px',
-                borderRadius: '8px',
-                fontWeight: 700,
-                background: '#CFB53B',
-                color: '#000',
-                textDecoration: 'none',
-                boxShadow: '0 2px 8px rgba(207,181,59,0.25)',
-                transition: 'background 0.15s',
-              }}>
-                Login
-              </Link>
+              <div className="flex items-center gap-2">
+                <Link to="/login" style={{
+                  fontSize: '12px', padding: '6px 14px', borderRadius: '8px', fontWeight: 600,
+                  textDecoration: 'none', color: 'rgba(255,255,255,0.5)', transition: 'color 0.15s',
+                }}>
+                  Login
+                </Link>
+                <Link to="/signup" style={{
+                  fontSize: '12px', padding: '6px 14px', borderRadius: '8px', fontWeight: 700,
+                  background: '#CFB53B', color: '#000', textDecoration: 'none',
+                  boxShadow: '0 2px 8px rgba(207,181,59,0.25)',
+                }}>
+                  Sign Up
+                </Link>
+              </div>
             )}
           </div>
         </div>
@@ -107,8 +123,8 @@ export default function Navbar() {
         <LMEStrip />
       </header>
 
-      {/* Mobile bottom nav — outside header so it doesn't affect sticky */}
-      <nav className="md:hidden fixed bottom-0 left-0 right-0 z-50 pb-safe" style={{
+      {/* Mobile bottom nav — only for logged-in users */}
+      {user && <nav className="md:hidden fixed bottom-0 left-0 right-0 z-50 pb-safe" style={{
         background: 'rgba(8,14,26,0.97)',
         backdropFilter: 'blur(20px)',
         borderTop: '1px solid rgba(255,255,255,0.08)',
@@ -125,7 +141,7 @@ export default function Navbar() {
             );
           })}
         </div>
-      </nav>
+      </nav>}
     </>
   );
 }

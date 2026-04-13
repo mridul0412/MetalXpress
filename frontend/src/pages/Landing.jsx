@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import {
   TrendingUp, MapPin, BarChart3, Bell, ChevronRight,
-  CheckCircle, ArrowRight, Users, Briefcase, Shield,
+  CheckCircle, ArrowRight, Users, Briefcase, Shield, ChevronDown,
 } from 'lucide-react';
 
 const API = import.meta.env.VITE_API_URL || '';
@@ -10,6 +10,65 @@ const METAL_COLORS = {
   Copper: '#E87040', Aluminium: '#8B9DC3', Zinc: '#5B8DEF',
   Nickel: '#34d399', Lead: '#9CA3AF', Tin: '#CFB53B',
 };
+
+const FAQ_ITEMS = [
+  {
+    q: 'Where do the local spot rates come from?',
+    a: 'Rates are sourced directly from real-time market broadcast messages — the same ones traders share via WhatsApp groups. Our admin team verifies and publishes them within minutes, covering Delhi Mandoli, Ahmedabad, Mumbai, Ludhiana, and more hubs.',
+  },
+  {
+    q: 'How is the marketplace different from WhatsApp groups?',
+    a: 'Every trader on the marketplace is PAN-verified through our KYC process. You negotiate price and quantity in-app before any contact details are shared. Commission (0.1% of agreed value) is only charged after both parties agree — no upfront fees.',
+  },
+  {
+    q: 'Are the LME and MCX prices accurate?',
+    a: 'LME prices are fetched from Yahoo Finance and Stooq every 15 minutes. MCX prices are calculated using the live USD/INR rate. When an admin pastes a fresh broadcast, those values take priority for immediate accuracy.',
+  },
+  {
+    q: 'What do I get with the Pro plan?',
+    a: 'Pro unlocks local city spot rates (grade-wise buy/sell), the full B2B marketplace (post listings, negotiate, connect), market analytics (candlestick charts, trend signals, period highs/lows), and unlimited price alerts. Free users get live LME/MCX rates and basic alerts.',
+  },
+  {
+    q: 'Is my data safe? Do you report to any authorities?',
+    a: 'Your identity details are stored with bank-grade encryption and used solely for trader verification on MetalXpress. We never share your information with external parties. Deal amounts remain strictly between you and your counterparty.',
+  },
+];
+
+function FAQAccordion() {
+  const [openIdx, setOpenIdx] = useState(null);
+  return (
+    <div>
+      {FAQ_ITEMS.map((item, i) => {
+        const open = openIdx === i;
+        return (
+          <div key={i} style={{
+            borderBottom: '1px solid rgba(255,255,255,0.06)',
+          }}>
+            <button onClick={() => setOpenIdx(open ? null : i)} style={{
+              width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+              padding: '18px 0', background: 'none', border: 'none', cursor: 'pointer',
+              textAlign: 'left', gap: 16,
+            }}>
+              <span style={{ fontSize: 13, fontWeight: 600, color: open ? '#CFB53B' : 'rgba(255,255,255,0.7)', lineHeight: 1.5, fontFamily: 'inherit' }}>
+                {item.q}
+              </span>
+              <ChevronDown size={16} color={open ? '#CFB53B' : 'rgba(255,255,255,0.25)'}
+                style={{ flexShrink: 0, transition: 'transform 0.2s', transform: open ? 'rotate(180deg)' : 'rotate(0deg)' }} />
+            </button>
+            {open && (
+              <p style={{
+                fontSize: 12, color: 'rgba(255,255,255,0.38)', lineHeight: 1.75,
+                margin: '0 0 18px', paddingRight: 32,
+              }}>
+                {item.a}
+              </p>
+            )}
+          </div>
+        );
+      })}
+    </div>
+  );
+}
 
 export default function Landing() {
   const [liveData, setLiveData] = useState(null);
@@ -35,7 +94,7 @@ export default function Landing() {
 
         {/* OM watermark — sits above the glow, below the text, clearly visible */}
         <div style={{
-          position: 'absolute', top: '52%', left: '50%',
+          position: 'absolute', top: '58%', left: '50%',
           transform: 'translate(-50%, -50%)',
           fontSize: 'min(72vw, 560px)', lineHeight: 1,
           color: 'rgba(207,181,59,0.11)', fontWeight: 900,
@@ -78,10 +137,12 @@ export default function Landing() {
           {/* Sub */}
           <p style={{
             fontSize: 'clamp(13px, 2vw, 15px)', color: 'rgba(255,255,255,0.4)',
-            maxWidth: 480, margin: '0 auto 36px', lineHeight: 1.8,
+            maxWidth: 500, margin: '0 auto 36px', lineHeight: 1.8,
           }}>
-            Accurate local spot rates direct from the market. Live LME & MCX benchmarks.
-            B2B marketplace and analytics — all in one platform.
+            Accurate local spot rates updated from real market broadcasts.
+            Live LME & MCX benchmarks every 15 minutes.
+            A verified B2B marketplace where you negotiate, agree, then connect.
+            Pro analytics with price trends, signals, and period highs.
           </p>
 
           {/* CTAs */}
@@ -109,7 +170,7 @@ export default function Landing() {
             display: 'flex', gap: 20, justifyContent: 'center', flexWrap: 'wrap',
             fontSize: 11, color: 'rgba(255,255,255,0.22)', letterSpacing: '0.03em',
           }}>
-            {['Auto-refreshes every 15 min', 'LME + MCX + Local', 'B2B Marketplace', 'No spam, ever'].map(t => (
+            {['Verified traders only', 'Live every 15 min', '0.1% commission on deals', 'PAN-verified KYC'].map(t => (
               <span key={t} style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
                 <CheckCircle size={11} color="#34d399" strokeWidth={2.5} /> {t}
               </span>
@@ -297,7 +358,16 @@ export default function Landing() {
         </div>
       </section>
 
-      {/* ── 6. FINAL CTA ── */}
+      {/* ── 6. FAQ ── */}
+      <section style={{ padding: '64px 16px', maxWidth: 720, margin: '0 auto' }}>
+        <p style={{ textAlign: 'center', fontSize: 10, color: 'rgba(255,255,255,0.28)', letterSpacing: '0.12em', textTransform: 'uppercase', marginBottom: 10 }}>Questions?</p>
+        <h2 style={{ textAlign: 'center', fontSize: 24, fontWeight: 700, color: '#fff', margin: '0 0 32px' }}>
+          Frequently asked
+        </h2>
+        <FAQAccordion />
+      </section>
+
+      {/* ── 7. FINAL CTA ── */}
       <section style={{ padding: '0 16px 96px', textAlign: 'center' }}>
         <div style={{
           maxWidth: 560, margin: '0 auto', padding: '52px 32px',

@@ -21,14 +21,14 @@ export default function About() {
           About MetalXpress
         </h1>
         <p style={{ fontSize: 14, color: 'rgba(255,255,255,0.5)', maxWidth: 500, margin: '0 auto', lineHeight: 1.6 }}>
-          India's first real-time scrap metal rate platform, built for traders who need accurate prices without the WhatsApp chaos.
+          India's real-time metal intelligence platform — live rates, verified marketplace, and pro analytics for traders who need accuracy without the WhatsApp chaos.
         </p>
       </div>
 
       {/* Content sections */}
       <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
         <Section icon={<Zap size={18} color="#CFB53B" />} title="What We Do">
-          <p>MetalXpress replaces WhatsApp broadcast groups with a clean, organized platform for scrap metal rates.
+          <p>MetalXpress replaces WhatsApp broadcast groups with a clean, organized platform for metal rates and trading.
           Admin operators paste WhatsApp broadcast messages into our smart parser, which automatically extracts LME,
           MCX, forex, and local spot rates — then publishes them instantly to all users.</p>
           <p>Our platform covers Copper, Aluminium, Zinc, Nickel, Lead, Tin, Brass, and more — with city-wise
@@ -43,7 +43,7 @@ export default function About() {
         </Section>
 
         <Section icon={<Shield size={18} color="#CFB53B" />} title="Our Mission">
-          <p>Indian scrap metal trading runs on trust, speed, and accurate information. We're building the digital
+          <p>Indian metal trading runs on trust, speed, and accurate information. We're building the digital
           infrastructure that traders need — starting with live rates, expanding to a full marketplace, price alerts,
           and analytics.</p>
           <p>MetalXpress is built in India, for Indian traders. We understand the nuances of the market —

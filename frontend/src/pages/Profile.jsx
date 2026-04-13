@@ -18,8 +18,8 @@ const labelStyle = {
 };
 
 const TRADER_TYPES = [
-  { value: 'BUYER', label: 'Buyer', desc: 'I buy scrap metal' },
-  { value: 'SELLER', label: 'Seller', desc: 'I sell scrap metal' },
+  { value: 'BUYER', label: 'Buyer', desc: 'I buy metals' },
+  { value: 'SELLER', label: 'Seller', desc: 'I sell metals' },
   { value: 'CHECKING_RATES', label: 'Just Checking', desc: 'Market observer' },
 ];
 

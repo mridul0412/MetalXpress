@@ -113,7 +113,7 @@ export default function Terms() {
             agent, or guarantor of any transaction.
           </p>
           <p>
-            Our role is limited to providing a digital venue where verified scrap metal traders can
+            Our role is limited to providing a digital venue where verified metal traders can
             discover counterparties, negotiate deal terms through structured in-app offers, and
             connect after commission payment. Specifically, MetalXpress does <strong style={{ color: '#fff' }}>not</strong>:
           </p>
