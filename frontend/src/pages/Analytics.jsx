@@ -5,6 +5,7 @@ import ReactApexChart from 'react-apexcharts';
 import {
   BarChart3, TrendingUp, TrendingDown, Minus, Lock,
   ArrowUpRight, ArrowDownRight, Activity, Clock, Zap,
+  LineChart, CandlestickChart,
 } from 'lucide-react';
 
 const API = import.meta.env.VITE_API_URL || '';
@@ -559,14 +560,21 @@ export default function Analytics() {
           </div>
           {/* Chart type toggle */}
           <div style={{ display: 'flex', gap: 2, background: 'rgba(255,255,255,0.04)', borderRadius: 8, padding: 3 }}>
-            {[{ v: 'line', label: '📈 Line' }, { v: 'candle', label: '🕯 Candle' }].map(opt => (
-              <button key={opt.v} onClick={() => setChartType(opt.v)} style={{
-                padding: '5px 12px', borderRadius: 6, fontSize: 10, fontWeight: 700,
-                background: chartType === opt.v ? color : 'transparent',
-                color: chartType === opt.v ? '#000' : 'rgba(255,255,255,0.4)',
+            {[
+              { v: 'line', Icon: LineChart, label: 'Line' },
+              { v: 'candle', Icon: CandlestickChart, label: 'Candle' },
+            ].map(({ v, Icon, label }) => (
+              <button key={v} onClick={() => setChartType(v)} style={{
+                padding: '5px 11px', borderRadius: 6, fontSize: 10, fontWeight: 700,
+                background: chartType === v ? color : 'transparent',
+                color: chartType === v ? '#000' : 'rgba(255,255,255,0.4)',
                 border: 'none', cursor: 'pointer', fontFamily: 'monospace',
+                display: 'flex', alignItems: 'center', gap: 5,
                 transition: 'all 0.15s',
-              }}>{opt.label}</button>
+              }}>
+                <Icon size={12} />
+                {label}
+              </button>
             ))}
           </div>
         </div>
