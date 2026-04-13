@@ -20,34 +20,39 @@ export default function About() {
         }}>
           About MetalXpress
         </h1>
-        <p style={{ fontSize: 14, color: 'rgba(255,255,255,0.5)', maxWidth: 500, margin: '0 auto', lineHeight: 1.6 }}>
-          India's real-time metal intelligence platform — live rates, verified marketplace, and pro analytics for traders who need accuracy without the WhatsApp chaos.
+        <p style={{ fontSize: 15, fontWeight: 700, color: '#fff', margin: '0 0 8px' }}>
+          India's Biggest Metal Trading Platform
+        </p>
+        <p style={{ fontSize: 14, color: 'rgba(255,255,255,0.45)', maxWidth: 500, margin: '0 auto', lineHeight: 1.6 }}>
+          Live rates. Verified marketplace. Pro analytics. Built for traders who need accuracy — not WhatsApp forwards.
         </p>
       </div>
 
       {/* Content sections */}
       <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
         <Section icon={<Zap size={18} color="#CFB53B" />} title="What We Do">
-          <p>MetalXpress replaces WhatsApp broadcast groups with a clean, organized platform for metal rates and trading.
-          Admin operators paste WhatsApp broadcast messages into our smart parser, which automatically extracts LME,
-          MCX, forex, and local spot rates — then publishes them instantly to all users.</p>
-          <p>Our platform covers Copper, Aluminium, Zinc, Nickel, Lead, Tin, Brass, and more — with city-wise
-          local spot rates for hubs like Delhi Mandoli, Mumbai, Chennai, and others across India.</p>
+          <p>MetalXpress brings everything a metal trader needs into one platform. Live LME & MCX rates
+          updated throughout the day. Local spot prices from major trading hubs. A verified marketplace
+          where every trader and every metal is checked before a deal happens.</p>
+          <p>We cover Copper, Aluminium, Zinc, Nickel, Lead, Tin, Brass, and more — ferrous, non-ferrous,
+          scrap, alloys. City-wise local spot rates for Delhi Mandoli, Mumbai, Ahmedabad, Ludhiana, Chennai,
+          and new cities being added every month.</p>
+          <p>No more scrolling through broadcast messages. No more stale screenshots. Same rates you trust — better platform.</p>
         </Section>
 
-        <Section icon={<Globe size={18} color="#CFB53B" />} title="Live Data Sources">
-          <p>We pull live metal prices from global exchanges (LME via Yahoo Finance, COMEX), convert them to
-          MCX-equivalent INR prices, and overlay admin-verified local spot rates from WhatsApp trader networks.</p>
-          <p>Forex rates (USD/INR, EUR/USD), market indices (Nifty 50, Sensex), and Crude Oil WTI prices are
-          refreshed automatically every 5 minutes.</p>
+        <Section icon={<Globe size={18} color="#CFB53B" />} title="Live Data">
+          <p>Real-time metal prices from global exchanges, MCX-equivalent INR prices, forex rates, market
+          indices, and crude oil — all updated frequently and formatted cleanly. Local spot rates sourced
+          from real market broadcasts across India's biggest trading hubs.</p>
+          <p>Everything a trader checks daily — in one place, always current, always accurate.</p>
         </Section>
 
         <Section icon={<Shield size={18} color="#CFB53B" />} title="Our Mission">
-          <p>Indian metal trading runs on trust, speed, and accurate information. We're building the digital
-          infrastructure that traders need — starting with live rates, expanding to a full marketplace, price alerts,
-          and analytics.</p>
-          <p>MetalXpress is built in India, for Indian traders. We understand the nuances of the market —
-          from Mandoli to Mundra.</p>
+          <p>Indian metal trading runs on trust, speed, and accurate information. We're building the platform
+          this industry deserves — starting with live rates, expanding into a full verified marketplace,
+          price alerts, and advanced analytics.</p>
+          <p>MetalXpress is built in India, for Indian traders. From tier-1 cities to tier-3 mandis —
+          wherever metal is traded, we're there.</p>
         </Section>
       </div>
     </div>
@@ -64,7 +69,7 @@ function Section({ icon, title, children }) {
         {icon}
         <h2 style={{ fontSize: 16, fontWeight: 700, color: '#fff', margin: 0 }}>{title}</h2>
       </div>
-      <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.5)', lineHeight: 1.7 }}>
+      <div style={{ fontSize: 14, color: 'rgba(255,255,255,0.5)', lineHeight: 1.7 }}>
         {children}
       </div>
     </div>

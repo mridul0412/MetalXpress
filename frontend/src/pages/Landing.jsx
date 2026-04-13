@@ -73,7 +73,7 @@ function FAQAccordion() {
               padding: '18px 0', background: 'none', border: 'none', cursor: 'pointer',
               textAlign: 'left', gap: 16,
             }}>
-              <span style={{ fontSize: 13, fontWeight: 600, color: open ? '#CFB53B' : 'rgba(255,255,255,0.7)', lineHeight: 1.5, fontFamily: 'inherit' }}>
+              <span style={{ fontSize: 14, fontWeight: 600, color: open ? '#CFB53B' : 'rgba(255,255,255,0.7)', lineHeight: 1.5, fontFamily: 'inherit' }}>
                 {item.q}
               </span>
               <ChevronDown size={16} color={open ? '#CFB53B' : 'rgba(255,255,255,0.25)'}
@@ -81,7 +81,7 @@ function FAQAccordion() {
             </button>
             {open && (
               <p style={{
-                fontSize: 12, color: 'rgba(255,255,255,0.38)', lineHeight: 1.75,
+                fontSize: 13, color: 'rgba(255,255,255,0.42)', lineHeight: 1.75,
                 margin: '0 0 18px', paddingRight: 32,
               }}>
                 {item.a}
@@ -192,7 +192,7 @@ export default function Landing() {
           {/* Trust strip */}
           <div style={{
             display: 'flex', gap: 20, justifyContent: 'center', flexWrap: 'wrap',
-            fontSize: 11, color: 'rgba(255,255,255,0.22)', letterSpacing: '0.03em',
+            fontSize: 12, color: 'rgba(255,255,255,0.22)', letterSpacing: '0.03em',
           }}>
             {['Real-time rate updates', 'Every trader verified', 'Every metal checked', 'Trusted by traders across India'].map(t => (
               <span key={t} style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
@@ -207,7 +207,7 @@ export default function Landing() {
       {liveData?.metals && (
         <section style={{ padding: '0 16px 68px', maxWidth: 920, margin: '0 auto' }}>
           <p style={{
-            fontSize: 10, textAlign: 'center', color: 'rgba(255,255,255,0.2)',
+            fontSize: 11, textAlign: 'center', color: 'rgba(255,255,255,0.2)',
             letterSpacing: '0.12em', textTransform: 'uppercase', marginBottom: 14,
           }}>Live LME spot prices</p>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(128px, 1fr))', gap: 8 }}>
@@ -220,18 +220,18 @@ export default function Landing() {
                   background: 'rgba(13,20,32,0.85)', border: '1px solid rgba(255,255,255,0.05)',
                   borderTop: `2px solid ${mc}45`,
                 }}>
-                  <p style={{ fontSize: 10, color: mc, margin: '0 0 5px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em' }}>{m.metal}</p>
+                  <p style={{ fontSize: 11, color: mc, margin: '0 0 5px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em' }}>{m.metal}</p>
                   <p style={{ fontSize: 18, fontWeight: 700, color: '#fff', margin: '0 0 3px', fontFamily: 'monospace' }}>
                     ${m.priceUsd >= 1000 ? (m.priceUsd / 1000).toFixed(1) + 'K' : m.priceUsd?.toFixed(0)}
                   </p>
-                  <p style={{ fontSize: 11, margin: 0, fontFamily: 'monospace', fontWeight: 700, color: up ? '#34d399' : dn ? '#f87171' : 'rgba(255,255,255,0.3)' }}>
+                  <p style={{ fontSize: 12, margin: 0, fontFamily: 'monospace', fontWeight: 700, color: up ? '#34d399' : dn ? '#f87171' : 'rgba(255,255,255,0.3)' }}>
                     {up ? '+' : ''}{m.change?.toFixed(2)}%
                   </p>
                 </div>
               );
             })}
           </div>
-          <p style={{ fontSize: 10, textAlign: 'center', color: 'rgba(255,255,255,0.15)', marginTop: 10 }}>
+          <p style={{ fontSize: 11, textAlign: 'center', color: 'rgba(255,255,255,0.15)', marginTop: 10 }}>
             <Link to="/signup" style={{ color: '#CFB53B', textDecoration: 'none' }}>Sign up free</Link>
             {' '}to unlock local city rates, marketplace, and market analytics
           </p>
@@ -240,7 +240,7 @@ export default function Landing() {
 
       {/* ── 3. HOW IT WORKS ── */}
       <section style={{ padding: '64px 16px', maxWidth: 920, margin: '0 auto' }}>
-        <p style={{ textAlign: 'center', fontSize: 10, color: 'rgba(255,255,255,0.28)', letterSpacing: '0.12em', textTransform: 'uppercase', marginBottom: 10 }}>How it works</p>
+        <p style={{ textAlign: 'center', fontSize: 11, color: 'rgba(255,255,255,0.28)', letterSpacing: '0.12em', textTransform: 'uppercase', marginBottom: 10 }}>How it works</p>
         <h2 style={{ textAlign: 'center', fontSize: 26, fontWeight: 700, color: '#fff', margin: '0 0 40px' }}>
           How <span style={{ color: '#CFB53B' }}>MetalXpress</span> Works
         </h2>
@@ -259,7 +259,7 @@ export default function Landing() {
                 <Icon size={18} color="#CFB53B" />
               </div>
               <h3 style={{ fontSize: 15, fontWeight: 700, color: '#fff', margin: '0 0 8px' }}>{title}</h3>
-              <p style={{ fontSize: 12, color: 'rgba(255,255,255,0.38)', margin: 0, lineHeight: 1.7 }}>{desc}</p>
+              <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.42)', margin: 0, lineHeight: 1.7 }}>{desc}</p>
             </div>
           ))}
         </div>
@@ -268,7 +268,7 @@ export default function Landing() {
       {/* ── 4. WHAT YOU GET ── */}
       <section style={{ padding: '64px 16px', background: 'rgba(13,20,32,0.5)' }}>
         <div style={{ maxWidth: 920, margin: '0 auto' }}>
-          <p style={{ textAlign: 'center', fontSize: 10, color: 'rgba(255,255,255,0.28)', letterSpacing: '0.12em', textTransform: 'uppercase', marginBottom: 10 }}>What you get</p>
+          <p style={{ textAlign: 'center', fontSize: 11, color: 'rgba(255,255,255,0.28)', letterSpacing: '0.12em', textTransform: 'uppercase', marginBottom: 10 }}>What you get</p>
           <h2 style={{ textAlign: 'center', fontSize: 26, fontWeight: 700, color: '#fff', margin: '0 0 40px' }}>
             Free to start.{' '}
             <span style={{ color: '#CFB53B' }}>Pro when you're ready.</span>
@@ -290,8 +290,8 @@ export default function Landing() {
                   <Icon size={17} color="#34d399" />
                 </div>
                 <div>
-                  <p style={{ fontSize: 13, fontWeight: 700, color: '#fff', margin: '0 0 5px' }}>{title}</p>
-                  <p style={{ fontSize: 11, color: 'rgba(255,255,255,0.35)', margin: 0, lineHeight: 1.6 }}>{desc}</p>
+                  <p style={{ fontSize: 14, fontWeight: 700, color: '#fff', margin: '0 0 5px' }}>{title}</p>
+                  <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.42)', margin: 0, lineHeight: 1.6 }}>{desc}</p>
                 </div>
               </div>
             ))}
@@ -314,8 +314,8 @@ export default function Landing() {
                   <Icon size={17} color="#CFB53B" />
                 </div>
                 <div>
-                  <p style={{ fontSize: 13, fontWeight: 700, color: '#fff', margin: '0 0 5px' }}>{title}</p>
-                  <p style={{ fontSize: 11, color: 'rgba(255,255,255,0.35)', margin: 0, lineHeight: 1.6 }}>{desc}</p>
+                  <p style={{ fontSize: 14, fontWeight: 700, color: '#fff', margin: '0 0 5px' }}>{title}</p>
+                  <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.42)', margin: 0, lineHeight: 1.6 }}>{desc}</p>
                 </div>
               </div>
             ))}
@@ -352,16 +352,16 @@ export default function Landing() {
                   whiteSpace: 'nowrap',
                 }}>Most Popular</div>
               )}
-              <p style={{ fontSize: 11, fontWeight: 700, color: highlight ? '#CFB53B' : 'rgba(255,255,255,0.38)', margin: '0 0 12px', textTransform: 'uppercase', letterSpacing: '0.08em' }}>{name}</p>
+              <p style={{ fontSize: 12, fontWeight: 700, color: highlight ? '#CFB53B' : 'rgba(255,255,255,0.38)', margin: '0 0 12px', textTransform: 'uppercase', letterSpacing: '0.08em' }}>{name}</p>
               <div style={{ display: 'flex', alignItems: 'baseline', gap: 5, marginBottom: 22 }}>
                 <span style={{ fontSize: 34, fontWeight: 800, color: '#fff', fontFamily: 'monospace' }}>{price}</span>
-                <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.28)' }}>/{period}</span>
+                <span style={{ fontSize: 12, color: 'rgba(255,255,255,0.28)' }}>/{period}</span>
               </div>
               <div style={{ marginBottom: 24 }}>
                 {features.map(f => (
                   <div key={f} style={{ display: 'flex', alignItems: 'flex-start', gap: 9, marginBottom: 10 }}>
                     <CheckCircle size={13} color={highlight ? '#CFB53B' : '#34d399'} style={{ marginTop: 1, flexShrink: 0 }} />
-                    <span style={{ fontSize: 12, color: 'rgba(255,255,255,0.5)', lineHeight: 1.45 }}>{f}</span>
+                    <span style={{ fontSize: 13, color: 'rgba(255,255,255,0.5)', lineHeight: 1.5 }}>{f}</span>
                   </div>
                 ))}
               </div>
@@ -379,7 +379,7 @@ export default function Landing() {
 
       {/* ── 6. FAQ ── */}
       <section style={{ padding: '64px 16px', maxWidth: 720, margin: '0 auto' }}>
-        <p style={{ textAlign: 'center', fontSize: 10, color: 'rgba(255,255,255,0.28)', letterSpacing: '0.12em', textTransform: 'uppercase', marginBottom: 10 }}>Got questions?</p>
+        <p style={{ textAlign: 'center', fontSize: 11, color: 'rgba(255,255,255,0.28)', letterSpacing: '0.12em', textTransform: 'uppercase', marginBottom: 10 }}>Got questions?</p>
         <h2 style={{ textAlign: 'center', fontSize: 24, fontWeight: 700, color: '#fff', margin: '0 0 32px' }}>
           Questions Traders Ask Us
         </h2>
@@ -397,7 +397,7 @@ export default function Landing() {
           <h2 style={{ fontSize: 22, fontWeight: 700, color: '#fff', margin: '0 0 12px', lineHeight: 1.35 }}>
             Stop Trading on WhatsApp.<br />Start Trading on MetalXpress.
           </h2>
-          <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.38)', margin: '0 0 30px', lineHeight: 1.7 }}>
+          <p style={{ fontSize: 14, color: 'rgba(255,255,255,0.42)', margin: '0 0 30px', lineHeight: 1.7 }}>
             Same rates you trust. A better, verified platform.
             Every trader checked. Every metal checked. Every deal transparent.
             Join India's fastest-growing metal trading platform — free to start, no card needed.
@@ -410,7 +410,7 @@ export default function Landing() {
           }}>
             Join MetalXpress Free <ArrowRight size={15} />
           </Link>
-          <p style={{ fontSize: 11, color: 'rgba(255,255,255,0.18)', marginTop: 14 }}>No credit card required</p>
+          <p style={{ fontSize: 12, color: 'rgba(255,255,255,0.18)', marginTop: 14 }}>No credit card required</p>
         </div>
       </section>
 
