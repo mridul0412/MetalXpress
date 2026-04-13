@@ -42,11 +42,11 @@ const FAQ_ITEMS = [
   },
   {
     q: 'What does the Pro plan include?',
-    a: 'Full marketplace access to post and negotiate deals, local city spot rates for Delhi, Mumbai, Ahmedabad, Ludhiana, Chennai, candlestick charts, trend analysis, momentum signals, and LME-MCX spread tracking. All for \u20B9299/month.',
+    a: 'Full marketplace access to post and negotiate deals, local city spot rates for Delhi Mandoli, Mumbai, Ahmedabad, Ludhiana, Chennai, candlestick charts, trend analysis, momentum signals, and LME-MCX spread tracking. All for \u20B9299/month.',
   },
   {
     q: 'Which cities do you cover?',
-    a: "Delhi, Mumbai, Ahmedabad, Ludhiana, Chennai \u2014 with more cities being added every month. If your market isn't listed yet, tell us and we'll prioritise it.",
+    a: "Delhi Mandoli, Mumbai, Ahmedabad, Ludhiana, Chennai \u2014 with more cities being added every month. If your market isn't listed yet, tell us and we'll prioritise it.",
   },
   {
     q: 'Is my data private and secure?',
@@ -106,13 +106,27 @@ export default function Landing() {
 
       {/* ── 1. HERO ── */}
       <section style={{
-        minHeight: '100vh', display: 'flex', flexDirection: 'column',
-        position: 'relative', textAlign: 'center', padding: '48px 16px 0',
-        overflow: 'hidden',
+        minHeight: '88vh', display: 'flex', alignItems: 'center', justifyContent: 'center',
+        position: 'relative', textAlign: 'center', padding: '60px 16px 48px',
       }}>
+        {/* Gold radial glow */}
+        <div style={{
+          position: 'absolute', inset: 0,
+          background: 'radial-gradient(ellipse 70% 55% at 50% 0%, rgba(207,181,59,0.08) 0%, transparent 70%)',
+          pointerEvents: 'none',
+        }} />
 
-        {/* ── Text zone (top) ── */}
-        <div style={{ position: 'relative', zIndex: 3, maxWidth: 660, margin: '0 auto', paddingTop: 24 }}>
+        {/* OM watermark — sits above the glow, below the text, clearly visible */}
+        <div style={{
+          position: 'absolute', top: '58%', left: '50%',
+          transform: 'translate(-50%, -50%)',
+          fontSize: 'min(72vw, 560px)', lineHeight: 1,
+          color: 'rgba(207,181,59,0.11)', fontWeight: 900,
+          pointerEvents: 'none', userSelect: 'none', zIndex: 1,
+          filter: 'blur(0.5px)',
+        }}>{'\u0950'}</div>
+
+        <div style={{ position: 'relative', zIndex: 2, maxWidth: 660, margin: '0 auto' }}>
           {/* Live badge */}
           <div style={{
             display: 'inline-flex', alignItems: 'center', gap: 7,
@@ -141,13 +155,13 @@ export default function Landing() {
             color: '#CFB53B', margin: '0 auto 14px', letterSpacing: '0.06em',
             fontWeight: 700, textTransform: 'uppercase',
           }}>
-            Live spot rates from: Delhi · Mumbai · Ahmedabad · Ludhiana · Chennai · +more
+            Live spot rates from: Delhi Mandoli · Mumbai · Ahmedabad · Ludhiana · Chennai · +more
           </p>
 
           {/* Sub */}
           <p style={{
             fontSize: 'clamp(13px, 2vw, 15px)', color: 'rgba(255,255,255,0.4)',
-            maxWidth: 540, margin: '0 auto 32px', lineHeight: 1.8,
+            maxWidth: 540, margin: '0 auto 36px', lineHeight: 1.8,
           }}>
             The same rates you get on WhatsApp — but faster, cleaner, and always accurate.
             Live LME & MCX prices updated throughout the day.
@@ -156,7 +170,7 @@ export default function Landing() {
           </p>
 
           {/* CTAs */}
-          <div style={{ display: 'flex', gap: 12, justifyContent: 'center', flexWrap: 'wrap', marginBottom: 24 }}>
+          <div style={{ display: 'flex', gap: 12, justifyContent: 'center', flexWrap: 'wrap', marginBottom: 48 }}>
             <Link to="/signup" style={{
               padding: '13px 28px', borderRadius: 12, fontWeight: 700, fontSize: 14,
               background: '#CFB53B', color: '#000', textDecoration: 'none',
@@ -186,32 +200,6 @@ export default function Landing() {
               </span>
             ))}
           </div>
-        </div>
-
-        {/* ── OM zone (bottom of hero) — clean, nothing overlapping ── */}
-        <div style={{
-          flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center',
-          position: 'relative', minHeight: 'clamp(200px, 30vh, 380px)',
-        }}>
-          {/* Radial glow emanating FROM the OM outward */}
-          <div style={{
-            position: 'absolute', top: '50%', left: '50%',
-            transform: 'translate(-50%, -50%)',
-            width: 'min(90vw, 700px)', height: 'min(90vw, 700px)',
-            borderRadius: '50%',
-            background: 'radial-gradient(circle, rgba(207,181,59,0.12) 0%, rgba(207,181,59,0.05) 35%, transparent 70%)',
-            pointerEvents: 'none', zIndex: 1,
-          }} />
-
-          {/* OM symbol — clean, unobstructed */}
-          <div style={{
-            position: 'relative', zIndex: 2,
-            fontSize: 'clamp(200px, 40vw, 420px)', lineHeight: 0.85,
-            color: 'rgba(207,181,59,0.14)', fontWeight: 900,
-            pointerEvents: 'none', userSelect: 'none',
-            filter: 'blur(0.3px)',
-            textShadow: '0 0 80px rgba(207,181,59,0.08), 0 0 160px rgba(207,181,59,0.04)',
-          }}>{'\u0950'}</div>
         </div>
       </section>
 
@@ -313,7 +301,7 @@ export default function Landing() {
           <p style={{ fontSize: 11, fontWeight: 700, color: '#CFB53B', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 10 }}>{'\u26A1'} Pro — {'\u20B9'}299/month</p>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(210px, 1fr))', gap: 10 }}>
             {[
-              { icon: MapPin, title: 'Local Spot Rates', desc: 'City-wise buy/sell prices per grade: Delhi, Mumbai, Ahmedabad, Ludhiana, Chennai. Sourced from real market broadcasts.' },
+              { icon: MapPin, title: 'Local Spot Rates', desc: 'City-wise buy/sell prices per grade: Delhi Mandoli, Mumbai, Ahmedabad, Ludhiana, Chennai. Sourced from real market broadcasts.' },
               { icon: Briefcase, title: 'Verified Marketplace', desc: 'Post buy/sell listings, negotiate deals in-app. Every trader verified. Every metal checked. Commission only after both parties agree.' },
               { icon: BarChart3, title: 'Market Analytics', desc: 'Candlestick charts, trend analysis, momentum signals, and LME vs MCX spread tracking.' },
             ].map(({ icon: Icon, title, desc }) => (

@@ -1371,7 +1371,7 @@ function PostForm({ user, onSuccess }) {
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: 12, marginBottom: 12 }}>
         <div>
           <label style={labelStyle}>Location *</label>
-          <input value={location} onChange={e => setLocation(e.target.value)} placeholder="e.g. Mandoli, Delhi" style={inputStyle} />
+          <input value={location} onChange={e => setLocation(e.target.value)} placeholder="e.g. Delhi, Mumbai" style={inputStyle} />
         </div>
         <div>
           <label style={labelStyle}>Contact Number *</label>

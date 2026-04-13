@@ -35,7 +35,7 @@ export default function About() {
           updated throughout the day. Local spot prices from major trading hubs. A verified marketplace
           where every trader and every metal is checked before a deal happens.</p>
           <p>We cover Copper, Aluminium, Zinc, Nickel, Lead, Tin, Brass, and more — ferrous, non-ferrous,
-          scrap, alloys. City-wise local spot rates for Delhi Mandoli, Mumbai, Ahmedabad, Ludhiana, Chennai,
+          scrap, alloys. City-wise local spot rates for Delhi, Mumbai, Ahmedabad, Ludhiana, Chennai,
           and new cities being added every month.</p>
           <p>No more scrolling through broadcast messages. No more stale screenshots. Same rates you trust — better platform.</p>
         </Section>
