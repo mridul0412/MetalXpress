@@ -130,7 +130,7 @@ export default function Analytics() {
   const [period, setPeriod] = useState('30d');
   const [loading, setLoading] = useState(true);
   const [chartLoading, setChartLoading] = useState(false);
-  const [chartType, setChartType] = useState('candle'); // 'candle' | 'line'
+  const [chartType, setChartType] = useState('line'); // 'line' | 'candle'
 
   const isPro = subscription?.plan === 'pro' || subscription?.plan === 'business';
 
@@ -329,26 +329,46 @@ export default function Analytics() {
     ttFmt: (v) => `₹${fmt(v)} /kg`,
   });
 
-  // ── Line / Area chart data (close prices only) ────────────────────────────
-  const lmeLineData = lmeOHLC.map(d => ({ x: new Date(d.date).getTime(), y: parseFloat(d.close.toFixed(2)) }));
-  const mcxLineData = mcxOHLC.map(d => ({ x: new Date(d.date).getTime(), y: parseFloat(d.close.toFixed(2)) }));
+  // ── Line chart data: close line + H-L range band ─────────────────────────
+  // Series 0: rangeArea [low, high] → subtle background band (the "shadows")
+  // Series 1: area close price → gradient glow under the line
+  const lmeLineData  = lmeOHLC.map(d => ({ x: new Date(d.date).getTime(), y: parseFloat(d.close.toFixed(2)) }));
+  const mcxLineData  = mcxOHLC.map(d => ({ x: new Date(d.date).getTime(), y: parseFloat(d.close.toFixed(2)) }));
+  const lmeRangeData = lmeOHLC.map(d => ({ x: new Date(d.date).getTime(), y: [parseFloat(d.low.toFixed(2)), parseFloat(d.high.toFixed(2))] }));
+  const mcxRangeData = mcxOHLC.map(d => ({ x: new Date(d.date).getTime(), y: [parseFloat(d.low.toFixed(2)), parseFloat(d.high.toFixed(2))] }));
 
-  function makeAreaOptions({ yMin, yMax, metalColor, yFmt, unit }) {
+  function makeLineOptions({ yMin, yMax, metalColor, yFmt, unit }) {
+    const sharedAxis = {
+      xaxis: {
+        type: 'datetime',
+        labels: { style: { colors: 'rgba(255,255,255,0.3)', fontSize: '10px', fontFamily: 'monospace' }, datetimeUTC: false },
+        axisBorder: { show: false }, axisTicks: { show: false },
+        crosshairs: { show: true, stroke: { color: 'rgba(255,255,255,0.2)', width: 1 } },
+      },
+      yaxis: {
+        min: yMin, max: yMax,
+        labels: { style: { colors: 'rgba(255,255,255,0.3)', fontSize: '10px', fontFamily: 'monospace' }, formatter: yFmt },
+        crosshairs: { show: true, position: 'front', stroke: { color: 'rgba(255,255,255,0.12)', width: 1, dashArray: 3 } },
+        tooltip: { enabled: true },
+      },
+    };
     return {
       chart: {
-        type: 'area', background: 'transparent',
+        type: 'line',   // mixed — each series overrides with its own type
+        background: 'transparent',
         toolbar: { show: false },
         zoom: { enabled: true, type: 'x', autoScaleYaxis: true },
         animations: { enabled: false },
         fontFamily: '"JetBrains Mono", monospace',
       },
-      stroke: { curve: 'smooth', width: 2 },
-      colors: [metalColor],
+      // [0]=rangeArea band, [1]=area close line
+      stroke: { curve: 'smooth', width: [0, 2] },
+      colors: [metalColor, metalColor],
       fill: {
-        type: 'gradient',
+        type: ['solid', 'gradient'],
+        opacity: [0.09, 1],
         gradient: {
           type: 'vertical',
-          shadeIntensity: 1,
           colorStops: [
             { offset: 0,   color: metalColor, opacity: 0.38 },
             { offset: 55,  color: metalColor, opacity: 0.12 },
@@ -362,23 +382,32 @@ export default function Analytics() {
         xaxis: { lines: { show: false } },
         yaxis: { lines: { show: true } },
       },
-      xaxis: {
-        type: 'datetime',
-        labels: { style: { colors: 'rgba(255,255,255,0.3)', fontSize: '10px', fontFamily: 'monospace' }, datetimeUTC: false },
-        axisBorder: { show: false }, axisTicks: { show: false },
-        crosshairs: { show: true, stroke: { color: 'rgba(255,255,255,0.2)', width: 1 } },
-      },
-      yaxis: {
-        min: yMin, max: yMax,
-        labels: { style: { colors: 'rgba(255,255,255,0.3)', fontSize: '10px', fontFamily: 'monospace' }, formatter: yFmt },
-        crosshairs: { show: true, position: 'front', stroke: { color: 'rgba(255,255,255,0.12)', width: 1, dashArray: 3 } },
-        tooltip: { enabled: true },
-      },
+      ...sharedAxis,
       tooltip: {
         theme: 'dark',
-        x: { format: 'dd MMM yyyy' },
-        y: { formatter: (v) => `${yFmt(v)} ${unit}` },
-        marker: { fillColors: [metalColor] },
+        shared: true,
+        intersect: false,
+        custom: ({ dataPointIndex, w }) => {
+          const rangeSeries = w.globals.initialSeries[0];
+          const closeSeries = w.globals.initialSeries[1];
+          if (!closeSeries?.data?.[dataPointIndex]) return '';
+          const closeVal = closeSeries.data[dataPointIndex].y;
+          const rangeVal = rangeSeries?.data?.[dataPointIndex]?.y;
+          const date = new Date(closeSeries.data[dataPointIndex].x)
+            .toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' });
+          return `<div style="padding:10px 14px;font-family:monospace;font-size:11px;background:#0D1420;border:1px solid rgba(255,255,255,0.1);border-radius:8px;min-width:160px">
+            <div style="font-size:10px;color:rgba(255,255,255,0.4);margin-bottom:6px">${date}</div>
+            <div style="display:grid;grid-template-columns:auto auto;gap:3px 16px">
+              <span style="color:rgba(255,255,255,0.4)">Close</span>
+              <span style="color:#fff;font-weight:700">${yFmt(closeVal)} ${unit}</span>
+              ${rangeVal ? `
+              <span style="color:#34d399">High</span>
+              <span style="color:#34d399;font-weight:700">${yFmt(rangeVal[1])} ${unit}</span>
+              <span style="color:#f87171">Low</span>
+              <span style="color:#f87171;font-weight:700">${yFmt(rangeVal[0])} ${unit}</span>` : ''}
+            </div>
+          </div>`;
+        },
       },
       dataLabels: { enabled: false },
       legend: { show: false },
@@ -386,12 +415,12 @@ export default function Analytics() {
     };
   }
 
-  const lmeAreaOptions = makeAreaOptions({
+  const lmeLineOptions = makeLineOptions({
     yMin: lmeYMin, yMax: lmeYMax, metalColor: color,
     yFmt: (v) => `$${v >= 1000 ? (v / 1000).toFixed(1) + 'K' : v?.toFixed(0)}`,
     unit: '/MT',
   });
-  const mcxAreaOptions = makeAreaOptions({
+  const mcxLineOptions = makeLineOptions({
     yMin: mcxYMin, yMax: mcxYMax, metalColor: color,
     yFmt: (v) => `₹${v >= 1000 ? (v / 1000).toFixed(1) + 'K' : v?.toFixed(0)}`,
     unit: '/kg',
@@ -519,7 +548,7 @@ export default function Analytics() {
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 8px 10px', flexWrap: 'wrap', gap: 8 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
             <p style={{ fontSize: 11, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.08em', color: 'rgba(255,255,255,0.35)', margin: 0 }}>
-              {selectedMetal} — LME {chartType === 'candle' ? 'Candlestick' : 'Area'} ($/MT)
+              {selectedMetal} — LME {chartType === 'candle' ? 'Candlestick' : 'Line'} ($/MT)
             </p>
             {todayOHLC && chartType === 'candle' && (
               <div style={{ display: 'flex', gap: 12, fontSize: 11, fontFamily: 'monospace' }}>
@@ -530,7 +559,7 @@ export default function Analytics() {
           </div>
           {/* Chart type toggle */}
           <div style={{ display: 'flex', gap: 2, background: 'rgba(255,255,255,0.04)', borderRadius: 8, padding: 3 }}>
-            {[{ v: 'candle', label: '🕯 Candle' }, { v: 'line', label: '📈 Area' }].map(opt => (
+            {[{ v: 'line', label: '📈 Line' }, { v: 'candle', label: '🕯 Candle' }].map(opt => (
               <button key={opt.v} onClick={() => setChartType(opt.v)} style={{
                 padding: '5px 12px', borderRadius: 6, fontSize: 10, fontWeight: 700,
                 background: chartType === opt.v ? color : 'transparent',
@@ -555,10 +584,13 @@ export default function Analytics() {
             />
           ) : (
             <ReactApexChart
-              key={`lme-area-${selectedMetal}-${period}`}
-              options={lmeAreaOptions}
-              series={[{ name: `${selectedMetal} LME`, data: lmeLineData }]}
-              type="area" height={380}
+              key={`lme-line-${selectedMetal}-${period}`}
+              options={lmeLineOptions}
+              series={[
+                { name: 'Daily Range', type: 'rangeArea', data: lmeRangeData },
+                { name: `${selectedMetal} Close`, type: 'area', data: lmeLineData },
+              ]}
+              type="line" height={380}
             />
           )
         ) : (
@@ -579,7 +611,7 @@ export default function Analytics() {
         }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 8px 2px' }}>
             <p style={{ fontSize: 11, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.08em', color: 'rgba(255,255,255,0.35)', margin: 0 }}>
-              {selectedMetal} — MCX {chartType === 'candle' ? 'Candlestick' : 'Area'} (₹/kg)
+              {selectedMetal} — MCX {chartType === 'candle' ? 'Candlestick' : 'Line'} (₹/kg)
             </p>
             {mcxOHLC.length > 0 && (() => {
               const last = mcxOHLC[mcxOHLC.length - 1];
@@ -600,10 +632,13 @@ export default function Analytics() {
             />
           ) : (
             <ReactApexChart
-              key={`mcx-area-${selectedMetal}-${period}`}
-              options={mcxAreaOptions}
-              series={[{ name: `${selectedMetal} MCX`, data: mcxLineData }]}
-              type="area" height={280}
+              key={`mcx-line-${selectedMetal}-${period}`}
+              options={mcxLineOptions}
+              series={[
+                { name: 'Daily Range', type: 'rangeArea', data: mcxRangeData },
+                { name: `${selectedMetal} MCX Close`, type: 'area', data: mcxLineData },
+              ]}
+              type="line" height={280}
             />
           )}
         </div>
