@@ -57,7 +57,7 @@ export default function PaywallModal({ isOpen, onClose, trigger = 'local_rates' 
 
   const headline = trigger === 'listing_contact'
     ? 'Unlock Seller Contact'
-    : 'Upgrade to MetalXpress Pro';
+    : 'Upgrade to BhavX Pro';
 
   const subheadline = trigger === 'listing_contact'
     ? 'Subscribe to reveal phone numbers and WhatsApp links for marketplace listings.'

@@ -1,4 +1,4 @@
-# ⚡ MetalXpress
+# ⚡ BhavX
 
 India's Scrap Metal Rate Platform — replacing WhatsApp-based rate broadcasts with a clean, fast, mobile-first web app.
 
@@ -35,7 +35,7 @@ India's Scrap Metal Rate Platform — replacing WhatsApp-based rate broadcasts w
 
 ```bash
 git clone <repo>
-cd MetalXpress
+cd BhavX
 npm run install:all
 ```
 
@@ -48,7 +48,7 @@ cp backend/.env.example backend/.env
 Edit `backend/.env`:
 
 ```env
-DATABASE_URL="postgresql://postgres:password@localhost:5432/metalxpress"
+DATABASE_URL="postgresql://postgres:password@localhost:5432/bhavx"
 REDIS_URL="redis://localhost:6379"
 JWT_SECRET="change-this-in-production"
 ADMIN_PASSWORD="admin123"
@@ -69,7 +69,7 @@ VITE_API_URL=http://localhost:3001/api
 
 ```bash
 # Create the database
-createdb metalxpress
+createdb bhavx
 
 # Run migrations
 cd backend

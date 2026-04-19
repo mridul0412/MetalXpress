@@ -142,7 +142,7 @@ export default function Login() {
             <Shield size={24} color="#000" strokeWidth={2.5} />
           </div>
           <h1 style={{ fontSize: 22, fontWeight: 700, color: '#fff', margin: '0 0 4px' }}>
-            {mode === 'email' ? 'Login to MetalXpress' : mode === 'phone' ? 'Phone Login' : 'Verify OTP'}
+            {mode === 'email' ? 'Login to BhavX' : mode === 'phone' ? 'Phone Login' : 'Verify OTP'}
           </h1>
           <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.4)', margin: 0 }}>
             {mode === 'email' ? 'Enter your email and password' :

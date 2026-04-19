@@ -7,7 +7,7 @@
  * Setup (2 min):
  *  1. Sign up at https://resend.com (free — 3,000 emails/month)
  *  2. API Keys → Create Key → copy it → RESEND_API_KEY
- *  3. For EMAIL_FROM: use "MetalXpress <onboarding@resend.dev>" for testing,
+ *  3. For EMAIL_FROM: use "BhavX <onboarding@resend.dev>" for testing,
  *     or add/verify your own domain at resend.com/domains for production.
  */
 
@@ -18,7 +18,7 @@ const isConfigured = () => {
   return key && key !== 'your_resend_api_key';
 };
 
-const FROM = () => process.env.EMAIL_FROM || 'MetalXpress <onboarding@resend.dev>';
+const FROM = () => process.env.EMAIL_FROM || 'BhavX <onboarding@resend.dev>';
 const FRONTEND = () => process.env.FRONTEND_URL || 'http://localhost:5173';
 
 // ── Core sender ───────────────────────────────────────────────────────────────
@@ -54,7 +54,7 @@ function baseTemplate(content) {
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>MetalXpress</title>
+    <title>BhavX</title>
   </head>
   <body style="margin:0;padding:0;background:#080E1A;font-family:monospace,Courier New;">
     <table width="100%" cellpadding="0" cellspacing="0" style="background:#080E1A;padding:40px 16px;">
@@ -66,10 +66,10 @@ function baseTemplate(content) {
             <tr>
               <td style="background:linear-gradient(135deg,#0D1420,#1a2235);padding:28px 32px;text-align:center;border-bottom:1px solid rgba(207,181,59,0.2);">
                 <div style="font-size:22px;font-weight:700;letter-spacing:2px;color:#CFB53B;font-family:monospace;">
-                  ⚙ METALXPRESS
+                  ⚡ BHAVX
                 </div>
                 <div style="font-size:11px;color:rgba(207,181,59,0.5);margin-top:4px;letter-spacing:1px;">
-                  INDIA'S SCRAP METAL RATE PLATFORM
+                  INDIA'S REAL-TIME METAL RATE PLATFORM
                 </div>
               </td>
             </tr>
@@ -85,7 +85,7 @@ function baseTemplate(content) {
             <tr>
               <td style="padding:20px 32px;border-top:1px solid rgba(255,255,255,0.06);text-align:center;">
                 <p style="margin:0;font-size:11px;color:rgba(255,255,255,0.2);font-family:monospace;">
-                  MetalXpress · India's Real-Time Scrap Metal Platform<br/>
+                  BhavX · India's Real-Time Metal Rate Platform<br/>
                   If you didn't request this, you can safely ignore this email.
                 </p>
               </td>
@@ -110,7 +110,7 @@ async function sendVerificationEmail(email, name, token) {
     </h2>
     <p style="margin:0 0 24px;font-size:14px;color:rgba(255,255,255,0.5);line-height:1.6;">
       Hi ${name || 'Trader'},<br/><br/>
-      Welcome to MetalXpress! Click the button below to verify your email and activate your account.
+      Welcome to BhavX! Click the button below to verify your email and activate your account.
       This link expires in <strong style="color:#CFB53B;">24 hours</strong>.
     </p>
 
@@ -130,7 +130,7 @@ async function sendVerificationEmail(email, name, token) {
 
   return sendEmail({
     to: email,
-    subject: 'Verify your MetalXpress email address',
+    subject: 'Verify your BhavX email address',
     html,
   });
 }
@@ -146,7 +146,7 @@ async function sendPasswordResetEmail(email, name, token) {
     </h2>
     <p style="margin:0 0 24px;font-size:14px;color:rgba(255,255,255,0.5);line-height:1.6;">
       Hi ${name || 'Trader'},<br/><br/>
-      We received a request to reset your MetalXpress password. Click the button below to choose a new password.
+      We received a request to reset your BhavX password. Click the button below to choose a new password.
       This link expires in <strong style="color:#CFB53B;">1 hour</strong>.
     </p>
 
@@ -173,7 +173,7 @@ async function sendPasswordResetEmail(email, name, token) {
 
   return sendEmail({
     to: email,
-    subject: 'Reset your MetalXpress password',
+    subject: 'Reset your BhavX password',
     html,
   });
 }

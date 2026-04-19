@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom';
+import { BRAND } from '../config/brand';
 export default function Footer() {
   return (
     <footer style={{
@@ -28,7 +29,7 @@ export default function Footer() {
                 <span style={{ fontSize: 17, color: '#080E1A', fontWeight: 800, lineHeight: 1, marginTop: -1 }}>ॐ</span>
               </div>
               <span style={{ fontSize: 13, fontWeight: 700, letterSpacing: '0.1em', color: '#CFB53B' }}>
-                METALXPRESS
+                {BRAND.name.toUpperCase()}
               </span>
             </div>
             <p style={{ fontSize: 11, color: 'rgba(255,255,255,0.3)', lineHeight: 1.5, margin: 0 }}>
@@ -81,7 +82,7 @@ export default function Footer() {
           display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 8,
         }}>
           <p style={{ fontSize: 10, color: 'rgba(255,255,255,0.2)', margin: 0 }}>
-            &copy; {new Date().getFullYear()} MetalXpress. All rights reserved.
+            &copy; {new Date().getFullYear()} BhavX. All rights reserved.
           </p>
           <p style={{ fontSize: 10, color: 'rgba(255,255,255,0.2)', margin: 0 }}>
             Made in India 🇮🇳

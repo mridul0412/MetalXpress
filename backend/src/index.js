@@ -120,7 +120,7 @@ app.use((err, req, res, next) => {
 });
 
 app.listen(PORT, () => {
-  console.log(`MetalXpress backend running on port ${PORT}`);
+  console.log(`BhavX backend running on port ${PORT}`);
 });
 
 module.exports = app;

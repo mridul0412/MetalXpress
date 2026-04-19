@@ -57,7 +57,7 @@ async function sendOTP(phone, otp) {
     const params = new URLSearchParams({
       authkey,
       mobile: `91${phone}`,
-      message: `Your MetalXpress OTP is ${otp}. Valid for 10 minutes. Do not share.`,
+      message: `Your BhavX OTP is ${otp}. Valid for 10 minutes. Do not share.`,
       sender: 'MTLXPR',
       otp,
       otp_expiry: 10,

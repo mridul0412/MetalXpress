@@ -91,7 +91,7 @@ export default function Admin() {
             </div>
             <span style={{ fontSize: 13, fontWeight: 700, color: 'rgba(255,255,255,0.7)',
               letterSpacing: '0.08em', textTransform: 'uppercase' }}>
-              MetalXpress Admin
+              BhavX Admin
             </span>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
@@ -448,7 +448,7 @@ function DisputesAdmin() {
 }
 
 // ── Unified Smart Parser ──────────────────────────────────────────────────────
-// Accepts ANY MetalXpress broadcast.
+// Accepts ANY BhavX broadcast.
 // After parsing, auto-detects: local spot rates vs LME/MCX global broadcast.
 // Routes save to the right endpoint automatically — no manual selection needed.
 
@@ -584,7 +584,7 @@ function UnifiedParserPanel() {
       <textarea
         value={message}
         onChange={e => { setMessage(e.target.value); setPreview(null); setResolvedHub(null); setStatus(null); }}
-        placeholder={'Paste any MetalXpress WhatsApp broadcast here…\n\nWorks for both:\n• LME/MCX/Forex global broadcast\n• City local spot rates (Delhi, Mumbai, etc.)'}
+        placeholder={'Paste any BhavX WhatsApp broadcast here…\n\nWorks for both:\n• LME/MCX/Forex global broadcast\n• City local spot rates (Delhi, Mumbai, etc.)'}
         rows={9}
         style={{ width: '100%', padding: '12px', borderRadius: 10, fontSize: 12,
           fontFamily: 'monospace', background: 'rgba(255,255,255,0.04)',

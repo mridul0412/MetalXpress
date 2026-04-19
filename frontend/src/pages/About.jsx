@@ -18,7 +18,7 @@ export default function About() {
           background: 'linear-gradient(135deg, #CFB53B, #E8CC5A, #A89028)',
           WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent',
         }}>
-          About MetalXpress
+          About BhavX
         </h1>
         <p style={{ fontSize: 15, fontWeight: 700, color: '#fff', margin: '0 0 8px' }}>
           India's Biggest Metal Trading Platform
@@ -31,7 +31,7 @@ export default function About() {
       {/* Content sections */}
       <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
         <Section icon={<Zap size={18} color="#CFB53B" />} title="What We Do">
-          <p>MetalXpress brings everything a metal trader needs into one platform. Live LME & MCX rates
+          <p>BhavX brings everything a metal trader needs into one platform. Live LME & MCX rates
           updated throughout the day. Local spot prices from major trading hubs. A verified marketplace
           where every trader and every metal is checked before a deal happens.</p>
           <p>We cover Copper, Aluminium, Zinc, Nickel, Lead, Tin, Brass, and more — ferrous, non-ferrous,
@@ -51,7 +51,7 @@ export default function About() {
           <p>Indian metal trading runs on trust, speed, and accurate information. We're building the platform
           this industry deserves — starting with live rates, expanding into a full verified marketplace,
           price alerts, and advanced analytics.</p>
-          <p>MetalXpress is built in India, for Indian traders. From tier-1 cities to tier-3 mandis —
+          <p>BhavX is built in India, for Indian traders. From tier-1 cities to tier-3 mandis —
           wherever metal is traded, we're there.</p>
         </Section>
       </div>

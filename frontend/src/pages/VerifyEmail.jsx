@@ -97,7 +97,7 @@ export default function VerifyEmail() {
       icon: <CheckCircle size={28} color="#34d399" />,
       iconBg: 'rgba(52,211,153,0.1)', iconBorder: 'rgba(52,211,153,0.3)',
       title: 'Email verified!',
-      body: 'Your MetalXpress account is now fully active. You can access all features.',
+      body: 'Your BhavX account is now fully active. You can access all features.',
     },
     error: {
       icon: <AlertCircle size={28} color="#f87171" />,
@@ -160,7 +160,7 @@ export default function VerifyEmail() {
                 border: 'none', cursor: 'pointer', fontFamily: 'monospace',
               }}
             >
-              Go to MetalXpress →
+              Go to BhavX →
             </button>
           )}
 

@@ -136,7 +136,7 @@ const FOREX_RATES = [
 ];
 
 async function main() {
-  console.log('🌱 Seeding MetalXpress database...');
+  console.log('🌱 Seeding BhavX database...');
 
   // Clear existing data
   await prisma.rating.deleteMany();

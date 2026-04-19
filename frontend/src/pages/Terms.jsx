@@ -23,7 +23,7 @@ export default function Terms() {
           Key Points
         </p>
         <ul style={{ margin: 0, paddingLeft: 18, listStyleType: 'disc' }}>
-          <li>MetalXpress is a <strong style={{ color: '#fff' }}>facilitator</strong>, not a broker, mediator, or guarantor of deals.</li>
+          <li>BhavX is a <strong style={{ color: '#fff' }}>facilitator</strong>, not a broker, mediator, or guarantor of deals.</li>
           <li>Commission of <strong style={{ color: '#fff' }}>0.1%</strong> is charged on agreed deal value and is <strong style={{ color: '#fff' }}>non-refundable</strong> once a connection is made, except in cases of confirmed fraud.</li>
           <li><strong style={{ color: '#fff' }}>KYC verification</strong> (Aadhaar/PAN) is required before posting listings on the marketplace.</li>
           <li>All users must be <strong style={{ color: '#fff' }}>18 years or older</strong> and based in India.</li>
@@ -42,7 +42,7 @@ export default function Terms() {
         {[
           ['#acceptance', '1. Acceptance of Terms'],
           ['#definitions', '2. Definitions'],
-          ['#role', '3. MetalXpress\'s Role'],
+          ['#role', '3. BhavX\'s Role'],
           ['#kyc', '4. User Accounts & KYC'],
           ['#marketplace', '5. Marketplace Rules'],
           ['#commission', '6. Commission Policy'],
@@ -76,18 +76,18 @@ export default function Terms() {
         {/* 1 */}
         <LegalSection id="acceptance" title="1. Acceptance of Terms">
           <p>
-            By accessing, browsing, or using MetalXpress (the "Platform"), whether through our website
+            By accessing, browsing, or using BhavX (the "Platform"), whether through our website
             or any associated services, you acknowledge that you have read, understood, and agree to be
             bound by these Terms of Service ("Terms"). If you do not agree to these Terms, you must
             immediately stop using the Platform.
           </p>
           <p>
-            You must be at least <strong style={{ color: '#fff' }}>18 years of age</strong> to use MetalXpress.
+            You must be at least <strong style={{ color: '#fff' }}>18 years of age</strong> to use BhavX.
             By creating an account, you represent and warrant that you are 18 or older, are legally capable
             of entering into binding agreements, and are accessing the Platform from within India.
           </p>
           <p>
-            MetalXpress reserves the right to update these Terms at any time. Continued use of the Platform
+            BhavX reserves the right to update these Terms at any time. Continued use of the Platform
             after changes are posted constitutes acceptance of the revised Terms.
           </p>
         </LegalSection>
@@ -95,27 +95,27 @@ export default function Terms() {
         {/* 2 */}
         <LegalSection id="definitions" title="2. Definitions">
           <DefinitionList items={[
-            ['Platform', 'MetalXpress, including the website, mobile web application, backend services, and all associated features.'],
+            ['Platform', 'BhavX, including the website, mobile web application, backend services, and all associated features.'],
             ['Commission', 'A fee of 0.1% of the agreed deal value, charged to the buyer upon successful negotiation, before contact details are shared.'],
             ['Deal', 'A negotiation between a buyer and a seller conducted through the Platform\'s in-app offer system, progressing through the statuses: negotiating, agreed, paid, connected, and completed.'],
             ['Listing', 'A sell offer posted by a user on the Marketplace, specifying metal type, grade, quantity, location, price, and optionally photos.'],
             ['Dispute', 'A formal complaint raised by either party within 7 days of connection, requesting admin review of a deal.'],
             ['KYC', 'Know Your Customer verification, requiring government-issued identification (Aadhaar or PAN) to validate a user\'s identity before they can post listings.'],
             ['Connection', 'The point at which contact details (phone number, email) of both parties are revealed after commission payment.'],
-            ['Parties', 'The buyer and the seller involved in a specific Deal, excluding MetalXpress.'],
+            ['Parties', 'The buyer and the seller involved in a specific Deal, excluding BhavX.'],
           ]} />
         </LegalSection>
 
         {/* 3 */}
-        <LegalSection id="role" title="3. MetalXpress's Role">
+        <LegalSection id="role" title="3. BhavX's Role">
           <p style={{ color: '#CFB53B', fontWeight: 600, marginBottom: 12, fontSize: 12 }}>
-            MetalXpress is a facilitator and connection platform. We are NOT a broker, mediator,
+            BhavX is a facilitator and connection platform. We are NOT a broker, mediator,
             agent, or guarantor of any transaction.
           </p>
           <p>
             Our role is limited to providing a digital venue where verified metal traders can
             discover counterparties, negotiate deal terms through structured in-app offers, and
-            connect after commission payment. Specifically, MetalXpress does <strong style={{ color: '#fff' }}>not</strong>:
+            connect after commission payment. Specifically, BhavX does <strong style={{ color: '#fff' }}>not</strong>:
           </p>
           <BulletList items={[
             'Inspect, test, weigh, or verify the quality, grade, or quantity of any material listed or traded.',
@@ -129,7 +129,7 @@ export default function Terms() {
             Once a connection is made and contact details are shared, the responsibility for
             inspecting material, negotiating final terms, arranging logistics, and completing
             payment lies <strong style={{ color: '#fff' }}>entirely with the parties involved</strong>.
-            MetalXpress bears no liability for the outcome of any transaction.
+            BhavX bears no liability for the outcome of any transaction.
           </p>
         </LegalSection>
 
@@ -149,21 +149,21 @@ export default function Terms() {
           <p><strong style={{ color: '#fff' }}>KYC Requirements</strong></p>
           <p>
             Before posting any listing on the Marketplace, users must complete KYC verification by
-            providing a valid Aadhaar card or PAN card. KYC verification is reviewed by MetalXpress
+            providing a valid Aadhaar card or PAN card. KYC verification is reviewed by BhavX
             administrators.
           </p>
           <BulletList items={[
             'Users are responsible for maintaining the security of their login credentials.',
             'All information provided during registration and KYC must be accurate, current, and complete.',
-            'Submission of forged, stolen, or falsified KYC documents will result in an immediate and permanent account ban, and MetalXpress reserves the right to report such activity to appropriate authorities.',
-            'Users must notify MetalXpress promptly of any unauthorized access to their account.',
+            'Submission of forged, stolen, or falsified KYC documents will result in an immediate and permanent account ban, and BhavX reserves the right to report such activity to appropriate authorities.',
+            'Users must notify BhavX promptly of any unauthorized access to their account.',
           ]} />
         </LegalSection>
 
         {/* 5 */}
         <LegalSection id="marketplace" title="5. Marketplace Rules">
           <p>
-            All listings posted on the MetalXpress Marketplace must comply with the following rules.
+            All listings posted on the BhavX Marketplace must comply with the following rules.
             Violations may result in listing removal, account suspension, or permanent ban.
           </p>
           <p><strong style={{ color: '#fff' }}>Listing Accuracy</strong></p>
@@ -181,7 +181,7 @@ export default function Terms() {
             'Inflating or deflating listed quantities or prices to manipulate marketplace perception.',
           ]} />
           <p>
-            All listings are subject to admin verification before they become publicly visible. MetalXpress
+            All listings are subject to admin verification before they become publicly visible. BhavX
             reserves the right to remove any listing at its sole discretion, with or without prior notice.
           </p>
         </LegalSection>
@@ -189,7 +189,7 @@ export default function Terms() {
         {/* 6 */}
         <LegalSection id="commission" title="6. Commission Policy">
           <p>
-            MetalXpress charges a commission of <strong style={{ color: '#CFB53B' }}>0.1%</strong> of the
+            BhavX charges a commission of <strong style={{ color: '#CFB53B' }}>0.1%</strong> of the
             agreed deal value. The agreed deal value is calculated as:
           </p>
           <div style={{
@@ -233,17 +233,17 @@ export default function Terms() {
             <><strong style={{ color: '#fff' }}>Initiate Dispute</strong> — From the deal detail screen, select "Report Issue / Raise Dispute." Disputes must be raised within <strong style={{ color: '#fff' }}>7 days</strong> of the connection date. Disputes filed after this window will not be considered.</>,
             <><strong style={{ color: '#fff' }}>Select Category</strong> — Choose the category that best describes your issue (e.g., seller unresponsive, material mismatch, suspected fraud). The selected category determines refund eligibility as per the Refund Policy above.</>,
             <><strong style={{ color: '#fff' }}>Provide Evidence</strong> — Upload supporting evidence including: photographs of received material, WhatsApp or messaging screenshots, delivery receipts, weighment slips, or any other relevant documentation. A minimum of one piece of evidence is required.</>,
-            <><strong style={{ color: '#fff' }}>Admin Review</strong> — A MetalXpress administrator will review the dispute, evidence, and both parties' accounts within <strong style={{ color: '#fff' }}>48 hours</strong> of filing.</>,
+            <><strong style={{ color: '#fff' }}>Admin Review</strong> — A BhavX administrator will review the dispute, evidence, and both parties' accounts within <strong style={{ color: '#fff' }}>48 hours</strong> of filing.</>,
             <><strong style={{ color: '#fff' }}>Resolution</strong> — Based on the review, the admin will apply one of the following resolutions: full refund and seller action, deal marked as completed, or deal cancelled. The resolution will align with the Refund Policy table.</>,
             <><strong style={{ color: '#fff' }}>Escrow Hold</strong> — During the review period, the commission amount is held in escrow and not settled until a resolution is reached.</>,
-            <><strong style={{ color: '#fff' }}>Final Decision</strong> — The admin's resolution decision is final and binding. MetalXpress does not offer an appeals process for dispute resolutions.</>,
+            <><strong style={{ color: '#fff' }}>Final Decision</strong> — The admin's resolution decision is final and binding. BhavX does not offer an appeals process for dispute resolutions.</>,
           ]} />
         </LegalSection>
 
         {/* 9 */}
         <LegalSection id="ban-policy" title="9. Ban & Suspension Policy">
           <p>
-            MetalXpress enforces the following account restrictions to maintain a trustworthy
+            BhavX enforces the following account restrictions to maintain a trustworthy
             marketplace for all traders:
           </p>
           <p><strong style={{ color: '#fff' }}>Automatic Cooldown</strong></p>
@@ -269,7 +269,7 @@ export default function Terms() {
           <p>
             Users may appeal a ban or suspension by emailing <span style={{ color: '#CFB53B' }}>support@metalxpress.in</span> within
             30 days of the action. Appeals must include a written explanation and any supporting evidence.
-            MetalXpress will review and respond within 10 business days. The appeal decision is final.
+            BhavX will review and respond within 10 business days. The appeal decision is final.
           </p>
         </LegalSection>
 
@@ -284,14 +284,14 @@ export default function Terms() {
             'Ratings provide transparency and help other traders make informed decisions about potential counterparties.',
             'Rating manipulation, including soliciting fake positive reviews, posting retaliatory negative reviews, or using multiple accounts to inflate ratings, will result in account suspension.',
             'Users cannot delete or edit their own ratings once submitted.',
-            'MetalXpress reserves the right to remove ratings that contain abusive language, personal threats, or irrelevant content.',
+            'BhavX reserves the right to remove ratings that contain abusive language, personal threats, or irrelevant content.',
           ]} />
         </LegalSection>
 
         {/* 11 */}
         <LegalSection id="liability" title="11. Limitation of Liability">
           <p>
-            To the maximum extent permitted by applicable law, MetalXpress, its founders, employees,
+            To the maximum extent permitted by applicable law, BhavX, its founders, employees,
             and affiliates shall not be held liable for:
           </p>
           <BulletList items={[
@@ -304,7 +304,7 @@ export default function Terms() {
             'Unauthorized access to your account resulting from your failure to secure your credentials.',
           ]} />
           <p>
-            In any event, MetalXpress's total aggregate liability to you for all claims arising
+            In any event, BhavX's total aggregate liability to you for all claims arising
             from or related to the Platform shall not exceed the <strong style={{ color: '#fff' }}>total
             commission amount paid by you</strong> in the 12-month period preceding the claim.
           </p>
@@ -317,13 +317,13 @@ export default function Terms() {
         {/* 12 */}
         <LegalSection id="responsibilities" title="12. User Responsibilities">
           <p>
-            As a user of MetalXpress, you agree to the following responsibilities:
+            As a user of BhavX, you agree to the following responsibilities:
           </p>
           <BulletList items={[
             'Provide accurate, truthful, and complete information in your profile, listings, and communications.',
             'Complete all deals negotiated through the Platform in good faith.',
             'Not circumvent the Platform to avoid commission payment (e.g., exchanging contact details outside the app before paying commission, using coded messages in offer text).',
-            'Report any suspicious activity, fraudulent listings, or terms violations to MetalXpress promptly.',
+            'Report any suspicious activity, fraudulent listings, or terms violations to BhavX promptly.',
             'Keep your KYC documents and profile information current and up to date.',
             'Not use the Platform for any unlawful purpose or in violation of any applicable Indian law or regulation.',
             'Respect other users and maintain professional conduct in all negotiations and communications.',
@@ -341,7 +341,7 @@ export default function Terms() {
             margin: '12px 0', border: '1px solid rgba(207,181,59,0.15)',
           }}>
             <p style={{ margin: '0 0 4px', color: '#CFB53B', fontWeight: 600, fontSize: 12 }}>
-              MetalXpress Support
+              BhavX Support
             </p>
             <p style={{ margin: 0, fontSize: 12, color: 'rgba(255,255,255,0.6)' }}>
               Email: <span style={{ color: '#CFB53B' }}>support@metalxpress.in</span>

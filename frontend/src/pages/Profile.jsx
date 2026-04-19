@@ -223,7 +223,7 @@ export default function Profile() {
           {/* Privacy promise — professional, no government/tax mentions */}
           <div style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 10, padding: '12px 16px', marginBottom: 16 }}>
             <p style={{ fontSize: 11, color: 'rgba(255,255,255,0.5)', margin: 0, lineHeight: 1.7 }}>
-              🛡️ <strong style={{ color: 'rgba(255,255,255,0.7)' }}>Your data is secure.</strong> Identity details are stored with bank-grade encryption and used solely for trader verification on MetalXpress. We never share your information with external parties.
+              🛡️ <strong style={{ color: 'rgba(255,255,255,0.7)' }}>Your data is secure.</strong> Identity details are stored with bank-grade encryption and used solely for trader verification on BhavX. We never share your information with external parties.
             </p>
           </div>
 

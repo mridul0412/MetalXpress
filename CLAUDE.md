@@ -1,7 +1,9 @@
-# MetalXpress — Project Context & Requirements
+# BhavX — Project Context & Requirements
 
 ## What This App Is
-MetalXpress is a real-time metal intelligence platform for Indian traders. It replaces WhatsApp broadcast messages with a clean, organized mobile-first web app. Features: live LME/MCX rates, local spot rates by city, verified B2B marketplace with negotiation flow, and pro analytics. Admin pastes WhatsApp messages to update local rates.
+BhavX (formerly MetalXpress) is a real-time metal intelligence platform for Indian traders. It replaces WhatsApp broadcast messages with a clean, organized mobile-first web app. Features: live LME/MCX rates, local spot rates by city, verified B2B marketplace with negotiation flow, and pro analytics. Admin pastes WhatsApp messages to update local rates.
+
+**Brand**: BhavX | **Domain**: bhavx.com + bhavx.in | **Central config**: `frontend/src/config/brand.js`
 
 ## Owner Preferences (MUST FOLLOW)
 - **Accent**: Gold (`#CFB53B`) + Black (`#0D0D0D`). Blue only for secondary actions.
@@ -38,7 +40,7 @@ MetalXpress is a real-time metal intelligence platform for Indian traders. It re
 ```
 
 ## Current Date
-2026-04-14
+2026-04-20
 
 ## Session Log
 - **2026-03-19**: Initial UI overhaul (Replit-quality design, LME/MCX panel, hub selector, Login, Admin, Marketplace)
@@ -56,6 +58,55 @@ MetalXpress is a real-time metal intelligence platform for Indian traders. It re
 - **2026-04-12 (session 12)**: Bug fixes, cleanup, Analytics page, mobile responsiveness — see Session 12 details below
 - **2026-04-13 (session 13)**: Analytics full redesign (ApexCharts candlestick+line, cron price feed, OHLC, chart toggle, period H/L), landing page redesign (marketing page, FAQ, conditional nav), PRO gates (Analytics+Marketplace), signup simplification (removed KYC step), rebrand scrap→metal — see Session 13 details below
 - **2026-04-14 (session 14)**: Landing page copy overhaul (new headline, hero, FAQ x11, 2-tier pricing), About page rewrite, font standardization, PaywallModal simplified, "Mandoli" removed — see Session 14 details below
+- **2026-04-20 (session 15)**: Full brand rename MetalXpress → BhavX, central brand config created, domains bhavx.com + bhavx.in purchased — see Session 15 details below
+
+## Session 15 Changes (2026-04-20) — Full Detail
+
+### Brand Rename: MetalXpress → BhavX
+- **Rationale**: Owner bought bhavx.com + bhavx.in. "Bhav" (भाव) = "price/rate" in Hindi trading vernacular ("aaj ka bhav kya hai?") — exact word traders use daily. Numerology: BhavX = Sun (1), same as Google/Tata/Disney. MetalXpress = Ketu (7), weakest for commerce.
+- **Domain**: bhavx.com (primary), bhavx.in (India). Registered on GoDaddy; transfer to Cloudflare recommended before April 2027 renewal.
+- **Scope**: All 33 files updated — `MetalXpress` → `BhavX`, `METALXPRESS` → `BHAVX` everywhere in source code
+
+### Central Brand Config (NEW)
+- **File**: `frontend/src/config/brand.js`
+- **Purpose**: Single source of truth for brand name — future rebrand = edit one file
+- **Contents**: `name`, `symbol` (⚡), `domain`, `email`, `tagline`, `description`, `fullTitle`, `metaDescription`
+- **Imported by**: `Navbar.jsx` and `Footer.jsx` use `BRAND.name.toUpperCase()` dynamically; `Landing.jsx` imports for future use
+
+### Navbar Update
+- Desktop: `METALXPRESS` → `{BRAND.name.toUpperCase()}` (dynamic from config)
+- Mobile abbreviation: `MX⚡` → `BX⚡`
+
+### Footer Update
+- Brand display: `METALXPRESS` → `{BRAND.name.toUpperCase()}` (dynamic from config)
+- Copyright line: "BhavX. All rights reserved."
+
+### Email Templates Update (emailService.js)
+- Email header: `⚙ METALXPRESS` → `⚡ BHAVX`
+- Email subtitle: "INDIA'S SCRAP METAL RATE PLATFORM" → "INDIA'S REAL-TIME METAL RATE PLATFORM"
+- Email footer: "BhavX · India's Real-Time Metal Rate Platform"
+- Subject lines, body text, welcome message all updated to BhavX
+
+### index.html Update
+- Title: "MetalXpress ⚡ Real-Time Metal Intelligence for India" → "BhavX ⚡ Real-Time Metal Intelligence for India"
+- Meta description updated to BhavX
+
+### Files Modified (Session 15)
+- `frontend/src/config/brand.js` — NEW: central brand config
+- `frontend/src/components/Navbar.jsx` — BRAND import, dynamic name, mobile abbreviation BX⚡
+- `frontend/src/components/Footer.jsx` — BRAND import, dynamic name
+- `frontend/src/components/LocalRatesGate.jsx` — text updated
+- `frontend/src/components/PaywallModal.jsx` — text updated
+- `frontend/src/pages/Landing.jsx` — BRAND import + all text updated
+- `frontend/src/pages/About.jsx`, `Admin.jsx`, `Login.jsx`, `Marketplace.jsx`, `Profile.jsx`, `ResetPassword.jsx`, `Terms.jsx`, `VerifyEmail.jsx`, `Contact.jsx`, `Privacy.jsx`, `Home.jsx`, `Signup.jsx` — all text updated
+- `frontend/index.html` — title + meta description
+- `backend/src/services/emailService.js` — email header, footer, subjects, body
+- `backend/src/services/smsService.js`, `backend/src/index.js`, `backend/src/routes/auth.js`, `backend/src/routes/marketplace.js`, `backend/src/prisma/seed.js` — text updated
+- `backend/.env.example`, `README.md`, `.vscode/tasks.json` — text updated
+- `CLAUDE.md` — renamed to BhavX, session 15 added, date updated to 2026-04-20
+
+### Backup Files (intentionally NOT updated)
+- `frontend/src/pages/Landing.backup.jsx` and `Landing.backup-v1.jsx` — historical rollback references, kept with old name
 
 ## Session 14 Changes (2026-04-14) — Full Detail
 
@@ -686,7 +737,7 @@ Grade names updated to match actual WhatsApp message format (so `normGrade` matc
 ### Resend Sandbox Limitation (Important)
 - Resend free tier with `onboarding@resend.dev` can ONLY send to the email registered on your Resend account
 - To send to any email → add a domain at resend.com/domains (takes ~5 min)
-- Production: set `EMAIL_FROM="MetalXpress <noreply@yourdomain.com>"` after domain verification
+- Production: set `EMAIL_FROM="BhavX <noreply@bhavx.com>"` after domain verification at resend.com
 
 ### Files Modified (Session 11)
 - `frontend/src/pages/VerifyEmail.jsx` — StrictMode guard (`verifiedRef`), refreshUser try/catch, `resendError` fix, cooldown timer, removed Skip button
@@ -983,7 +1034,7 @@ Used in both Signup.jsx and Profile.jsx:
 - `backend/uploads/` — 11 real scrap metal photos + 2 industrial videos (local serving)
 - `backend/src/prisma/seed.js` — Updated to use local `/uploads/` paths (not CDN), proper metal-matched images per listing
 
-## Current Status (as of 2026-04-12, session 12)
+## Current Status (as of 2026-04-20, session 15)
 - **Auth**: Unified signup (email+phone+OTP mandatory), email+password login, phone OTP login, Google OAuth — prevents duplicate accounts. Phone normalization handles +91 prefix, spaces, dashes.
 - **Subscription**: Pro test user `test@metalxpress.in` / `test1234`, Admin user `admin@metalxpress.in` / `admin1234` — pro plan via PRO_EMAILS env var
 - **Landing**: Hero section for non-logged-in users with feature cards and CTAs

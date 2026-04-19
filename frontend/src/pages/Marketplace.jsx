@@ -651,7 +651,7 @@ function OfferModal({ listing: l, onClose, onSuccess, isOnCooldown, cooldownDate
           <input type="checkbox" checked={termsChecked} onChange={e => setTermsChecked(e.target.checked)}
             style={{ marginTop: 3, accentColor: '#CFB53B', width: 16, height: 16, flexShrink: 0 }} />
           <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.5)', lineHeight: 1.6, fontFamily: 'monospace' }}>
-            I agree to MetalXpress <a href="/terms" target="_blank" style={{ color: '#CFB53B' }}>Terms of Service</a>, the{' '}
+            I agree to BhavX <a href="/terms" target="_blank" style={{ color: '#CFB53B' }}>Terms of Service</a>, the{' '}
             <a href="/terms#commission" target="_blank" style={{ color: '#CFB53B' }}>0.1% commission policy</a> (charged only after mutual agreement), and the{' '}
             <a href="/terms#refund-policy" target="_blank" style={{ color: '#CFB53B' }}>Refund Policy</a>.
           </span>
@@ -1455,7 +1455,7 @@ function PostForm({ user, onSuccess }) {
         <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.5)', lineHeight: 1.6, fontFamily: 'monospace' }}>
           I confirm this listing is accurate and I agree to the{' '}
           <a href="/terms" target="_blank" style={{ color: '#CFB53B' }}>Terms of Service</a>,{' '}
-          <a href="/terms#dispute" target="_blank" style={{ color: '#CFB53B' }}>Dispute Policy</a>, and that MetalXpress may verify this listing before publishing.
+          <a href="/terms#dispute" target="_blank" style={{ color: '#CFB53B' }}>Dispute Policy</a>, and that BhavX may verify this listing before publishing.
         </span>
       </label>
 
@@ -1538,7 +1538,7 @@ function KycGate({ user, navigate }) {
       }}>
         <p style={{ fontSize: 11, color: 'rgba(255,255,255,0.45)', margin: 0, lineHeight: 1.7 }}>
           Your identity details are stored securely with bank-grade encryption. We use PAN only for trader verification —
-          your data is never shared with external parties or used for any purpose beyond confirming your identity on MetalXpress.
+          your data is never shared with external parties or used for any purpose beyond confirming your identity on BhavX.
         </p>
       </div>
 

@@ -47,7 +47,7 @@ export default function LocalRatesGate({ children }) {
         </h3>
         <p style={{ fontSize: 12, color: 'rgba(255,255,255,0.4)', margin: '0 0 16px', maxWidth: 280, lineHeight: 1.4 }}>
           {user
-            ? 'Get access to real-time local spot rates, price analytics, and more with MetalXpress Pro.'
+            ? 'Get access to real-time local spot rates, price analytics, and more with BhavX Pro.'
             : 'Create a free account to explore. Upgrade to Pro for full access to local spot rates across all cities.'}
         </p>
 

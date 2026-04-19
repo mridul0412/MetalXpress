@@ -2,6 +2,7 @@ import { Link, useLocation } from 'react-router-dom';
 import { Activity, Bell, Briefcase, Settings, BarChart3 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import LMEStrip from './LMEStrip';
+import { BRAND } from '../config/brand';
 
 const NAV_ITEMS = [
   { href: '/',            label: 'Rates',     icon: Activity   },
@@ -34,8 +35,8 @@ export default function Navbar() {
             }}>
               <span style={{ fontSize: 20, color: '#080E1A', fontWeight: 800, lineHeight: 1, marginTop: -1 }}>ॐ</span>
             </div>
-            <span className="hidden sm:block text-base font-bold tracking-widest metallic-text">METALXPRESS</span>
-            <span className="sm:hidden text-base font-bold tracking-widest metallic-text">MX⚡</span>
+            <span className="hidden sm:block text-base font-bold tracking-widest metallic-text">{BRAND.name.toUpperCase()}</span>
+            <span className="sm:hidden text-base font-bold tracking-widest metallic-text">BX⚡</span>
           </Link>
 
           {/* Desktop nav — app nav for logged-in, marketing links for visitors */}

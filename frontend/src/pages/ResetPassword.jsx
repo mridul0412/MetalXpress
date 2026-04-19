@@ -150,7 +150,7 @@ export default function ResetPassword() {
                 Set new password
               </h1>
               <p style={{ margin: '0 0 28px', fontSize: 14, color: 'rgba(255,255,255,0.45)', lineHeight: 1.6 }}>
-                Choose a strong password for your MetalXpress account.
+                Choose a strong password for your BhavX account.
               </p>
 
               {error && (

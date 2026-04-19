@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
+import { BRAND } from '../config/brand';
 import {
   TrendingUp, MapPin, BarChart3, Bell, ChevronRight,
   CheckCircle, ArrowRight, Users, Briefcase, Shield, ChevronDown,
@@ -13,8 +14,8 @@ const METAL_COLORS = {
 
 const FAQ_ITEMS = [
   {
-    q: 'What is MetalXpress?',
-    a: "MetalXpress is India's metal trading platform. Live LME & MCX rates, local spot prices, and a verified B2B marketplace \u2014 all in one place. Built for traders who are tired of relying on WhatsApp broadcasts and phone calls to get rates and find buyers.",
+    q: 'What is BhavX?',
+    a: "BhavX is India's metal trading platform. Live LME & MCX rates, local spot prices, and a verified B2B marketplace \u2014 all in one place. Built for traders who are tired of relying on WhatsApp broadcasts and phone calls to get rates and find buyers.",
   },
   {
     q: 'What metals are covered?',
@@ -34,7 +35,7 @@ const FAQ_ITEMS = [
   },
   {
     q: 'Are sellers and metals verified?',
-    a: "Yes. Every trader on MetalXpress is verified before they can list or negotiate. And the metal being sold is checked too. Person verified. Material verified. You always know who you're dealing with and what you're buying.",
+    a: "Yes. Every trader on BhavX is verified before they can list or negotiate. And the metal being sold is checked too. Person verified. Material verified. You always know who you're dealing with and what you're buying.",
   },
   {
     q: 'How does commission work on deals?',
@@ -54,7 +55,7 @@ const FAQ_ITEMS = [
   },
   {
     q: 'Can I use this on mobile?',
-    a: 'Yes. MetalXpress works on any smartphone \u2014 Android or iPhone, no heavy app download needed. Same live rates, same marketplace, same analytics. Trade from anywhere.',
+    a: 'Yes. BhavX works on any smartphone \u2014 Android or iPhone, no heavy app download needed. Same live rates, same marketplace, same analytics. Trade from anywhere.',
   },
 ];
 
@@ -177,7 +178,7 @@ export default function Landing() {
               boxShadow: '0 4px 28px rgba(207,181,59,0.28)',
               display: 'inline-flex', alignItems: 'center', gap: 8,
             }}>
-              Join MetalXpress Free <ChevronRight size={16} />
+              Join BhavX Free <ChevronRight size={16} />
             </Link>
             <Link to="/login" style={{
               padding: '13px 28px', borderRadius: 12, fontWeight: 700, fontSize: 14,
@@ -242,7 +243,7 @@ export default function Landing() {
       <section style={{ padding: '64px 16px', maxWidth: 920, margin: '0 auto' }}>
         <p style={{ textAlign: 'center', fontSize: 11, color: 'rgba(255,255,255,0.28)', letterSpacing: '0.12em', textTransform: 'uppercase', marginBottom: 10 }}>How it works</p>
         <h2 style={{ textAlign: 'center', fontSize: 26, fontWeight: 700, color: '#fff', margin: '0 0 40px' }}>
-          How <span style={{ color: '#CFB53B' }}>MetalXpress</span> Works
+          How <span style={{ color: '#CFB53B' }}>BhavX</span> Works
         </h2>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 14 }}>
           {[
@@ -395,7 +396,7 @@ export default function Landing() {
           boxShadow: '0 0 80px rgba(207,181,59,0.04)',
         }}>
           <h2 style={{ fontSize: 22, fontWeight: 700, color: '#fff', margin: '0 0 12px', lineHeight: 1.35 }}>
-            Stop Trading on WhatsApp.<br />Start Trading on MetalXpress.
+            Stop Trading on WhatsApp.<br />Start Trading on BhavX.
           </h2>
           <p style={{ fontSize: 14, color: 'rgba(255,255,255,0.42)', margin: '0 0 30px', lineHeight: 1.7 }}>
             Same rates you trust. A better, verified platform.
@@ -408,7 +409,7 @@ export default function Landing() {
             background: '#CFB53B', color: '#000', textDecoration: 'none',
             boxShadow: '0 4px 28px rgba(207,181,59,0.22)',
           }}>
-            Join MetalXpress Free <ArrowRight size={15} />
+            Join BhavX Free <ArrowRight size={15} />
           </Link>
           <p style={{ fontSize: 12, color: 'rgba(255,255,255,0.18)', marginTop: 14 }}>No credit card required</p>
         </div>
