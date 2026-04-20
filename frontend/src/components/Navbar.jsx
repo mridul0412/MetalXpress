@@ -28,15 +28,22 @@ export default function Navbar() {
         {/* Top bar */}
         <div className="max-w-5xl mx-auto px-4 h-14 flex items-center justify-between">
           {/* Brand */}
-          <Link to="/" className="flex items-center gap-2.5" style={{ textDecoration: 'none' }}>
-            <div className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0" style={{
-              background: 'linear-gradient(135deg, #E8CC5A, #CFB53B, #A89028)',
-              boxShadow: '0 0 12px rgba(207,181,59,0.3)',
-            }}>
-              <span style={{ fontSize: 20, color: '#080E1A', fontWeight: 800, lineHeight: 1, marginTop: -1 }}>ॐ</span>
-            </div>
-            <span className="hidden sm:block text-base font-bold tracking-widest metallic-text">{BRAND.name.toUpperCase()}</span>
-            <span className="sm:hidden text-base font-bold tracking-widest metallic-text">BX⚡</span>
+          <Link to="/" className="flex items-center gap-2" style={{ textDecoration: 'none' }}>
+            {/* BhavX Logo Mark */}
+            <svg width="32" height="32" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ flexShrink: 0, filter: 'drop-shadow(0 0 8px rgba(207,181,59,0.4))' }}>
+              <defs>
+                <linearGradient id="ng1" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" stopColor="#E8CC5A"/>
+                  <stop offset="50%" stopColor="#CFB53B"/>
+                  <stop offset="100%" stopColor="#A89028"/>
+                </linearGradient>
+              </defs>
+              <polygon points="32,3 58,17.5 58,46.5 32,61 6,46.5 6,17.5" fill="url(#ng1)"/>
+              <polygon points="32,7 54,19.5 54,44.5 32,57 10,44.5 10,19.5" fill="#080E1A"/>
+              <path d="M17 20h11c3.5 0 6 2 6 5.5 0 2-1 3.5-2.5 4.2C34 30.5 35.5 32.5 35.5 35c0 4-3 6-7 6H17V20zm4 4v6h6.5c1.5 0 2.5-1 2.5-3s-1-3-2.5-3H21zm0 10v7h7c2 0 3-1.2 3-3.5S30 31 28 31H21z" fill="url(#ng1)"/>
+              <path d="M38 20l5.5 8 5.5-8h4.5l-7.5 11 7.5 10h-4.5L43.5 33 38 41h-4.5l7.5-10L33.5 20H38z" fill="url(#ng1)"/>
+            </svg>
+            <span className="hidden sm:block font-bold metallic-text" style={{ fontSize: 16, letterSpacing: '0.08em' }}>BhavX</span>
           </Link>
 
           {/* Desktop nav — app nav for logged-in, marketing links for visitors */}

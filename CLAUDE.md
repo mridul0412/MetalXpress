@@ -40,7 +40,7 @@ BhavX (formerly MetalXpress) is a real-time metal intelligence platform for Indi
 ```
 
 ## Current Date
-2026-04-20
+2026-04-21
 
 ## Session Log
 - **2026-03-19**: Initial UI overhaul (Replit-quality design, LME/MCX panel, hub selector, Login, Admin, Marketplace)
@@ -59,6 +59,47 @@ BhavX (formerly MetalXpress) is a real-time metal intelligence platform for Indi
 - **2026-04-13 (session 13)**: Analytics full redesign (ApexCharts candlestick+line, cron price feed, OHLC, chart toggle, period H/L), landing page redesign (marketing page, FAQ, conditional nav), PRO gates (Analytics+Marketplace), signup simplification (removed KYC step), rebrand scrap→metal — see Session 13 details below
 - **2026-04-14 (session 14)**: Landing page copy overhaul (new headline, hero, FAQ x11, 2-tier pricing), About page rewrite, font standardization, PaywallModal simplified, "Mandoli" removed — see Session 14 details below
 - **2026-04-20 (session 15)**: Full brand rename MetalXpress → BhavX, central brand config created, domains bhavx.com + bhavx.in purchased — see Session 15 details below
+- **2026-04-21 (session 16)**: BhavX hexagon logo (SVG, gold gradient, Navbar+Footer+favicon), ROADMAP.md created, Resend domain verified (bhavx.com), email now sends to any inbox from noreply@bhavx.com, hero CTA button changed to outline+hover-fill so OM watermark shows through — see Session 16 details below
+
+## Session 16 Changes (2026-04-21) — Full Detail
+
+### BhavX Hexagon Logo (NEW)
+- **File**: `frontend/public/favicon.svg` — new SVG hexagon mark (gold gradient outer ring, dark inner, Bx letterform inside)
+- **Navbar**: Replaced OM symbol box with inline SVG logo mark + "BhavX" in InitCaps (gold drop-shadow glow)
+- **Footer**: Replaced OM symbol box with matching smaller SVG logo mark + "BhavX"
+- **Mobile**: No separate abbreviation needed — SVG scales cleanly at all sizes
+
+### Resend Domain Verification (DONE ✅)
+- **DNS records added** to bhavx.com on Hostinger: DKIM (TXT), SPF MX, SPF TXT, DMARC (TXT)
+- **Domain verified** — Resend shows green on bhavx.com
+- **`backend/.env` updated**: `EMAIL_FROM="BhavX <noreply@bhavx.com>"`
+- **Tested**: Emails confirmed delivering to external inboxes (not just owner's email)
+- **Spam note**: One test email went to spam — expected for new domain, improves naturally with volume. User should click "Not spam" on any that land there.
+- **Resend cost**: Free tier = 3,000 emails/month, 100/day — sufficient until significant user base
+
+### User DB Reset (for testing)
+- All existing test users deleted via Prisma
+- Admin account re-created: `admin@bhavx.com` / `admin1234` (emailVerified + kycVerified = true)
+- Backend restarted to pick up new EMAIL_FROM env var
+
+### Hero CTA Button — Outline Style
+- **Problem**: Solid gold "Join BhavX Free" button covered the OM watermark in the hero
+- **Fix**: Button is now transparent with gold border by default; fills gold on hover
+- `onMouseEnter/Leave` handlers swap `background` and `color` inline
+- Bottom-of-page CTA remains solid gold (no OM behind it)
+
+### ROADMAP.md Created
+- **File**: `ROADMAP.md` in repo root — master checklist with phases, daily progress tracking, session log
+- Covers: Critical (go-live blockers), Revenue (paying users), Growth (post-launch), Capital & Scale, Completed items, Session log table
+
+### Files Modified (Session 16)
+- `frontend/public/favicon.svg` — NEW: BhavX hexagon SVG logo
+- `frontend/src/components/Navbar.jsx` — SVG logo mark, "BhavX" InitCaps
+- `frontend/src/components/Footer.jsx` — SVG logo mark, "BhavX" InitCaps
+- `frontend/src/pages/Landing.jsx` — hero CTA button outline+hover style
+- `backend/.env` — `EMAIL_FROM` updated to `noreply@bhavx.com`
+- `ROADMAP.md` — NEW: master roadmap and progress tracker
+- `CLAUDE.md` — session 16 added, date updated
 
 ## Session 15 Changes (2026-04-20) — Full Detail
 

@@ -172,12 +172,16 @@ export default function Landing() {
 
           {/* CTAs */}
           <div style={{ display: 'flex', gap: 12, justifyContent: 'center', flexWrap: 'wrap', marginBottom: 48 }}>
-            <Link to="/signup" style={{
-              padding: '13px 28px', borderRadius: 12, fontWeight: 700, fontSize: 14,
-              background: '#CFB53B', color: '#000', textDecoration: 'none',
-              boxShadow: '0 4px 28px rgba(207,181,59,0.28)',
-              display: 'inline-flex', alignItems: 'center', gap: 8,
-            }}>
+            <Link to="/signup"
+              onMouseEnter={e => { e.currentTarget.style.background = '#CFB53B'; e.currentTarget.style.color = '#000'; e.currentTarget.style.boxShadow = '0 4px 28px rgba(207,181,59,0.4)'; }}
+              onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = '#CFB53B'; e.currentTarget.style.boxShadow = 'none'; }}
+              style={{
+                padding: '13px 28px', borderRadius: 12, fontWeight: 700, fontSize: 14,
+                background: 'transparent', color: '#CFB53B', textDecoration: 'none',
+                border: '1.5px solid #CFB53B',
+                display: 'inline-flex', alignItems: 'center', gap: 8,
+                transition: 'all 0.2s ease',
+              }}>
               Join BhavX Free <ChevronRight size={16} />
             </Link>
             <Link to="/login" style={{

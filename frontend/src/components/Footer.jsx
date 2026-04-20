@@ -22,14 +22,21 @@ export default function Footer() {
           {/* Brand */}
           <div>
             <div className="flex items-center gap-2 mb-3">
-              <div style={{
-                width: 28, height: 28, borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center',
-                background: 'linear-gradient(135deg, #E8CC5A, #CFB53B, #A89028)',
-              }}>
-                <span style={{ fontSize: 17, color: '#080E1A', fontWeight: 800, lineHeight: 1, marginTop: -1 }}>ॐ</span>
-              </div>
-              <span style={{ fontSize: 13, fontWeight: 700, letterSpacing: '0.1em', color: '#CFB53B' }}>
-                {BRAND.name.toUpperCase()}
+              <svg width="24" height="24" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <defs>
+                  <linearGradient id="fg1" x1="0%" y1="0%" x2="100%" y2="100%">
+                    <stop offset="0%" stopColor="#E8CC5A"/>
+                    <stop offset="50%" stopColor="#CFB53B"/>
+                    <stop offset="100%" stopColor="#A89028"/>
+                  </linearGradient>
+                </defs>
+                <polygon points="32,3 58,17.5 58,46.5 32,61 6,46.5 6,17.5" fill="url(#fg1)"/>
+                <polygon points="32,7 54,19.5 54,44.5 32,57 10,44.5 10,19.5" fill="#060B15"/>
+                <path d="M17 20h11c3.5 0 6 2 6 5.5 0 2-1 3.5-2.5 4.2C34 30.5 35.5 32.5 35.5 35c0 4-3 6-7 6H17V20zm4 4v6h6.5c1.5 0 2.5-1 2.5-3s-1-3-2.5-3H21zm0 10v7h7c2 0 3-1.2 3-3.5S30 31 28 31H21z" fill="url(#fg1)"/>
+                <path d="M38 20l5.5 8 5.5-8h4.5l-7.5 11 7.5 10h-4.5L43.5 33 38 41h-4.5l7.5-10L33.5 20H38z" fill="url(#fg1)"/>
+              </svg>
+              <span style={{ fontSize: 14, fontWeight: 700, letterSpacing: '0.06em', color: '#CFB53B' }}>
+                BhavX
               </span>
             </div>
             <p style={{ fontSize: 11, color: 'rgba(255,255,255,0.3)', lineHeight: 1.5, margin: 0 }}>
