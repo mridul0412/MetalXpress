@@ -3,7 +3,9 @@ const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
 const crypto = require('crypto');
 const { PrismaClient } = require('@prisma/client');
-const { sendOTP } = require('../services/smsService');
+// ── SMS Provider: MSG91 (parked — switch back by uncommenting and removing Firebase below)
+// const { sendOTP } = require('../services/smsService');
+const { verifyFirebaseToken } = require('../services/firebaseAdmin');
 const { sendVerificationEmail, sendPasswordResetEmail } = require('../services/emailService');
 
 const router = express.Router();
@@ -42,65 +44,67 @@ function verifyJWT(req) {
   return jwt.verify(token, process.env.JWT_SECRET);
 }
 
-// ── POST /api/auth/request-otp ───────────────────────────────────────────────
-router.post('/request-otp', async (req, res) => {
+// ════════════════════════════════════════════════════════════════════════════
+// MSG91 OTP endpoints — PARKED. Uncomment to switch back to MSG91.
+// To re-enable: uncomment below, re-import sendOTP, remove Firebase import.
+// ════════════════════════════════════════════════════════════════════════════
+//
+// router.post('/request-otp', async (req, res) => {
+//   try {
+//     const { phone } = req.body;
+//     const cleanPhone = normalizePhone(phone);
+//     if (!cleanPhone) return res.status(400).json({ error: 'Valid 10-digit Indian phone number required' });
+//     await prisma.oTPSession.deleteMany({ where: { phone: cleanPhone } });
+//     const isMSG91Configured = process.env.MSG91_API_KEY && process.env.MSG91_API_KEY !== 'your_msg91_api_key';
+//     const otp = isMSG91Configured ? Math.floor(1000 + Math.random() * 9000).toString() : DEV_OTP;
+//     const expiresAt = new Date(Date.now() + OTP_EXPIRY_MINUTES * 60 * 1000);
+//     await prisma.oTPSession.create({ data: { phone: cleanPhone, otp, expiresAt } });
+//     await sendOTP(cleanPhone, otp);
+//     res.json({ success: true, message: isMSG91Configured ? 'OTP sent' : `Dev OTP: ${DEV_OTP}`, dev: !isMSG91Configured });
+//   } catch (err) { console.error('/request-otp error:', err); res.status(500).json({ error: 'Failed to send OTP' }); }
+// });
+//
+// router.post('/verify-otp', async (req, res) => {
+//   try {
+//     const { phone, otp, name, traderType, city } = req.body;
+//     if (!phone || !otp) return res.status(400).json({ error: 'Phone and OTP required' });
+//     const cleanPhone = normalizePhone(phone);
+//     if (!cleanPhone) return res.status(400).json({ error: 'Valid Indian phone number required' });
+//     const session = await prisma.oTPSession.findFirst({ where: { phone: cleanPhone, used: false, expiresAt: { gt: new Date() } }, orderBy: { createdAt: 'desc' } });
+//     if (!session) return res.status(400).json({ error: 'OTP expired or not found' });
+//     if (session.otp !== otp) return res.status(400).json({ error: 'Invalid OTP' });
+//     await prisma.oTPSession.update({ where: { id: session.id }, data: { used: true } });
+//     let user = await prisma.user.findUnique({ where: { phone: cleanPhone } });
+//     if (user) {
+//       user = await prisma.user.update({ where: { id: user.id }, data: { phoneVerified: true, ...(name && { name }), ...(city && { city }), ...(traderType && { traderType }) } });
+//     } else {
+//       user = await prisma.user.create({ data: { phone: cleanPhone, phoneVerified: true, name: name || null, city: city || null, traderType: traderType || 'CHECKING_RATES' } });
+//     }
+//     const token = signJWT({ userId: user.id, phone: user.phone });
+//     res.json({ success: true, token, user });
+//   } catch (err) { console.error('/verify-otp error:', err); res.status(500).json({ error: 'Verification failed' }); }
+// });
+// ════════════════════════════════════════════════════════════════════════════
+
+// ── POST /api/auth/verify-firebase-otp ──────────────────────────────────────
+// Firebase Phone Auth: frontend verifies OTP directly with Firebase,
+// then sends the resulting ID token here. We verify it and issue our JWT.
+router.post('/verify-firebase-otp', async (req, res) => {
   try {
-    const { phone } = req.body;
-    const cleanPhone = normalizePhone(phone);
-    if (!cleanPhone) {
-      return res.status(400).json({ error: 'Valid 10-digit Indian phone number required (starting with 6-9)' });
-    }
+    const { firebaseToken, name, traderType, city } = req.body;
+    if (!firebaseToken) return res.status(400).json({ error: 'Firebase ID token required' });
 
-    // Delete old OTP sessions for this phone
-    await prisma.oTPSession.deleteMany({ where: { phone: cleanPhone } });
+    // Verify the token with Firebase Admin SDK
+    const decoded = await verifyFirebaseToken(firebaseToken);
+    const firebasePhone = decoded.phone_number; // format: +919876543210
 
-    // Generate OTP — random in production, 1234 in dev (when MSG91 not configured)
-    const isMSG91Configured = process.env.MSG91_API_KEY && process.env.MSG91_API_KEY !== 'your_msg91_api_key';
-    const otp = isMSG91Configured
-      ? Math.floor(1000 + Math.random() * 9000).toString()
-      : DEV_OTP;
+    if (!firebasePhone) return res.status(400).json({ error: 'No phone number in Firebase token' });
 
-    const expiresAt = new Date(Date.now() + OTP_EXPIRY_MINUTES * 60 * 1000);
+    // Normalize to bare 10-digit for our DB
+    const cleanPhone = normalizePhone(firebasePhone);
+    if (!cleanPhone) return res.status(400).json({ error: 'Invalid phone number from Firebase' });
 
-    await prisma.oTPSession.create({
-      data: { phone: cleanPhone, otp, expiresAt },
-    });
-
-    // Send via MSG91 (or log in dev mode)
-    await sendOTP(cleanPhone, otp);
-
-    res.json({
-      success: true,
-      message: isMSG91Configured
-        ? 'OTP sent to your phone'
-        : `OTP sent (dev mode: use ${DEV_OTP})`,
-      dev: !isMSG91Configured,
-    });
-  } catch (err) {
-    console.error('/api/auth/request-otp error:', err);
-    res.status(500).json({ error: 'Failed to send OTP' });
-  }
-});
-
-// ── POST /api/auth/verify-otp ────────────────────────────────────────────────
-router.post('/verify-otp', async (req, res) => {
-  try {
-    const { phone, otp, name, traderType, city } = req.body;
-    if (!phone || !otp) return res.status(400).json({ error: 'Phone and OTP required' });
-
-    const cleanPhone = normalizePhone(phone);
-    if (!cleanPhone) return res.status(400).json({ error: 'Valid Indian phone number required' });
-
-    const session = await prisma.oTPSession.findFirst({
-      where: { phone: cleanPhone, used: false, expiresAt: { gt: new Date() } },
-      orderBy: { createdAt: 'desc' },
-    });
-
-    if (!session) return res.status(400).json({ error: 'OTP expired or not found' });
-    if (session.otp !== otp) return res.status(400).json({ error: 'Invalid OTP' });
-
-    await prisma.oTPSession.update({ where: { id: session.id }, data: { used: true } });
-
+    // Find or create user
     let user = await prisma.user.findUnique({ where: { phone: cleanPhone } });
 
     if (user) {
@@ -128,8 +132,10 @@ router.post('/verify-otp', async (req, res) => {
     const token = signJWT({ userId: user.id, phone: user.phone });
     res.json({ success: true, token, user });
   } catch (err) {
-    console.error('/api/auth/verify-otp error:', err);
-    res.status(500).json({ error: 'Verification failed' });
+    console.error('/verify-firebase-otp error:', err);
+    if (err.code === 'auth/id-token-expired') return res.status(401).json({ error: 'Firebase token expired, please try again' });
+    if (err.code === 'auth/argument-error') return res.status(400).json({ error: 'Invalid Firebase token' });
+    res.status(500).json({ error: 'Phone verification failed' });
   }
 });
 

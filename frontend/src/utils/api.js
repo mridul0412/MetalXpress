@@ -48,8 +48,11 @@ export const fetchCities = () => api.get('/cities');
 export const fetchMetals = () => api.get('/metals');
 
 // Auth
+// ── MSG91 OTP (parked — kept for easy switch back) ──
 export const requestOTP = (phone) => api.post('/auth/request-otp', { phone });
 export const verifyOTP = (data) => api.post('/auth/verify-otp', data);
+// ── Firebase Phone Auth ──
+export const verifyFirebaseOTP = (data) => api.post('/auth/verify-firebase-otp', data);
 export const fetchMe = () => api.get('/auth/me');
 export const registerEmail = (data) => api.post('/auth/register', data);
 export const loginEmail = (data) => api.post('/auth/login', data);

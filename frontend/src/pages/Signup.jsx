@@ -81,8 +81,7 @@ export default function Signup() {
         name: name || undefined,
         traderType: mappedType,
         phone: cleanPhone || undefined,
-        // No OTP — phone verification bypassed until DLT is set up
-        skipPhoneOtp: true,
+        // Phone stored but not verified here — verified when user logs in via Phone OTP (Firebase)
         termsAccepted: true,
       });
 
@@ -205,11 +204,11 @@ export default function Signup() {
                   onBlur={e => e.target.style.borderColor = 'rgba(255,255,255,0.1)'} />
               </div>
 
-              {/* Phone — optional */}
+              {/* Phone — optional, verified later via Firebase OTP when logging in by phone */}
               <div style={{ position: 'relative' }}>
                 <Smartphone size={15} color="rgba(255,255,255,0.3)" style={{ position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }} />
                 <input type="tel" value={phone} onChange={e => setPhone(e.target.value)}
-                  placeholder="Phone Number (optional)"
+                  placeholder="Phone Number (optional, for OTP login)"
                   style={{ ...inputStyle, paddingLeft: 42 }}
                   onFocus={e => e.target.style.borderColor = '#CFB53B'}
                   onBlur={e => e.target.style.borderColor = 'rgba(255,255,255,0.1)'} />

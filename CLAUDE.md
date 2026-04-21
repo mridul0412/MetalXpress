@@ -15,7 +15,7 @@ BhavX (formerly MetalXpress) is a real-time metal intelligence platform for Indi
 ## Architecture
 - **Frontend**: React + Vite + Tailwind CSS (port 5173)
 - **Backend**: Node/Express + Prisma + PostgreSQL (port 3001)
-- **Auth**: Email+password (bcrypt), Phone OTP (dev OTP: 1234), Google OAuth — JWT tokens in localStorage as `mx_token`
+- **Auth**: Email+password (bcrypt), Phone OTP via **Firebase Phone Auth** (real SMS, 6-digit code), Google OAuth — JWT tokens in localStorage as `mx_token`
 - **Admin auth**: Password in localStorage as `mx_admin_pass`, sent as `x-admin-password` header
 
 ## Design System (dark navy glass)
@@ -43,6 +43,7 @@ BhavX (formerly MetalXpress) is a real-time metal intelligence platform for Indi
 2026-04-21
 
 ## Session Log
+- **2026-04-21 (session 17)**: Firebase Phone Auth integrated end-to-end — real SMS OTP replaces hardcoded `1234`; MSG91 endpoints parked with comments; Login.jsx + Signup.jsx updated; full Firebase explanation pending — see Session 17 details below
 - **2026-03-19**: Initial UI overhaul (Replit-quality design, LME/MCX panel, hub selector, Login, Admin, Marketplace)
 - **2026-03-20 (session 1)**: Fixed Navbar not rendering (missing from App.jsx), rewrote CLAUDE.md, fixed Lead symbol (PB-USD→Stooq), added Forex+Indices+Crude display, city pills selector, standalone Admin layout, Login redesign (Google OAuth stub + phone OTP + profile), PaywallModal, plug-and-play API stubs for metals-api/Google/Razorpay/MSG91
 - **2026-03-20 (session 2)**: Corrected CLAUDE.md — owner is semi-technical; fixed Live Data Sources table (Lead/Tin are DB fallback, not Stooq); fixed Stooq symbol case ni.f → NI.F in docs
@@ -60,6 +61,68 @@ BhavX (formerly MetalXpress) is a real-time metal intelligence platform for Indi
 - **2026-04-14 (session 14)**: Landing page copy overhaul (new headline, hero, FAQ x11, 2-tier pricing), About page rewrite, font standardization, PaywallModal simplified, "Mandoli" removed — see Session 14 details below
 - **2026-04-20 (session 15)**: Full brand rename MetalXpress → BhavX, central brand config created, domains bhavx.com + bhavx.in purchased — see Session 15 details below
 - **2026-04-21 (session 16)**: BhavX hexagon logo (SVG, gold gradient, Navbar+Footer+favicon), ROADMAP.md created, Resend domain verified (bhavx.com), email now sends to any inbox from noreply@bhavx.com, hero CTA button changed to outline+hover-fill so OM watermark shows through — see Session 16 details below
+
+## Session 17 Changes (2026-04-21) — Full Detail
+
+### Firebase Phone Auth — End-to-End Integration (replaces hardcoded OTP 1234)
+
+**Why Firebase**: All Indian SMS providers (MSG91, Twilio, Fast2SMS) require TRAI DLT registration (3–7 day approval process, fees). Firebase Phone Auth bypasses DLT entirely — Google handles the SMS delivery, so no Indian operator registration is needed. Free up to 10,000 OTPs/month.
+
+**How it works (full flow)**:
+1. User enters phone → Login.jsx creates `RecaptchaVerifier` (invisible, no UI widget) + calls Firebase `signInWithPhoneNumber`
+2. Firebase sends a real 6-digit SMS to the phone
+3. User enters 6-digit code → `confirmationResult.confirm(otp)` verifies with Firebase
+4. Frontend gets a **Firebase ID token** (a JWT signed by Google, valid 1 hour)
+5. Frontend POSTs `firebaseToken` to `/api/auth/verify-firebase-otp`
+6. Backend verifies token with Firebase Admin SDK → extracts phone number → finds-or-creates user → issues **our own app JWT**
+7. App JWT stored in `localStorage` as `mx_token` — all subsequent API calls use this
+
+**What each config value means**:
+- `VITE_FIREBASE_API_KEY` — identifies the Firebase project to the web client (not secret, safe in browser)
+- `VITE_FIREBASE_AUTH_DOMAIN` — the domain Firebase uses for auth flows (bhavx-ff380.firebaseapp.com)
+- `VITE_FIREBASE_PROJECT_ID` — project ID: `bhavx-ff380`
+- `VITE_FIREBASE_APP_ID` — identifies the specific web app within the project
+- `FIREBASE_PROJECT_ID` — same project, but for backend (Admin SDK)
+- `FIREBASE_CLIENT_EMAIL` — the service account email (has permission to verify tokens)
+- `FIREBASE_PRIVATE_KEY` — the service account's private key (NEVER share — backend only)
+
+**Backend files**:
+- `backend/src/services/firebaseAdmin.js` (NEW) — initializes Admin SDK (lazy singleton), exports `verifyFirebaseToken(idToken)`
+- `backend/src/routes/auth.js` — added `POST /api/auth/verify-firebase-otp` endpoint; MSG91 endpoints **commented out** (not deleted) with `PARKED` banner for easy switch-back
+
+**Frontend files**:
+- `frontend/src/config/firebase.js` (NEW) — initializes Firebase client SDK from `VITE_` env vars, exports `auth` and `isConfigured`
+- `frontend/.env.local` (NEW) — `VITE_FIREBASE_*` values filled in
+- `frontend/src/pages/Login.jsx` — full rewrite of phone OTP flow: `RecaptchaVerifier` + `signInWithPhoneNumber` + `confirmationResult.confirm` → `getIdToken` → POST to backend
+- `frontend/src/pages/Signup.jsx` — cleaned up old `// No OTP — phone bypassed until DLT` comment
+- `frontend/src/utils/api.js` — added `verifyFirebaseOTP` export
+
+**Login.jsx OTP UX changes**:
+- Phone input now shows `+91` prefix badge (India-first UX)
+- OTP input accepts 6 digits (was 4 — Firebase OTPs are always 6-digit)
+- "Dev mode: use 1234" hint replaced with "A 6-digit code will be sent via SMS"
+- "Resend OTP" button goes back to phone screen (re-triggers Firebase flow)
+- Error handling: `auth/invalid-phone-number`, `auth/too-many-requests`, `auth/invalid-verification-code`, `auth/code-expired` — each has specific user-friendly message
+
+**Important production note**: 
+- Firebase Console → Authentication → Settings → **Authorized Domains** — must add `bhavx.com` before going live (localhost already whitelisted by default)
+
+**MSG91 parked (not deleted)**:
+- Both `request-otp` and `verify-otp` endpoints commented out in `auth.js` with clear banner
+- Can switch back in under 5 minutes: uncomment MSG91 endpoints, re-import `sendOTP`, remove Firebase import
+
+### Files Modified (Session 17)
+- `backend/src/services/firebaseAdmin.js` — NEW: Firebase Admin SDK wrapper
+- `backend/src/routes/auth.js` — `/verify-firebase-otp` endpoint added; MSG91 endpoints parked
+- `backend/.env` — FIREBASE_PROJECT_ID, FIREBASE_CLIENT_EMAIL, FIREBASE_PRIVATE_KEY added
+- `frontend/src/config/firebase.js` — NEW: Firebase client SDK init
+- `frontend/.env.local` — NEW: VITE_FIREBASE_* values filled
+- `frontend/src/pages/Login.jsx` — Full phone OTP flow rewritten for Firebase (6-digit OTP, RecaptchaVerifier, confirmationResult, error handling)
+- `frontend/src/pages/Signup.jsx` — Cleaned up old DLT bypass comment; phone placeholder updated
+- `frontend/src/utils/api.js` — `verifyFirebaseOTP` function added
+- `CLAUDE.md` — session 17 added, architecture section updated
+
+---
 
 ## Session 16 Changes (2026-04-21) — Full Detail
 
@@ -738,7 +801,7 @@ Grade names updated to match actual WhatsApp message format (so `normGrade` matc
 - **Legacy components**: Removed (session 12) — CitySelector, MetalCard, RateTable, LMERatesPanel deleted.
 - **Unused dependencies**: `ioredis` removed (session 12).
 - **Google OAuth**: Plug-and-play but shows greyed "Soon" when `GOOGLE_CLIENT_ID` not set.
-- **SMS OTP**: Dev mode uses hardcoded OTP `1234`. Production needs MSG91 or Twilio integration. Env vars defined in `.env.example` but not wired to auth.js.
+- **SMS OTP**: **DONE (session 17)** — Firebase Phone Auth sends real 6-digit SMS. No DLT registration needed. Backend `/verify-firebase-otp` endpoint live. MSG91 endpoints parked with comments for easy switch-back.
 - **Subscription lookup**: Currently env-var based (`PRO_EMAILS`). Needs real subscription table + Razorpay webhook when payments go live.
 
 ## Session 11 Changes (2026-04-11) — Full Detail

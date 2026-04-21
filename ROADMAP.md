@@ -7,7 +7,7 @@
 ## 🔴 CRITICAL — Before Go-Live
 
 - [x] **Email domain on Resend** — bhavx.com verified, `EMAIL_FROM="BhavX <noreply@bhavx.com>"` set, sending to any inbox ✅ (done 2026-04-21)
-- [ ] **SMS OTP real integration** — wire MSG91_API_KEY into auth.js, remove hardcoded dev OTP `1234`
+- [x] **SMS OTP real integration** — Firebase Phone Auth live; real 6-digit SMS; no DLT needed; MSG91 parked ✅ (done 2026-04-21)
 - [ ] **Deploy backend → Railway** — Node + PostgreSQL plugin, set DATABASE_URL
 - [ ] **Deploy frontend → Vercel** — free tier, set `VITE_API_URL` to Railway backend URL
 - [ ] **Production env vars** — new JWT_SECRET, ADMIN_PASSWORD, DATABASE_URL (never use dev values in prod)
@@ -71,6 +71,7 @@
 - [x] T&C enforcement on offers, listings, signup
 - [x] Footer + static pages (About, Terms, Privacy, Contact)
 - [x] Domains purchased — bhavx.com + bhavx.in (GoDaddy, April 2026)
+- [x] SMS OTP — Firebase Phone Auth, real SMS, no DLT registration needed, 10k OTPs/month free
 
 ---
 
@@ -88,3 +89,4 @@
 | 2026-04-14 | 14 | Landing copy overhaul, 2-tier pricing, About rewrite, font standardization |
 | 2026-04-20 | 15 | BhavX rebrand, brand config, domains purchased |
 | 2026-04-21 | 16 | BhavX hexagon logo (SVG), ROADMAP.md created, Resend domain verified ✅, email live to any inbox, hero CTA button → outline+hover |
+| 2026-04-21 | 17 | Firebase Phone Auth end-to-end — real SMS OTP replaces hardcoded `1234`, MSG91 parked, Login.jsx + Signup.jsx updated |

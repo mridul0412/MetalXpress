@@ -1,8 +1,10 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Shield, Mail, Lock, Eye, EyeOff, ArrowRight, Smartphone, User } from 'lucide-react';
-import { loginEmail, requestOTP, verifyOTP } from '../utils/api';
+import { RecaptchaVerifier, signInWithPhoneNumber } from 'firebase/auth';
+import { auth, isConfigured as firebaseConfigured } from '../config/firebase';
+import { loginEmail, verifyFirebaseOTP } from '../utils/api';
 import { useAuth } from '../context/AuthContext';
 
 const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID;
@@ -37,15 +39,20 @@ export default function Login() {
   const initialMethod = searchParams.get('method') === 'phone' ? 'phone' : 'email';
   const [mode, setMode] = useState(initialMethod);
 
-  const [email, setEmail]             = useState('');
-  const [password, setPassword]       = useState('');
+  const [email, setEmail]               = useState('');
+  const [password, setPassword]         = useState('');
   const [showPassword, setShowPassword] = useState(false);
-  const [phone, setPhone]             = useState('');
-  const [otp, setOtp]                 = useState('');
-  const [name, setName]               = useState('');
+  const [phone, setPhone]               = useState('');
+  const [otp, setOtp]                   = useState('');
+  const [name, setName]                 = useState('');
   const [traderTypes, setTraderTypes]   = useState(['CHECKING_RATES']);
-  const [loading, setLoading]         = useState(false);
-  const [error, setError]             = useState('');
+  const [loading, setLoading]           = useState(false);
+  const [error, setError]               = useState('');
+
+  // Firebase phone auth state
+  const [confirmationResult, setConfirmationResult] = useState(null);
+  const recaptchaVerifierRef = useRef(null);
+
   const navigate = useNavigate();
   const { login, user } = useAuth();
 
@@ -68,6 +75,16 @@ export default function Login() {
     if (user) navigate('/');
   }, [user, navigate]);
 
+  // Cleanup reCAPTCHA on unmount
+  useEffect(() => {
+    return () => {
+      if (recaptchaVerifierRef.current) {
+        try { recaptchaVerifierRef.current.clear(); } catch (_) {}
+        recaptchaVerifierRef.current = null;
+      }
+    };
+  }, []);
+
   // Email login
   const handleEmailLogin = async (e) => {
     e.preventDefault();
@@ -81,33 +98,116 @@ export default function Login() {
     } finally { setLoading(false); }
   };
 
-  // Phone OTP send
-  const handleSendOTP = async (e) => {
-    e.preventDefault();
-    if (phone.length < 10) return;
-    setLoading(true); setError('');
-    try {
-      await requestOTP(phone);
-      setMode('otp');
-    } catch { setError('Failed to send OTP. Try again.'); }
-    finally { setLoading(false); }
+  // Normalize phone to +91XXXXXXXXXX format for Firebase
+  const toFirebasePhone = (raw) => {
+    let p = raw.replace(/[\s\-()]/g, '');
+    if (p.startsWith('+91')) return p;
+    if (p.startsWith('91') && p.length === 12) return '+' + p;
+    if (/^[6-9]\d{9}$/.test(p)) return '+91' + p;
+    return null;
   };
 
-  // OTP verify
+  // Phone OTP send — uses Firebase signInWithPhoneNumber
+  const handleSendOTP = async (e) => {
+    e.preventDefault();
+    setError('');
+    const firebasePhone = toFirebasePhone(phone);
+    if (!firebasePhone) {
+      setError('Enter a valid 10-digit Indian mobile number');
+      return;
+    }
+
+    if (!firebaseConfigured || !auth) {
+      setError('Phone OTP is not configured. Please use email login.');
+      return;
+    }
+
+    setLoading(true);
+    try {
+      // Clear any old verifier and create a fresh invisible reCAPTCHA
+      if (recaptchaVerifierRef.current) {
+        try { recaptchaVerifierRef.current.clear(); } catch (_) {}
+        recaptchaVerifierRef.current = null;
+      }
+
+      recaptchaVerifierRef.current = new RecaptchaVerifier(auth, 'recaptcha-container', {
+        size: 'invisible',
+        callback: () => {},           // called when reCAPTCHA solved (invisible — auto-solved usually)
+        'expired-callback': () => {   // reCAPTCHA token expired — will trigger on next attempt
+          recaptchaVerifierRef.current = null;
+        },
+      });
+
+      const confirmation = await signInWithPhoneNumber(auth, firebasePhone, recaptchaVerifierRef.current);
+      setConfirmationResult(confirmation);
+      setMode('otp');
+    } catch (err) {
+      console.error('Firebase OTP send error:', err);
+      // Clean up verifier on failure so next attempt starts fresh
+      if (recaptchaVerifierRef.current) {
+        try { recaptchaVerifierRef.current.clear(); } catch (_) {}
+        recaptchaVerifierRef.current = null;
+      }
+      if (err.code === 'auth/invalid-phone-number') {
+        setError('Invalid phone number. Use a valid Indian 10-digit number.');
+      } else if (err.code === 'auth/too-many-requests') {
+        setError('Too many attempts. Please wait a few minutes and try again.');
+      } else if (err.code === 'auth/quota-exceeded') {
+        setError('OTP quota exceeded. Please try again later.');
+      } else {
+        setError('Failed to send OTP. Please try again.');
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // OTP verify — confirms with Firebase, then exchanges for our JWT
   const handleVerify = async (e) => {
     e.preventDefault();
-    if (otp.length < 4) return;
+    if (otp.length < 6) return;
+    if (!confirmationResult) {
+      setError('Session expired. Please request a new OTP.');
+      setMode('phone');
+      return;
+    }
     setLoading(true); setError('');
     try {
+      // Confirm OTP with Firebase
+      const credential = await confirmationResult.confirm(otp);
+      // Get Firebase ID token
+      const firebaseToken = await credential.user.getIdToken();
+
       // Map multi-select to enum: BUYER+SELLER → BOTH
-      const hasBuyer = traderTypes.includes('BUYER');
+      const hasBuyer  = traderTypes.includes('BUYER');
       const hasSeller = traderTypes.includes('SELLER');
-      const mappedType = (hasBuyer && hasSeller) ? 'BOTH' : hasBuyer ? 'BUYER' : hasSeller ? 'SELLER' : 'CHECKING_RATES';
-      const res = await verifyOTP({ phone, otp, name: name || undefined, traderType: mappedType });
-      login(res.data.token, res.data.user || { phone });
+      const mappedType = (hasBuyer && hasSeller) ? 'BOTH'
+        : hasBuyer ? 'BUYER'
+        : hasSeller ? 'SELLER'
+        : 'CHECKING_RATES';
+
+      // Exchange Firebase token for our app JWT
+      const res = await verifyFirebaseOTP({
+        firebaseToken,
+        name: name || undefined,
+        traderType: mappedType,
+      });
+
+      login(res.data.token, res.data.user || {});
       navigate('/');
-    } catch { setError('Invalid OTP. In dev mode, use 1234.'); }
-    finally { setLoading(false); }
+    } catch (err) {
+      console.error('Firebase OTP verify error:', err);
+      if (err.code === 'auth/invalid-verification-code') {
+        setError('Incorrect OTP. Please check and try again.');
+      } else if (err.code === 'auth/code-expired') {
+        setError('OTP expired. Please request a new one.');
+        setMode('phone');
+        setConfirmationResult(null);
+      } else {
+        setError(err.response?.data?.error || 'Verification failed. Please try again.');
+      }
+    } finally {
+      setLoading(false); }
   };
 
   return (
@@ -115,6 +215,9 @@ export default function Login() {
       minHeight: 'calc(100vh - 120px)', display: 'flex', flexDirection: 'column',
       alignItems: 'center', justifyContent: 'center', padding: '24px 16px', position: 'relative',
     }}>
+      {/* Invisible reCAPTCHA container — Firebase requires a DOM element */}
+      <div id="recaptcha-container" />
+
       <div style={{
         position: 'absolute', top: '20%', left: '50%', transform: 'translate(-50%,-50%)',
         width: 500, height: 500, background: 'rgba(207,181,59,0.05)',
@@ -142,11 +245,12 @@ export default function Login() {
             <Shield size={24} color="#000" strokeWidth={2.5} />
           </div>
           <h1 style={{ fontSize: 22, fontWeight: 700, color: '#fff', margin: '0 0 4px' }}>
-            {mode === 'email' ? 'Login to BhavX' : mode === 'phone' ? 'Phone Login' : 'Verify OTP'}
+            {mode === 'email' ? 'Login to BhavX' : mode === 'phone' ? 'Phone Login' : 'Enter OTP'}
           </h1>
           <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.4)', margin: 0 }}>
             {mode === 'email' ? 'Enter your email and password' :
-             mode === 'phone' ? 'We\'ll send a one-time code' : `OTP sent to ${phone}`}
+             mode === 'phone' ? 'We\'ll send a 6-digit code to your number' :
+             `Code sent to +91 ${phone}`}
           </p>
         </div>
 
@@ -263,11 +367,14 @@ export default function Login() {
         {mode === 'phone' && (
           <form onSubmit={handleSendOTP} style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
             <div style={{ position: 'relative' }}>
-              <Smartphone size={16} color="rgba(255,255,255,0.3)" style={{
-                position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }} />
+              {/* +91 prefix badge */}
+              <span style={{
+                position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)',
+                fontSize: 14, fontWeight: 700, color: 'rgba(255,255,255,0.4)', pointerEvents: 'none',
+              }}>+91</span>
               <input type="tel" value={phone} onChange={e => setPhone(e.target.value)}
-                placeholder="9876543210" required autoFocus
-                style={{ ...inputStyle, paddingLeft: 42, fontSize: 16 }}
+                placeholder="9876543210" required autoFocus maxLength={10}
+                style={{ ...inputStyle, paddingLeft: 52, fontSize: 16 }}
                 onFocus={e => e.target.style.borderColor = '#CFB53B'}
                 onBlur={e => e.target.style.borderColor = 'rgba(255,255,255,0.1)'} />
             </div>
@@ -278,16 +385,16 @@ export default function Login() {
                   border: '1px solid rgba(255,255,255,0.1)', cursor: 'pointer' }}>
                 Back
               </button>
-              <button type="submit" disabled={loading || phone.length < 10}
+              <button type="submit" disabled={loading || phone.replace(/\D/g, '').length < 10}
                 style={{ flex: 1, padding: '13px', borderRadius: 12, fontWeight: 700, fontSize: 14,
                   background: '#CFB53B', color: '#000', border: 'none', cursor: 'pointer',
                   display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
-                  opacity: (loading || phone.length < 10) ? 0.5 : 1 }}>
-                {loading ? 'Sending...' : 'Get OTP'} {!loading && <ArrowRight size={16} />}
+                  opacity: (loading || phone.replace(/\D/g, '').length < 10) ? 0.5 : 1 }}>
+                {loading ? 'Sending OTP...' : 'Get OTP'} {!loading && <ArrowRight size={16} />}
               </button>
             </div>
             <p style={{ textAlign: 'center', fontSize: 11, color: 'rgba(255,255,255,0.25)', margin: 0 }}>
-              Dev mode: any 10-digit number works, OTP is 1234
+              A 6-digit code will be sent via SMS
             </p>
           </form>
         )}
@@ -299,17 +406,17 @@ export default function Login() {
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
                 <label style={{ fontSize: 10, fontWeight: 700, textTransform: 'uppercase',
                   letterSpacing: '0.08em', color: 'rgba(255,255,255,0.35)' }}>
-                  One-Time Code
+                  6-Digit Code
                 </label>
-                <button type="button" onClick={() => setMode('phone')}
+                <button type="button" onClick={() => { setMode('phone'); setOtp(''); setConfirmationResult(null); setError(''); }}
                   style={{ fontSize: 11, color: '#CFB53B', background: 'none', border: 'none', cursor: 'pointer', fontWeight: 600 }}>
                   Change Number
                 </button>
               </div>
-              <input type="text" value={otp} onChange={e => setOtp(e.target.value)}
-                placeholder="1234" maxLength={4} required autoFocus
+              <input type="text" value={otp} onChange={e => setOtp(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                placeholder="• • • • • •" maxLength={6} required autoFocus inputMode="numeric"
                 style={{ ...inputStyle, fontSize: 28, fontWeight: 700, textAlign: 'center',
-                  letterSpacing: '0.5em', fontFamily: 'monospace' }}
+                  letterSpacing: '0.4em', fontFamily: 'monospace' }}
                 onFocus={e => e.target.style.borderColor = '#CFB53B'}
                 onBlur={e => e.target.style.borderColor = 'rgba(255,255,255,0.1)'} />
             </div>
@@ -360,14 +467,23 @@ export default function Login() {
               </div>
             </div>
 
-            <button type="submit" disabled={loading || otp.length < 4}
+            <button type="submit" disabled={loading || otp.length < 6}
               style={{ width: '100%', padding: '13px', borderRadius: 12, fontWeight: 700, fontSize: 14,
                 background: '#CFB53B', color: '#000', border: 'none', cursor: 'pointer',
-                opacity: (loading || otp.length < 4) ? 0.5 : 1 }}>
+                opacity: (loading || otp.length < 6) ? 0.5 : 1,
+                display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
               {loading ? 'Verifying...' : 'Verify & Enter'}
+              {!loading && <ArrowRight size={16} />}
             </button>
-            <p style={{ textAlign: 'center', fontSize: 11, color: 'rgba(255,255,255,0.25)', margin: 0 }}>
-              Dev mode: use 1234
+
+            {/* Resend OTP */}
+            <p style={{ textAlign: 'center', fontSize: 11, color: 'rgba(255,255,255,0.3)', margin: 0 }}>
+              Didn't get the code?{' '}
+              <button type="button" onClick={() => { setMode('phone'); setOtp(''); setConfirmationResult(null); setError(''); }}
+                style={{ background: 'none', border: 'none', color: '#CFB53B', cursor: 'pointer',
+                  fontSize: 11, fontWeight: 700, padding: 0 }}>
+                Resend OTP
+              </button>
             </p>
           </form>
         )}
