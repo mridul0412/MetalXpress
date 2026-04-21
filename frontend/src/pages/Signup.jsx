@@ -59,10 +59,8 @@ export default function Signup() {
   const { login } = useAuth();
   const googleAvailable = GOOGLE_CLIENT_ID && GOOGLE_CLIENT_ID !== 'undefined' && GOOGLE_CLIENT_ID.length > 8;
 
-  // Initialize reCAPTCHA on mount — must exist before user clicks, not inside the handler
+  // Cleanup on unmount only
   useEffect(() => {
-    if (!firebaseConfigured || !auth) return;
-    initRecaptcha();
     return () => {
       if (recaptchaVerifierRef.current) {
         try { recaptchaVerifierRef.current.clear(); } catch (_) {}
@@ -71,22 +69,25 @@ export default function Signup() {
     };
   }, []);
 
-  function initRecaptcha() {
-    // Clear any previous instance first
+  // Build a fresh RecaptchaVerifier each time we need one.
+  // Clears the container's DOM first so Firebase doesn't complain about re-use.
+  async function buildVerifier() {
+    // Destroy old instance if any
     if (recaptchaVerifierRef.current) {
       try { recaptchaVerifierRef.current.clear(); } catch (_) {}
       recaptchaVerifierRef.current = null;
     }
-    try {
-      const verifier = new RecaptchaVerifier(auth, 'recaptcha-container-signup', {
-        size: 'invisible',
-      });
-      // Pre-render so Google evaluates the session before user even clicks
-      verifier.render().catch(() => {});
-      recaptchaVerifierRef.current = verifier;
-    } catch (err) {
-      console.error('[reCAPTCHA] init failed:', err);
-    }
+    // Clear any Firebase-injected widget from the container
+    const container = document.getElementById('recaptcha-container-signup');
+    if (!container) throw new Error('reCAPTCHA container element not found in DOM');
+    container.innerHTML = '';
+
+    // Create verifier pointing at the element directly (not the ID string)
+    const verifier = new RecaptchaVerifier(auth, container, { size: 'invisible' });
+    // Render it and wait — this is what actually contacts Google's servers
+    await verifier.render();
+    recaptchaVerifierRef.current = verifier;
+    return verifier;
   }
 
   // Normalize to +91XXXXXXXXXX for Firebase
@@ -119,30 +120,22 @@ export default function Signup() {
 
     setLoading(true);
     try {
-      // Use the pre-initialized verifier (created on mount, not here)
-      if (!recaptchaVerifierRef.current) {
-        initRecaptcha();
-        // Small wait to let it initialize
-        await new Promise(r => setTimeout(r, 300));
-      }
-
-      const confirmation = await signInWithPhoneNumber(auth, firebasePhone, recaptchaVerifierRef.current);
+      const verifier = await buildVerifier();
+      const confirmation = await signInWithPhoneNumber(auth, firebasePhone, verifier);
       setConfirmationResult(confirmation);
       setStep('otp');
     } catch (err) {
-      console.error('[Firebase] OTP send error:', err.code, err.message);
-      // Verifier is consumed after a failed attempt — reinitialize for next try
-      initRecaptcha();
+      console.error('[Firebase] OTP send error:', err.code, err.message, err);
       if (err.code === 'auth/invalid-phone-number') {
         setError('Invalid phone number. Use a valid Indian 10-digit number.');
       } else if (err.code === 'auth/too-many-requests') {
         setError('Too many OTP requests. Please wait a few minutes and try again.');
       } else if (err.code === 'auth/operation-not-allowed') {
-        setError('Phone sign-in is disabled. Enable it in Firebase Console → Authentication → Sign-in method → Phone.');
+        setError('Phone sign-in is disabled in Firebase Console.');
       } else if (err.code === 'auth/captcha-check-failed') {
-        setError('Security check failed. Please refresh the page and try again.');
+        setError('reCAPTCHA failed. Please refresh the page and try again.');
       } else {
-        setError(`Failed to send OTP (${err.code || 'unknown'}). Check browser console for details.`);
+        setError(`OTP failed: ${err.code || err.message || 'unknown error'}`);
       }
     } finally {
       setLoading(false);

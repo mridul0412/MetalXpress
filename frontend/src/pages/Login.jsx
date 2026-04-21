@@ -75,32 +75,28 @@ export default function Login() {
     if (user) navigate('/');
   }, [user, navigate]);
 
-  // Initialize reCAPTCHA as soon as phone mode is active
+  // Cleanup on unmount only
   useEffect(() => {
-    if (mode !== 'phone' || !firebaseConfigured || !auth) return;
-    initRecaptcha();
     return () => {
       if (recaptchaVerifierRef.current) {
         try { recaptchaVerifierRef.current.clear(); } catch (_) {}
         recaptchaVerifierRef.current = null;
       }
     };
-  }, [mode]);
+  }, []);
 
-  function initRecaptcha() {
+  async function buildVerifier() {
     if (recaptchaVerifierRef.current) {
       try { recaptchaVerifierRef.current.clear(); } catch (_) {}
       recaptchaVerifierRef.current = null;
     }
-    try {
-      const verifier = new RecaptchaVerifier(auth, 'recaptcha-container', {
-        size: 'invisible',
-      });
-      verifier.render().catch(() => {});
-      recaptchaVerifierRef.current = verifier;
-    } catch (err) {
-      console.error('[reCAPTCHA] init failed:', err);
-    }
+    const container = document.getElementById('recaptcha-container');
+    if (!container) throw new Error('reCAPTCHA container not found');
+    container.innerHTML = '';
+    const verifier = new RecaptchaVerifier(auth, container, { size: 'invisible' });
+    await verifier.render();
+    recaptchaVerifierRef.current = verifier;
+    return verifier;
   }
 
   // Email login
@@ -142,19 +138,12 @@ export default function Login() {
 
     setLoading(true);
     try {
-      // Use the pre-initialized verifier (created when phone mode became active)
-      if (!recaptchaVerifierRef.current) {
-        initRecaptcha();
-        await new Promise(r => setTimeout(r, 300));
-      }
-
-      const confirmation = await signInWithPhoneNumber(auth, firebasePhone, recaptchaVerifierRef.current);
+      const verifier = await buildVerifier();
+      const confirmation = await signInWithPhoneNumber(auth, firebasePhone, verifier);
       setConfirmationResult(confirmation);
       setMode('otp');
     } catch (err) {
-      console.error('[Firebase] OTP send error:', err.code, err.message);
-      // Verifier is consumed after failure — reinitialize for next try
-      initRecaptcha();
+      console.error('[Firebase] OTP send error:', err.code, err.message, err);
       if (err.code === 'auth/invalid-phone-number') {
         setError('Invalid phone number. Use a valid Indian 10-digit number.');
       } else if (err.code === 'auth/too-many-requests') {
@@ -162,11 +151,11 @@ export default function Login() {
       } else if (err.code === 'auth/quota-exceeded') {
         setError('OTP quota exceeded. Please try again later.');
       } else if (err.code === 'auth/operation-not-allowed') {
-        setError('Phone sign-in not enabled. Enable it in Firebase Console → Authentication → Sign-in method → Phone.');
+        setError('Phone sign-in not enabled in Firebase Console.');
       } else if (err.code === 'auth/captcha-check-failed') {
-        setError('Security check failed. Please refresh the page and try again.');
+        setError('reCAPTCHA failed. Please refresh the page and try again.');
       } else {
-        setError(`Failed to send OTP (${err.code || 'unknown'}). Check browser console for details.`);
+        setError(`OTP failed: ${err.code || err.message || 'unknown error'}`);
       }
     } finally {
       setLoading(false);
