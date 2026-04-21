@@ -124,8 +124,10 @@ export default function Signup() {
         setError('Invalid phone number. Use a valid Indian 10-digit number.');
       } else if (err.code === 'auth/too-many-requests') {
         setError('Too many attempts. Wait a few minutes and try again.');
+      } else if (err.code === 'auth/operation-not-allowed') {
+        setError('Phone sign-in is not enabled. Enable it in Firebase Console → Authentication → Sign-in method → Phone.');
       } else {
-        setError('Failed to send OTP. Please try again.');
+        setError(`Failed to send OTP. (${err.code || 'unknown error'}) — check browser console for details.`);
       }
     } finally {
       setLoading(false);

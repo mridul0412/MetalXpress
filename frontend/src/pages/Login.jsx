@@ -154,8 +154,10 @@ export default function Login() {
         setError('Too many attempts. Please wait a few minutes and try again.');
       } else if (err.code === 'auth/quota-exceeded') {
         setError('OTP quota exceeded. Please try again later.');
+      } else if (err.code === 'auth/operation-not-allowed') {
+        setError('Phone sign-in is not enabled. Enable it in Firebase Console → Authentication → Sign-in method → Phone.');
       } else {
-        setError('Failed to send OTP. Please try again.');
+        setError(`Failed to send OTP. (${err.code || 'unknown error'}) — check browser console for details.`);
       }
     } finally {
       setLoading(false);
