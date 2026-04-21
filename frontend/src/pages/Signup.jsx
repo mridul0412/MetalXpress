@@ -59,8 +59,10 @@ export default function Signup() {
   const { login } = useAuth();
   const googleAvailable = GOOGLE_CLIENT_ID && GOOGLE_CLIENT_ID !== 'undefined' && GOOGLE_CLIENT_ID.length > 8;
 
-  // Cleanup reCAPTCHA on unmount
+  // Initialize reCAPTCHA on mount — must exist before user clicks, not inside the handler
   useEffect(() => {
+    if (!firebaseConfigured || !auth) return;
+    initRecaptcha();
     return () => {
       if (recaptchaVerifierRef.current) {
         try { recaptchaVerifierRef.current.clear(); } catch (_) {}
@@ -68,6 +70,24 @@ export default function Signup() {
       }
     };
   }, []);
+
+  function initRecaptcha() {
+    // Clear any previous instance first
+    if (recaptchaVerifierRef.current) {
+      try { recaptchaVerifierRef.current.clear(); } catch (_) {}
+      recaptchaVerifierRef.current = null;
+    }
+    try {
+      const verifier = new RecaptchaVerifier(auth, 'recaptcha-container-signup', {
+        size: 'invisible',
+      });
+      // Pre-render so Google evaluates the session before user even clicks
+      verifier.render().catch(() => {});
+      recaptchaVerifierRef.current = verifier;
+    } catch (err) {
+      console.error('[reCAPTCHA] init failed:', err);
+    }
+  }
 
   // Normalize to +91XXXXXXXXXX for Firebase
   const toFirebasePhone = (raw) => {
@@ -99,35 +119,30 @@ export default function Signup() {
 
     setLoading(true);
     try {
-      // Clear any old verifier
-      if (recaptchaVerifierRef.current) {
-        try { recaptchaVerifierRef.current.clear(); } catch (_) {}
-        recaptchaVerifierRef.current = null;
+      // Use the pre-initialized verifier (created on mount, not here)
+      if (!recaptchaVerifierRef.current) {
+        initRecaptcha();
+        // Small wait to let it initialize
+        await new Promise(r => setTimeout(r, 300));
       }
-
-      recaptchaVerifierRef.current = new RecaptchaVerifier(auth, 'recaptcha-container-signup', {
-        size: 'invisible',
-        callback: () => {},
-        'expired-callback': () => { recaptchaVerifierRef.current = null; },
-      });
 
       const confirmation = await signInWithPhoneNumber(auth, firebasePhone, recaptchaVerifierRef.current);
       setConfirmationResult(confirmation);
       setStep('otp');
     } catch (err) {
-      console.error('Firebase OTP send error (signup):', err);
-      if (recaptchaVerifierRef.current) {
-        try { recaptchaVerifierRef.current.clear(); } catch (_) {}
-        recaptchaVerifierRef.current = null;
-      }
+      console.error('[Firebase] OTP send error:', err.code, err.message);
+      // Verifier is consumed after a failed attempt — reinitialize for next try
+      initRecaptcha();
       if (err.code === 'auth/invalid-phone-number') {
         setError('Invalid phone number. Use a valid Indian 10-digit number.');
       } else if (err.code === 'auth/too-many-requests') {
-        setError('Too many attempts. Wait a few minutes and try again.');
+        setError('Too many OTP requests. Please wait a few minutes and try again.');
       } else if (err.code === 'auth/operation-not-allowed') {
-        setError('Phone sign-in is not enabled. Enable it in Firebase Console → Authentication → Sign-in method → Phone.');
+        setError('Phone sign-in is disabled. Enable it in Firebase Console → Authentication → Sign-in method → Phone.');
+      } else if (err.code === 'auth/captcha-check-failed') {
+        setError('Security check failed. Please refresh the page and try again.');
       } else {
-        setError(`Failed to send OTP. (${err.code || 'unknown error'}) — check browser console for details.`);
+        setError(`Failed to send OTP (${err.code || 'unknown'}). Check browser console for details.`);
       }
     } finally {
       setLoading(false);
