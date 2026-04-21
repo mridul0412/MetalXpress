@@ -265,33 +265,27 @@ router.get('/subscription', async (req, res) => {
 // ── POST /api/auth/register ──────────────────────────────────────────────────
 router.post('/register', async (req, res) => {
   try {
-    const { email, password, name, traderType, city, phone, otp, skipPhoneOtp, termsAccepted, businessName, tradeCategory, panNumber, gstNumber, legalName } = req.body;
+    const { email, password, name, traderType, city, firebaseToken, termsAccepted, businessName, tradeCategory, panNumber, gstNumber, legalName } = req.body;
     if (!email || !password) return res.status(400).json({ error: 'Email and password required' });
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return res.status(400).json({ error: 'Invalid email format' });
     if (password.length < 8) return res.status(400).json({ error: 'Password must be at least 8 characters' });
     if (!/[0-9]/.test(password) && !/[!@#$%^&*(),.?":{}|<>_\-]/.test(password))
       return res.status(400).json({ error: 'Password must contain at least one number or special character' });
 
-    // Phone is optional — only validate and verify if provided
-    const cleanPhone = phone ? normalizePhone(phone) : null;
-    if (phone && !cleanPhone) {
-      return res.status(400).json({ error: 'Invalid phone number format. Use a 10-digit Indian number.' });
-    }
-
-    // OTP verification — only required if phone provided AND skipPhoneOtp is not set
+    // Phone verification via Firebase token (mandatory for new signups)
+    let cleanPhone = null;
     let phoneVerified = false;
-    if (cleanPhone && !skipPhoneOtp) {
-      if (!otp) return res.status(400).json({ error: 'OTP required to verify your phone number' });
-      const session = await prisma.oTPSession.findFirst({
-        where: { phone: cleanPhone, used: false, expiresAt: { gt: new Date() } },
-        orderBy: { createdAt: 'desc' },
-      });
-      if (!session) return res.status(400).json({ error: 'OTP expired or not found. Request a new one.' });
-      if (session.otp !== otp) return res.status(400).json({ error: 'Invalid OTP' });
-      await prisma.oTPSession.update({ where: { id: session.id }, data: { used: true } });
+
+    if (firebaseToken) {
+      // Verify the Firebase ID token and extract the phone number
+      const decoded = await verifyFirebaseToken(firebaseToken);
+      const fbPhone = decoded.phone_number; // e.g. +919876543210
+      cleanPhone = normalizePhone(fbPhone);
+      if (!cleanPhone) return res.status(400).json({ error: 'Could not extract a valid Indian phone number from Firebase verification' });
       phoneVerified = true;
     }
-    // skipPhoneOtp: phone saved but not verified (can verify later from Profile)
+    // Note: phone-less signups (Google OAuth etc.) remain possible — phone is only
+    // required at the frontend signup form, not enforced here so OAuth path still works.
 
     // Check email uniqueness
     const existingEmail = await prisma.user.findUnique({ where: { email: email.toLowerCase().trim() } });

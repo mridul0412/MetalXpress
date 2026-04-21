@@ -1,7 +1,9 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Shield, Mail, Lock, User, Eye, EyeOff, ArrowRight, Smartphone } from 'lucide-react';
+import { Shield, Mail, Lock, User, Eye, EyeOff, ArrowRight, Smartphone, CheckCircle } from 'lucide-react';
+import { RecaptchaVerifier, signInWithPhoneNumber } from 'firebase/auth';
+import { auth, isConfigured as firebaseConfigured } from '../config/firebase';
 import { registerEmail } from '../utils/api';
 import { useAuth } from '../context/AuthContext';
 
@@ -12,7 +14,6 @@ const TRADER_TYPES = [
   { value: 'SELLER',         label: 'Seller',        desc: 'I sell metals' },
   { value: 'CHECKING_RATES', label: 'Just Checking', desc: 'Market observer' },
 ];
-
 
 function GoogleIcon() {
   return (
@@ -33,6 +34,10 @@ const inputStyle = {
 };
 
 export default function Signup() {
+  // step: 'form' | 'otp'
+  const [step, setStep]                     = useState('form');
+
+  // Form fields
   const [name, setName]                     = useState('');
   const [email, setEmail]                   = useState('');
   const [phone, setPhone]                   = useState('');
@@ -41,6 +46,12 @@ export default function Signup() {
   const [showPassword, setShowPassword]     = useState(false);
   const [traderTypes, setTraderTypes]       = useState(['CHECKING_RATES']);
   const [termsAccepted, setTermsAccepted]   = useState(false);
+
+  // OTP step
+  const [otp, setOtp]                       = useState('');
+  const [confirmationResult, setConfirmationResult] = useState(null);
+  const recaptchaVerifierRef                = useRef(null);
+
   const [loading, setLoading]               = useState(false);
   const [error, setError]                   = useState('');
 
@@ -48,50 +59,137 @@ export default function Signup() {
   const { login } = useAuth();
   const googleAvailable = GOOGLE_CLIENT_ID && GOOGLE_CLIENT_ID !== 'undefined' && GOOGLE_CLIENT_ID.length > 8;
 
-  // ── Step 1: Register with email + password ────────────────────────────────
-  const handleDetailsSubmit = async (e) => {
+  // Cleanup reCAPTCHA on unmount
+  useEffect(() => {
+    return () => {
+      if (recaptchaVerifierRef.current) {
+        try { recaptchaVerifierRef.current.clear(); } catch (_) {}
+        recaptchaVerifierRef.current = null;
+      }
+    };
+  }, []);
+
+  // Normalize to +91XXXXXXXXXX for Firebase
+  const toFirebasePhone = (raw) => {
+    let p = raw.replace(/[\s\-()]/g, '');
+    if (p.startsWith('+91')) return p;
+    if (p.startsWith('91') && p.length === 12) return '+' + p;
+    if (/^[6-9]\d{9}$/.test(p)) return '+91' + p;
+    return null;
+  };
+
+  // ── Step 1: Validate form + send Firebase OTP ──────────────────────────────
+  const handleFormSubmit = async (e) => {
     e.preventDefault();
     setError('');
+
+    // Validations
     if (password !== confirmPassword) return setError('Passwords do not match');
     if (password.length < 8) return setError('Password must be at least 8 characters');
     if (!/[0-9]/.test(password) && !/[!@#$%^&*(),.?":{}|<>_\-]/.test(password))
-      return setError('Password must include at least one number or special character (e.g. !, @, #, 1, 2)');
+      return setError('Password must include at least one number or special character');
     if (traderTypes.length === 0) return setError('Please select at least one trader type');
 
-    const hasBuyer  = traderTypes.includes('BUYER');
-    const hasSeller = traderTypes.includes('SELLER');
-    const mappedType = (hasBuyer && hasSeller) ? 'BOTH'
-      : hasBuyer ? 'BUYER'
-      : hasSeller ? 'SELLER'
-      : 'CHECKING_RATES';
+    const firebasePhone = toFirebasePhone(phone.trim());
+    if (!firebasePhone) return setError('Enter a valid 10-digit Indian mobile number');
 
-    // Normalize phone if provided (optional)
-    let cleanPhone = null;
-    if (phone.trim()) {
-      cleanPhone = phone.replace(/[\s\-()]/g, '').replace(/^\+?91/, '');
-      if (cleanPhone.length !== 10 || !/^[6-9]\d{9}$/.test(cleanPhone)) {
-        return setError('Enter a valid 10-digit Indian phone number, or leave it blank');
-      }
+    if (!firebaseConfigured || !auth) {
+      return setError('Phone verification is not configured. Please contact support.');
     }
 
     setLoading(true);
     try {
+      // Clear any old verifier
+      if (recaptchaVerifierRef.current) {
+        try { recaptchaVerifierRef.current.clear(); } catch (_) {}
+        recaptchaVerifierRef.current = null;
+      }
+
+      recaptchaVerifierRef.current = new RecaptchaVerifier(auth, 'recaptcha-container-signup', {
+        size: 'invisible',
+        callback: () => {},
+        'expired-callback': () => { recaptchaVerifierRef.current = null; },
+      });
+
+      const confirmation = await signInWithPhoneNumber(auth, firebasePhone, recaptchaVerifierRef.current);
+      setConfirmationResult(confirmation);
+      setStep('otp');
+    } catch (err) {
+      console.error('Firebase OTP send error (signup):', err);
+      if (recaptchaVerifierRef.current) {
+        try { recaptchaVerifierRef.current.clear(); } catch (_) {}
+        recaptchaVerifierRef.current = null;
+      }
+      if (err.code === 'auth/invalid-phone-number') {
+        setError('Invalid phone number. Use a valid Indian 10-digit number.');
+      } else if (err.code === 'auth/too-many-requests') {
+        setError('Too many attempts. Wait a few minutes and try again.');
+      } else {
+        setError('Failed to send OTP. Please try again.');
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // ── Step 2: Verify OTP + create account ────────────────────────────────────
+  const handleOtpVerify = async (e) => {
+    e.preventDefault();
+    if (otp.length < 6) return;
+    if (!confirmationResult) {
+      setError('Session expired. Go back and try again.');
+      setStep('form');
+      return;
+    }
+
+    setLoading(true); setError('');
+    try {
+      // Confirm OTP with Firebase
+      const credential = await confirmationResult.confirm(otp);
+      // Get Firebase ID token (proves phone ownership to our backend)
+      const firebaseToken = await credential.user.getIdToken();
+
+      // Map multi-select trader types to DB enum
+      const hasBuyer  = traderTypes.includes('BUYER');
+      const hasSeller = traderTypes.includes('SELLER');
+      const mappedType = (hasBuyer && hasSeller) ? 'BOTH'
+        : hasBuyer ? 'BUYER'
+        : hasSeller ? 'SELLER'
+        : 'CHECKING_RATES';
+
+      // Create account — backend verifies the Firebase token to get the phone
       const res = await registerEmail({
-        email, password,
+        email,
+        password,
         name: name || undefined,
         traderType: mappedType,
-        phone: cleanPhone || undefined,
-        // Phone stored but not verified here — verified when user logs in via Phone OTP (Firebase)
+        firebaseToken,    // ← backend extracts + verifies phone from here
         termsAccepted: true,
       });
 
       login(res.data.token, res.data.user);
       navigate('/verify-email');
     } catch (err) {
-      setError(err.response?.data?.error || 'Registration failed. Please try again.');
+      console.error('Signup OTP verify error:', err);
+      if (err.code === 'auth/invalid-verification-code') {
+        setError('Incorrect OTP. Please check and try again.');
+      } else if (err.code === 'auth/code-expired') {
+        setError('OTP expired. Go back and request a new one.');
+        setStep('form');
+        setConfirmationResult(null);
+      } else {
+        setError(err.response?.data?.error || 'Registration failed. Please try again.');
+      }
     } finally {
       setLoading(false);
     }
+  };
+
+  const goBackToForm = () => {
+    setStep('form');
+    setOtp('');
+    setConfirmationResult(null);
+    setError('');
   };
 
   return (
@@ -99,6 +197,9 @@ export default function Signup() {
       minHeight: 'calc(100vh - 120px)', display: 'flex', flexDirection: 'column',
       alignItems: 'center', justifyContent: 'center', padding: '24px 16px', position: 'relative',
     }}>
+      {/* Invisible reCAPTCHA container */}
+      <div id="recaptcha-container-signup" />
+
       <div style={{
         position: 'absolute', top: '20%', left: '50%', transform: 'translate(-50%,-50%)',
         width: 500, height: 500, background: 'rgba(207,181,59,0.05)',
@@ -126,11 +227,39 @@ export default function Signup() {
             <Shield size={24} color="#000" strokeWidth={2.5} />
           </div>
           <h1 style={{ fontSize: 22, fontWeight: 700, color: '#fff', margin: '0 0 4px' }}>
-            Create Your Account
+            {step === 'form' ? 'Create Your Account' : 'Verify Your Number'}
           </h1>
           <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.4)', margin: 0 }}>
-            Free to join, takes 30 seconds
+            {step === 'form'
+              ? 'Free to join. Takes 60 seconds.'
+              : `We sent a 6-digit code to +91 ${phone.replace(/\D/g, '')}`}
           </p>
+        </div>
+
+        {/* Step indicator */}
+        <div style={{ display: 'flex', gap: 6, marginBottom: 20, justifyContent: 'center' }}>
+          {['Details', 'Verify Phone'].map((label, i) => {
+            const active = (i === 0 && step === 'form') || (i === 1 && step === 'otp');
+            const done = i === 0 && step === 'otp';
+            return (
+              <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                <div style={{
+                  width: 22, height: 22, borderRadius: '50%', fontSize: 10, fontWeight: 700,
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  background: done ? '#34d399' : active ? '#CFB53B' : 'rgba(255,255,255,0.08)',
+                  color: (done || active) ? '#000' : 'rgba(255,255,255,0.3)',
+                }}>
+                  {done ? '✓' : i + 1}
+                </div>
+                <span style={{ fontSize: 11, color: active ? '#CFB53B' : 'rgba(255,255,255,0.3)', fontWeight: active ? 700 : 400 }}>
+                  {label}
+                </span>
+                {i === 0 && (
+                  <div style={{ width: 24, height: 1, background: 'rgba(255,255,255,0.1)', margin: '0 2px' }} />
+                )}
+              </div>
+            );
+          })}
         </div>
 
         {/* Error */}
@@ -149,8 +278,9 @@ export default function Signup() {
           )}
         </AnimatePresence>
 
-        {/* ── Account Details ── */}
-        <>
+        {/* ── STEP 1: Account Details ─────────────────────────────────────────── */}
+        {step === 'form' && (
+          <>
             {/* Google OAuth */}
             <div style={{ marginBottom: 16 }}>
               {googleAvailable ? (
@@ -170,9 +300,7 @@ export default function Signup() {
                   border: '1px solid rgba(255,255,255,0.1)', cursor: 'not-allowed',
                 }}>
                   <GoogleIcon /> Sign up with Google
-                  <span style={{ fontSize: 9, background: 'rgba(255,255,255,0.1)', padding: '2px 6px', borderRadius: 4 }}>
-                    Soon
-                  </span>
+                  <span style={{ fontSize: 9, background: 'rgba(255,255,255,0.1)', padding: '2px 6px', borderRadius: 4 }}>Soon</span>
                 </div>
               )}
             </div>
@@ -183,7 +311,7 @@ export default function Signup() {
               <div style={{ flex: 1, height: 1, background: 'rgba(255,255,255,0.08)' }} />
             </div>
 
-            <form onSubmit={handleDetailsSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+            <form onSubmit={handleFormSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
               {/* Name */}
               <div style={{ position: 'relative' }}>
                 <User size={15} color="rgba(255,255,255,0.3)" style={{ position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }} />
@@ -204,22 +332,28 @@ export default function Signup() {
                   onBlur={e => e.target.style.borderColor = 'rgba(255,255,255,0.1)'} />
               </div>
 
-              {/* Phone — optional, verified later via Firebase OTP when logging in by phone */}
+              {/* Phone — required, verified via Firebase OTP */}
               <div style={{ position: 'relative' }}>
-                <Smartphone size={15} color="rgba(255,255,255,0.3)" style={{ position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }} />
+                <span style={{
+                  position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)',
+                  fontSize: 14, fontWeight: 700, color: 'rgba(255,255,255,0.4)', pointerEvents: 'none',
+                }}>+91</span>
                 <input type="tel" value={phone} onChange={e => setPhone(e.target.value)}
-                  placeholder="Phone Number (optional, for OTP login)"
-                  style={{ ...inputStyle, paddingLeft: 42 }}
+                  placeholder="Mobile Number *" required maxLength={10}
+                  style={{ ...inputStyle, paddingLeft: 52 }}
                   onFocus={e => e.target.style.borderColor = '#CFB53B'}
                   onBlur={e => e.target.style.borderColor = 'rgba(255,255,255,0.1)'} />
               </div>
+              <p style={{ fontSize: 10, color: 'rgba(255,255,255,0.2)', margin: '-8px 0 0', paddingLeft: 2 }}>
+                We'll send a 6-digit code to verify your number
+              </p>
 
               {/* Password */}
               <div style={{ position: 'relative' }}>
                 <Lock size={15} color="rgba(255,255,255,0.3)" style={{ position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }} />
                 <input type={showPassword ? 'text' : 'password'} value={password}
                   onChange={e => setPassword(e.target.value)}
-                  placeholder="Password (min 8 chars, include number or symbol) *" required
+                  placeholder="Password * (min 8 chars + number or symbol)" required
                   style={{ ...inputStyle, paddingLeft: 42, paddingRight: 42 }}
                   onFocus={e => e.target.style.borderColor = '#CFB53B'}
                   onBlur={e => e.target.style.borderColor = 'rgba(255,255,255,0.1)'} />
@@ -276,21 +410,21 @@ export default function Signup() {
                   I agree to the{' '}
                   <a href="/terms" target="_blank" style={{ color: '#CFB53B', textDecoration: 'underline' }}>Terms of Service</a>,{' '}
                   <a href="/terms#commission" target="_blank" style={{ color: '#CFB53B', textDecoration: 'underline' }}>commission policy</a>,{' '}
-                  <a href="/terms#refund-policy" target="_blank" style={{ color: '#CFB53B', textDecoration: 'underline' }}>refund policy</a>, and{' '}
+                  and{' '}
                   <a href="/privacy" target="_blank" style={{ color: '#CFB53B', textDecoration: 'underline' }}>Privacy Policy</a>
                 </span>
               </label>
 
               <button type="submit"
-                disabled={loading || !email || password.length < 8 || traderTypes.length === 0 || !termsAccepted}
+                disabled={loading || !email || !phone || password.length < 8 || traderTypes.length === 0 || !termsAccepted}
                 style={{
                   width: '100%', padding: '13px', borderRadius: 12, fontWeight: 700, fontSize: 14,
                   background: '#CFB53B', color: '#000', border: 'none', cursor: 'pointer',
                   boxShadow: '0 4px 16px rgba(207,181,59,0.25)',
                   display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
-                  opacity: (loading || !email || password.length < 8 || traderTypes.length === 0 || !termsAccepted) ? 0.5 : 1,
+                  opacity: (loading || !email || !phone || password.length < 8 || traderTypes.length === 0 || !termsAccepted) ? 0.5 : 1,
                 }}>
-                {loading ? 'Creating Account...' : 'Create Account'}
+                {loading ? 'Sending OTP...' : 'Send Verification Code'}
                 {!loading && <ArrowRight size={16} />}
               </button>
             </form>
@@ -300,6 +434,76 @@ export default function Signup() {
               <Link to="/login" style={{ color: '#CFB53B', fontWeight: 700, textDecoration: 'none' }}>Login</Link>
             </p>
           </>
+        )}
+
+        {/* ── STEP 2: OTP Verification ─────────────────────────────────────────── */}
+        {step === 'otp' && (
+          <form onSubmit={handleOtpVerify} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+            {/* What we're verifying */}
+            <div style={{
+              background: 'rgba(207,181,59,0.08)', border: '1px solid rgba(207,181,59,0.2)',
+              borderRadius: 10, padding: '12px 16px',
+              display: 'flex', flexDirection: 'column', gap: 4,
+            }}>
+              <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase', letterSpacing: '0.08em', fontWeight: 700 }}>
+                Verifying phone
+              </div>
+              <div style={{ fontSize: 15, fontWeight: 700, color: '#CFB53B', fontFamily: 'monospace' }}>
+                +91 {phone.replace(/\D/g, '')}
+              </div>
+              <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.35)' }}>
+                Also creating account for: {email}
+              </div>
+            </div>
+
+            {/* OTP input */}
+            <div>
+              <label style={{ fontSize: 10, fontWeight: 700, textTransform: 'uppercase',
+                letterSpacing: '0.08em', color: 'rgba(255,255,255,0.35)', display: 'block', marginBottom: 8 }}>
+                6-Digit Code
+              </label>
+              <input
+                type="text"
+                value={otp}
+                onChange={e => setOtp(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                placeholder="• • • • • •"
+                maxLength={6}
+                required
+                autoFocus
+                inputMode="numeric"
+                style={{
+                  ...inputStyle, fontSize: 28, fontWeight: 700, textAlign: 'center',
+                  letterSpacing: '0.4em', fontFamily: 'monospace',
+                }}
+                onFocus={e => e.target.style.borderColor = '#CFB53B'}
+                onBlur={e => e.target.style.borderColor = 'rgba(255,255,255,0.1)'}
+              />
+            </div>
+
+            <button type="submit" disabled={loading || otp.length < 6}
+              style={{
+                width: '100%', padding: '13px', borderRadius: 12, fontWeight: 700, fontSize: 14,
+                background: '#CFB53B', color: '#000', border: 'none', cursor: 'pointer',
+                display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+                opacity: (loading || otp.length < 6) ? 0.5 : 1,
+              }}>
+              {loading ? 'Creating Account...' : 'Verify & Create Account'}
+              {!loading && <CheckCircle size={16} />}
+            </button>
+
+            {/* Resend / back */}
+            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 11 }}>
+              <button type="button" onClick={goBackToForm}
+                style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,0.35)', cursor: 'pointer', padding: 0, fontSize: 11 }}>
+                ← Change details
+              </button>
+              <button type="button" onClick={goBackToForm}
+                style={{ background: 'none', border: 'none', color: '#CFB53B', cursor: 'pointer', padding: 0, fontSize: 11, fontWeight: 700 }}>
+                Resend OTP
+              </button>
+            </div>
+          </form>
+        )}
       </motion.div>
     </div>
   );
