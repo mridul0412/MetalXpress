@@ -90,7 +90,13 @@ export default function Navbar() {
           <div className="flex items-center gap-2">
             {user ? (
               <>
-                <Link to="/profile" className="hidden sm:block text-xs" style={{ color: 'rgba(255,255,255,0.35)', textDecoration: 'none' }}>
+                <Link
+                  to="/profile"
+                  className="hidden sm:block text-xs"
+                  style={{ color: '#CFB53B', textDecoration: 'none', cursor: 'pointer' }}
+                  onMouseEnter={e => e.currentTarget.style.textDecoration = 'underline'}
+                  onMouseLeave={e => e.currentTarget.style.textDecoration = 'none'}
+                >
                   {user.name || user.email || user.phone}
                 </Link>
                 <button onClick={logout} style={{

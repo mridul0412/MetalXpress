@@ -56,13 +56,17 @@ export default function Profile() {
   const [phoneOtp, setPhoneOtp] = useState('');
   const [sendingOtp, setSendingOtp] = useState(false);
 
+  // Original values for dirty tracking
+  const [origValues, setOrigValues] = useState({});
+
   // Save state
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
 
-  // KYC section toggle
-  const [showKyc, setShowKyc] = useState(false);
+  // KYC verification state
+  const [verifying, setVerifying] = useState(false);
+  const [kycMessage, setKycMessage] = useState('');
 
   useEffect(() => {
     if (authLoading) return;
@@ -78,12 +82,20 @@ export default function Profile() {
     setGstNumber(user.gstNumber || '');
     setLegalName(user.legalName || '');
     const tt = user.traderType || 'CHECKING_RATES';
-    if (tt === 'BOTH') setTraderTypes(['BUYER', 'SELLER']);
-    else setTraderTypes([tt]);
+    const initialTypes = tt === 'BOTH' ? ['BUYER', 'SELLER'] : [tt];
+    setTraderTypes(initialTypes);
+    setOrigValues({ name: user.name || '', email: user.email || '', city: user.city || '', traderType: tt });
   }, [user, authLoading]);
 
   const cleanPhone = (p) => p.replace(/[\s\-()]/g, '').replace(/^\+?91/, '').slice(-10);
   const phoneChanged = phone && cleanPhone(phone) !== (originalPhone || '');
+
+  const origTraderTypes = origValues.traderType === 'BOTH' ? ['BUYER', 'SELLER']
+    : origValues.traderType ? [origValues.traderType] : ['CHECKING_RATES'];
+  const isDirty = name !== (origValues.name || '') ||
+    email !== (origValues.email || '') ||
+    city !== (origValues.city || '') ||
+    JSON.stringify([...traderTypes].sort()) !== JSON.stringify([...origTraderTypes].sort());
 
   const handleSendPhoneOtp = async () => {
     setSendingOtp(true); setError('');
@@ -118,12 +130,6 @@ export default function Profile() {
       // If phone changed, pass OTP for backend to verify
       const payload = {
         name, email: email || undefined, city, traderType: mappedType,
-        businessName: businessName || undefined,
-        tradeCategory: tradeCategory || undefined,
-        panNumber: panNumber || undefined,
-        gstNumber: gstNumber || undefined,
-        legalName: legalName || undefined,
-        ...(panNumber && tradeCategory && !user.kycVerified ? { kycComplete: true } : {}),
       };
       if (phoneChanged && phoneOtp) {
         payload.phone = cleanPhone(phone);
@@ -135,6 +141,7 @@ export default function Profile() {
       setOriginalPhone(phone);
       setPhoneOtpSent(false);
       setPhoneOtp('');
+      setOrigValues({ name, email: email || '', city, traderType: mappedType });
       setMessage('Profile saved!');
       setTimeout(() => setMessage(''), 3000);
     } catch (err) {
@@ -202,16 +209,10 @@ export default function Profile() {
               : 'All marketplace users need identity verification.'}
           </p>
         </div>
-        {needsKyc && (
-          <button onClick={() => setShowKyc(true)} style={{
-            padding: '6px 14px', borderRadius: 8, fontSize: 12, fontWeight: 700,
-            background: '#CFB53B', color: '#000', border: 'none', cursor: 'pointer', flexShrink: 0,
-          }}>Verify</button>
-        )}
       </div>
 
       {/* KYC inline section */}
-      {(showKyc || needsKyc) && !isKycDone && (
+      {needsKyc && !isKycDone && (
         <div style={{ background: '#0D1420', borderRadius: 14, border: '1px solid rgba(207,181,59,0.2)', padding: 20, marginBottom: 16 }}>
           <h3 style={{ fontSize: 14, fontWeight: 700, color: '#CFB53B', margin: '0 0 4px' }}>
             🔒 Identity Verification
@@ -276,9 +277,51 @@ export default function Profile() {
             )}
           </div>
 
-          <p style={{ fontSize: 11, color: 'rgba(255,255,255,0.3)', margin: '0 0 12px', fontStyle: 'italic' }}>
-            Complete the fields above and click Save Changes below to get your verified trader badge.
-          </p>
+          {(() => {
+            const panValid = /^[A-Z]{5}[0-9]{4}[A-Z]$/.test(panNumber);
+            const kycReady = panValid && legalName.trim() !== '' && tradeCategory !== '';
+            const handleVerify = async () => {
+              setVerifying(true); setKycMessage('');
+              try {
+                await updateProfile({
+                  panNumber,
+                  legalName,
+                  tradeCategory,
+                  businessName: businessName || undefined,
+                  gstNumber: gstNumber || undefined,
+                  kycComplete: true,
+                });
+                await refreshUser();
+                setKycMessage('Verification submitted!');
+              } catch (err) {
+                setKycMessage(err.response?.data?.error || 'Verification failed. Please try again.');
+              } finally { setVerifying(false); }
+            };
+            return (
+              <>
+                {!kycReady && (
+                  <p style={{ fontSize: 11, color: 'rgba(255,255,255,0.35)', margin: '0 0 10px', fontStyle: 'italic' }}>
+                    Fill in PAN, Legal Name and Trade Category to continue.
+                  </p>
+                )}
+                {kycMessage && (
+                  <p style={{ fontSize: 12, color: kycMessage.includes('submitted') ? '#34d399' : '#f87171', margin: '0 0 10px' }}>
+                    {kycMessage}
+                  </p>
+                )}
+                <button onClick={handleVerify} disabled={!kycReady || verifying} style={{
+                  width: '100%', padding: '12px', borderRadius: 10, fontSize: 13, fontWeight: 700,
+                  background: kycReady ? '#CFB53B' : 'rgba(255,255,255,0.07)',
+                  color: kycReady ? '#000' : 'rgba(255,255,255,0.25)',
+                  border: 'none', cursor: kycReady ? 'pointer' : 'not-allowed',
+                  opacity: verifying ? 0.6 : 1,
+                  display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+                }}>
+                  <ChevronRight size={15} /> {verifying ? 'Submitting…' : 'Complete Verification →'}
+                </button>
+              </>
+            );
+          })()}
         </div>
       )}
 
@@ -372,10 +415,12 @@ export default function Profile() {
         {error && <p style={{ color: '#f87171', fontSize: 12, margin: '0 0 10px' }}>{error}</p>}
         {message && <p style={{ color: '#34d399', fontSize: 12, margin: '0 0 10px' }}>{message}</p>}
 
-        <button onClick={handleSave} disabled={saving} style={{
+        <button onClick={handleSave} disabled={!isDirty || saving} style={{
           width: '100%', padding: '14px', borderRadius: 10, fontSize: 14, fontWeight: 700,
-          background: '#CFB53B', color: '#000', border: 'none', cursor: 'pointer',
-          opacity: saving ? 0.6 : 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+          background: '#CFB53B', color: '#000', border: 'none',
+          cursor: isDirty ? 'pointer' : 'default',
+          opacity: isDirty ? (saving ? 0.6 : 1) : 0.4,
+          display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
         }}>
           <Save size={16} /> {saving ? 'Saving…' : 'Save Changes'}
         </button>

@@ -1,19 +1,13 @@
 import { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Shield, Mail, Lock, Eye, EyeOff, ArrowRight, Smartphone, User } from 'lucide-react';
+import { Shield, Mail, Lock, Eye, EyeOff, ArrowRight, Smartphone } from 'lucide-react';
 import { RecaptchaVerifier, signInWithPhoneNumber } from 'firebase/auth';
 import { auth, isConfigured as firebaseConfigured } from '../config/firebase';
-import { loginEmail, verifyFirebaseOTP } from '../utils/api';
+import { loginEmail, verifyFirebaseOTP, checkPhone } from '../utils/api';
 import { useAuth } from '../context/AuthContext';
 
 const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID;
-
-const TRADER_TYPES = [
-  { value: 'BUYER',          label: 'Buyer',          desc: 'I buy metals' },
-  { value: 'SELLER',         label: 'Seller',         desc: 'I sell metals' },
-  { value: 'CHECKING_RATES', label: 'Just Checking',  desc: 'Market observer' },
-];
 
 function GoogleIcon() {
   return (
@@ -44,8 +38,6 @@ export default function Login() {
   const [showPassword, setShowPassword] = useState(false);
   const [phone, setPhone]               = useState('');
   const [otp, setOtp]                   = useState('');
-  const [name, setName]                 = useState('');
-  const [traderTypes, setTraderTypes]   = useState(['CHECKING_RATES']);
   const [loading, setLoading]           = useState(false);
   const [error, setError]               = useState('');
 
@@ -93,8 +85,8 @@ export default function Login() {
     const container = document.getElementById('recaptcha-container');
     if (!container) throw new Error('reCAPTCHA container not found');
     container.innerHTML = '';
-    const verifier = new RecaptchaVerifier(auth, container, { size: 'invisible' });
-    await verifier.render();
+    // Use string ID — more reliable. Let signInWithPhoneNumber handle render internally.
+    const verifier = new RecaptchaVerifier(auth, 'recaptcha-container', { size: 'invisible' });
     recaptchaVerifierRef.current = verifier;
     return verifier;
   }
@@ -138,6 +130,14 @@ export default function Login() {
 
     setLoading(true);
     try {
+      // Check if phone is registered before spending Firebase quota
+      const checkRes = await checkPhone(toFirebasePhone(phone));
+      if (!checkRes.data.exists) {
+        setError('No account found with this number. Please sign up first.');
+        setLoading(false);
+        return;
+      }
+
       const verifier = await buildVerifier();
       const confirmation = await signInWithPhoneNumber(auth, firebasePhone, verifier);
       setConfirmationResult(confirmation);
@@ -178,20 +178,8 @@ export default function Login() {
       // Get Firebase ID token
       const firebaseToken = await credential.user.getIdToken();
 
-      // Map multi-select to enum: BUYER+SELLER → BOTH
-      const hasBuyer  = traderTypes.includes('BUYER');
-      const hasSeller = traderTypes.includes('SELLER');
-      const mappedType = (hasBuyer && hasSeller) ? 'BOTH'
-        : hasBuyer ? 'BUYER'
-        : hasSeller ? 'SELLER'
-        : 'CHECKING_RATES';
-
-      // Exchange Firebase token for our app JWT
-      const res = await verifyFirebaseOTP({
-        firebaseToken,
-        name: name || undefined,
-        traderType: mappedType,
-      });
+      // Exchange Firebase token for our app JWT (loginOnly — no new account creation)
+      const res = await verifyFirebaseOTP({ firebaseToken, loginOnly: true });
 
       login(res.data.token, res.data.user || {});
       navigate('/');
@@ -216,7 +204,7 @@ export default function Login() {
       alignItems: 'center', justifyContent: 'center', padding: '24px 16px', position: 'relative',
     }}>
       {/* Invisible reCAPTCHA container — Firebase requires a DOM element */}
-      <div id="recaptcha-container" />
+      <div id="recaptcha-container" style={{ position: 'fixed', bottom: 0, left: 0 }} />
 
       <div style={{
         position: 'absolute', top: '20%', left: '50%', transform: 'translate(-50%,-50%)',
@@ -419,52 +407,6 @@ export default function Login() {
                   letterSpacing: '0.4em', fontFamily: 'monospace' }}
                 onFocus={e => e.target.style.borderColor = '#CFB53B'}
                 onBlur={e => e.target.style.borderColor = 'rgba(255,255,255,0.1)'} />
-            </div>
-
-            {/* Optional profile setup */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-              <div style={{ flex: 1, height: 1, background: 'rgba(255,255,255,0.06)' }} />
-              <span style={{ fontSize: 9, color: 'rgba(255,255,255,0.25)', fontWeight: 600, textTransform: 'uppercase' }}>
-                Optional Profile
-              </span>
-              <div style={{ flex: 1, height: 1, background: 'rgba(255,255,255,0.06)' }} />
-            </div>
-
-            <div style={{ position: 'relative' }}>
-              <User size={15} color="rgba(255,255,255,0.3)" style={{
-                position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }} />
-              <input type="text" value={name} onChange={e => setName(e.target.value)}
-                placeholder="Your Name" style={{ ...inputStyle, paddingLeft: 42 }}
-                onFocus={e => e.target.style.borderColor = '#CFB53B'}
-                onBlur={e => e.target.style.borderColor = 'rgba(255,255,255,0.1)'} />
-            </div>
-
-            <div>
-              <label style={{ fontSize: 10, fontWeight: 700, textTransform: 'uppercase',
-                letterSpacing: '0.08em', color: 'rgba(255,255,255,0.35)', display: 'block', marginBottom: 8 }}>
-                I am a <span style={{ fontWeight: 400, textTransform: 'none' }}>(select all that apply)</span>
-              </label>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(90px, 1fr))', gap: 6 }}>
-                {TRADER_TYPES.map(t => {
-                  const active = traderTypes.includes(t.value);
-                  return (
-                    <button key={t.value} type="button" onClick={() => {
-                      setTraderTypes(prev => prev.includes(t.value)
-                        ? prev.filter(v => v !== t.value) : [...prev, t.value]);
-                    }}
-                      style={{
-                        padding: '8px 10px', borderRadius: 8, textAlign: 'left', cursor: 'pointer',
-                        background: active ? 'rgba(207,181,59,0.12)' : 'rgba(255,255,255,0.04)',
-                        border: `1px solid ${active ? 'rgba(207,181,59,0.5)' : 'rgba(255,255,255,0.08)'}`,
-                        position: 'relative',
-                      }}>
-                      {active && <span style={{ position: 'absolute', top: 4, right: 6, fontSize: 10, color: '#CFB53B' }}>✓</span>}
-                      <p style={{ fontSize: 11, fontWeight: 700, color: active ? '#CFB53B' : '#fff', margin: '0 0 1px' }}>{t.label}</p>
-                      <p style={{ fontSize: 9, color: 'rgba(255,255,255,0.3)', margin: 0 }}>{t.desc}</p>
-                    </button>
-                  );
-                })}
-              </div>
             </div>
 
             <button type="submit" disabled={loading || otp.length < 6}

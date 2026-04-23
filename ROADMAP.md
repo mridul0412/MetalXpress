@@ -8,6 +8,7 @@
 
 - [x] **Email domain on Resend** — bhavx.com verified, `EMAIL_FROM="BhavX <noreply@bhavx.com>"` set, sending to any inbox ✅ (done 2026-04-21)
 - [x] **SMS OTP real integration** — Firebase Phone Auth live; real 6-digit SMS; no DLT needed; MSG91 parked ✅ (done 2026-04-21)
+- [x] **Phone login UX fixes** — pre-check blocks unregistered numbers before OTP send; removed name/trader-type from login OTP screen; `loginOnly:true` prevents silent account creation ✅ (done 2026-04-24)
 - [ ] **Deploy backend → Railway** — Node + PostgreSQL plugin, set DATABASE_URL
 - [ ] **Deploy frontend → Vercel** — free tier, set `VITE_API_URL` to Railway backend URL
 - [ ] **Production env vars** — new JWT_SECRET, ADMIN_PASSWORD, DATABASE_URL (never use dev values in prod)
@@ -35,6 +36,10 @@
 - [ ] **WebSocket/SSE** — replace 30s polling with real-time deal notifications
 - [ ] **KYC document upload** — PAN card photo upload for extra verification layer
 - [ ] **Dispute SLA automation** — auto-notify admin when dispute filed, escalation timer
+- [ ] **Premium UI/UX upgrade** — high-polish dropdowns, modals, animations across entire app; glassmorphism upgrade, micro-interactions, better mobile touch targets
+- [ ] **Deal completion visibility** — completed deals should mark listing as "Sold"; remove/archive from active Browse tab
+- [ ] **Offer/counter notifications** — email or in-app alert when buyer/seller receives a new offer or counter-offer
+- [ ] **Profile view mode** — profile shows view-only by default; "Edit" button unlocks fields; phone/email change triggers re-verification
 
 ---
 
@@ -72,6 +77,11 @@
 - [x] Footer + static pages (About, Terms, Privacy, Contact)
 - [x] Domains purchased — bhavx.com + bhavx.in (GoDaddy, April 2026)
 - [x] SMS OTP — Firebase Phone Auth, real SMS, no DLT registration needed, 10k OTPs/month free
+- [x] ngrok setup — Firebase Phone Auth works in local dev via ngrok tunnel
+- [x] Phone login UX — pre-check + clean OTP screen + loginOnly flag
+- [x] Seed improvements — emailVerified users, source:'seed' on LME/MCX rates, bhavx.com admin emails
+- [x] Marketplace bug fixes (session 18) — images on ngrok, Lightbox flicker, dispute scroll, own-listing filter, deal badges, KYC two-button, dirty-state Save
+- [x] Navbar username → gold clickable link to /profile
 
 ---
 
@@ -90,3 +100,4 @@
 | 2026-04-20 | 15 | BhavX rebrand, brand config, domains purchased |
 | 2026-04-21 | 16 | BhavX hexagon logo (SVG), ROADMAP.md created, Resend domain verified ✅, email live to any inbox, hero CTA button → outline+hover |
 | 2026-04-21 | 17 | Firebase Phone Auth end-to-end — real SMS OTP replaces hardcoded `1234`, MSG91 parked, Login.jsx + Signup.jsx updated |
+| 2026-04-24 | 18 | ngrok setup, phone login UX fixes, seed improvements, 7 marketplace/profile bug fixes, navbar profile link |

@@ -82,10 +82,9 @@ export default function Signup() {
     if (!container) throw new Error('reCAPTCHA container element not found in DOM');
     container.innerHTML = '';
 
-    // Create verifier pointing at the element directly (not the ID string)
-    const verifier = new RecaptchaVerifier(auth, container, { size: 'invisible' });
-    // Render it and wait — this is what actually contacts Google's servers
-    await verifier.render();
+    // Use string ID (not element ref) — more reliable across Firebase SDK versions
+    const verifier = new RecaptchaVerifier(auth, 'recaptcha-container-signup', { size: 'invisible' });
+    // Let signInWithPhoneNumber call render() internally — calling it here causes double-render
     recaptchaVerifierRef.current = verifier;
     return verifier;
   }
@@ -207,8 +206,8 @@ export default function Signup() {
       minHeight: 'calc(100vh - 120px)', display: 'flex', flexDirection: 'column',
       alignItems: 'center', justifyContent: 'center', padding: '24px 16px', position: 'relative',
     }}>
-      {/* Invisible reCAPTCHA container */}
-      <div id="recaptcha-container-signup" />
+      {/* reCAPTCHA container — invisible, required by Firebase */}
+      <div id="recaptcha-container-signup" style={{ position: 'fixed', bottom: 0, left: 0 }} />
 
       <div style={{
         position: 'absolute', top: '20%', left: '50%', transform: 'translate(-50%,-50%)',

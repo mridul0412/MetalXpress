@@ -40,9 +40,10 @@ BhavX (formerly MetalXpress) is a real-time metal intelligence platform for Indi
 ```
 
 ## Current Date
-2026-04-21
+2026-04-24
 
 ## Session Log
+- **2026-04-24 (session 18)**: ngrok setup for Firebase localhost bypass; phone login UX fixes (pre-check + clean OTP screen); seed improvements (bhavx.com emails, emailVerified, source:'seed' for LME/MCX); 6 bug fixes (images on ngrok, Lightbox flicker, dispute scroll, own listings in browse, deal badges, KYC two-button, dirty-state Save); Navbar username → gold link to profile — see Session 18 details below
 - **2026-04-21 (session 17)**: Firebase Phone Auth integrated end-to-end — real SMS OTP replaces hardcoded `1234`; MSG91 endpoints parked with comments; Login.jsx + Signup.jsx updated; full Firebase explanation pending — see Session 17 details below
 - **2026-03-19**: Initial UI overhaul (Replit-quality design, LME/MCX panel, hub selector, Login, Admin, Marketplace)
 - **2026-03-20 (session 1)**: Fixed Navbar not rendering (missing from App.jsx), rewrote CLAUDE.md, fixed Lead symbol (PB-USD→Stooq), added Forex+Indices+Crude display, city pills selector, standalone Admin layout, Login redesign (Google OAuth stub + phone OTP + profile), PaywallModal, plug-and-play API stubs for metals-api/Google/Razorpay/MSG91
@@ -61,6 +62,91 @@ BhavX (formerly MetalXpress) is a real-time metal intelligence platform for Indi
 - **2026-04-14 (session 14)**: Landing page copy overhaul (new headline, hero, FAQ x11, 2-tier pricing), About page rewrite, font standardization, PaywallModal simplified, "Mandoli" removed — see Session 14 details below
 - **2026-04-20 (session 15)**: Full brand rename MetalXpress → BhavX, central brand config created, domains bhavx.com + bhavx.in purchased — see Session 15 details below
 - **2026-04-21 (session 16)**: BhavX hexagon logo (SVG, gold gradient, Navbar+Footer+favicon), ROADMAP.md created, Resend domain verified (bhavx.com), email now sends to any inbox from noreply@bhavx.com, hero CTA button changed to outline+hover-fill so OM watermark shows through — see Session 16 details below
+
+## Session 18 Changes (2026-04-24) — Full Detail
+
+### ngrok Setup — Firebase Phone Auth on Localhost
+
+**Problem**: Firebase Phone Auth refuses `localhost` as an authorized domain — can't send real SMS during local dev.
+**Solution**: ngrok tunnel forwards `https://dandy-headrest-depravity.ngrok-free.dev` → `localhost:5173`. Firebase sees a real HTTPS domain; dev works end-to-end with real SMS.
+
+**Setup steps (permanent)**:
+1. `ngrok config add-authtoken 3Clm0TfbTT7FaUMdrC9WPcoewMG_22t34XofTkyWsBQ2Jtnmg`
+2. `ngrok http 5173` → use the `https://dandy-headrest-depravity.ngrok-free.dev` URL
+3. Firebase Console → Authentication → Settings → Authorized Domains → `dandy-headrest-depravity.ngrok-free.app` already added ✅
+4. Vite config updated with `allowedHosts` + `/uploads` proxy (see below)
+
+**`frontend/vite.config.js` changes**:
+- `allowedHosts: ['dandy-headrest-depravity.ngrok-free.dev']` — lets ngrok browser context reach Vite dev server
+- `/uploads` proxy added: `{ target: 'http://localhost:3001', changeOrigin: true }` — images/videos load correctly on ngrok
+
+**CRITICAL — BACKEND_URL fallback**: In `Marketplace.jsx`, the backend URL used to build image `src` must fall back to `''` (empty string), NOT `'http://localhost:3001'`. This makes `/uploads/...` paths go through the Vite proxy and work on ngrok. Four occurrences changed.
+
+### Phone Login UX Fixes
+
+**1. Pre-check before OTP send** — prevents wasting Firebase SMS quota on unregistered numbers:
+- Added `POST /api/auth/check-phone` backend endpoint — looks up normalized phone, returns `{ exists: bool }`
+- Added `checkPhone` export to `frontend/src/utils/api.js`
+- `Login.jsx` calls `checkPhone` *before* `signInWithPhoneNumber`; if `!exists` → shows "No account found with this number. Please sign up first." without spending an OTP
+
+**2. Cleaned OTP screen for login** — removed name, trader type, and "Optional Profile" section from login phone flow. Login is login — not signup. Fields were confusing for returning users.
+- Removed: `User` import, `name` state, `traderTypes` state, `TRADER_TYPES` constant, entire "Optional Profile" JSX block
+- Login OTP screen now shows only: phone input with +91 badge → OTP input → submit
+
+**3. `loginOnly: true` flag** — `verify-firebase-otp` backend now accepts `loginOnly` in request body. When `loginOnly: true` and no account exists for the phone, returns 404 instead of silently creating a new account. This prevents account creation from the login page.
+
+### Seed Data Improvements
+
+- All test user emails updated to `@bhavx.com` pattern: `admin@bhavx.com`, `test@bhavx.com`
+- All test users now have `emailVerified: true` — no friction during dev testing
+- `rajesh@test.com` and `amit@test.com` have `kycVerified: true` — ready for marketplace testing
+- **LME/MCX rates seeded with `source: 'seed'`** — critical fix. Default was `source: 'admin'` which triggered the 15-minute admin-override window, blocking Yahoo Finance live fetch. Now live rates load immediately without needing an admin paste.
+- `PRO_EMAILS` in `backend/.env` updated to include test traders: `test@bhavx.com,admin@bhavx.com,amit@test.com,rajesh@test.com,suresh@test.com,vikram@test.com`
+- Two verified test journeys ready: seller `rajesh@test.com` (copper listings) and buyer `amit@test.com`
+
+### Bug Fixes (Session 18)
+
+**1. Images not loading on ngrok** — See BACKEND_URL fix above (`''` fallback + `/uploads` proxy)
+
+**2. Lightbox flicker / auto-navigation** — Lightbox was rendered inside the `ListingCard`'s `onMouseEnter/Leave` div. Mouse events on the Lightbox overlay re-triggered card hover → re-renders → arrow keys jumped to different listing. **Fix**: `ListingCard` now returns `<>card div + lightbox</>` — Lightbox is outside the hover div in a React fragment.
+
+**3. Dispute modal not scrollable** — Long dispute reason + action buttons overflowed the panel with no scroll. **Fix**: Action bar div gets `overflowY: 'auto'` + `maxHeight: '55vh'`.
+
+**4. Own listings showing in Browse tab** — Seller saw their own listings in Browse, could accidentally "make offer" to themselves. **Fix**: `BrowseTab` filters `listings.filter(l => !user || l.userId !== user.id)`.
+
+**5. Deal status badges on My Listings** — Users had no idea if their listed items had active negotiations. **Fix**: `MyListingsTab` now receives `deals` prop; builds `listingDealMap` (maps `listingId → status`); renders amber/green/blue status pill under each listing ("Negotiating" / "Agreed" / "Connected"). `loadDeals()` also called when switching to the `my-listings` tab.
+
+**6. Profile KYC two-button mess** — There was a "Verify" button on the KYC status banner that toggled `showKyc` visibility, plus a separate Save button — confusing. **Fix**: Removed `showKyc` toggle state entirely. KYC form is always visible when `needsKyc && !isKycDone`. Added dedicated `handleVerify` with its own `verifying` + `kycMessage` states inside the KYC section. `handleSave` no longer touches KYC fields.
+
+**7. Save Changes dirty state** — Save Changes was always enabled even with no changes, making it easy to accidentally save a blank form. **Fix**: Added `origValues` state capturing initial form values on load. `isDirty = (name !== origValues.name || email !== origValues.email || ...)`. Save button is `disabled={!isDirty || saving}` with `opacity: 0.4` when clean.
+
+### Navbar Username — Gold Profile Link
+- Username display in Navbar wrapped in `<Link to="/profile">` styled gold (`color: #CFB53B`) with underline on hover
+- Clicking your name from anywhere navigates directly to profile page
+
+### Test Accounts (updated session 18)
+| Email | Password | Role | Notes |
+|-------|----------|------|-------|
+| `admin@bhavx.com` | `admin1234` | Admin + Pro | emailVerified + kycVerified |
+| `test@bhavx.com` | `test1234` | Pro tester | emailVerified + kycVerified |
+| `rajesh@test.com` | `test1234` | Seller (Delhi) | emailVerified + kycVerified, copper listings |
+| `amit@test.com` | `test1234` | Buyer (Mumbai) | emailVerified + kycVerified, Pro |
+| `suresh@test.com` | `test1234` | Seller (Ahmedabad) | emailVerified + kycVerified |
+| `vikram@test.com` | `test1234` | Seller (Ludhiana) | emailVerified + kycVerified |
+
+### Files Modified (Session 18)
+- `frontend/vite.config.js` — `allowedHosts` for ngrok, `/uploads` proxy
+- `frontend/src/utils/api.js` — `checkPhone` export added
+- `frontend/src/pages/Login.jsx` — removed name/traderTypes from OTP screen, `check-phone` pre-check, `loginOnly: true` flag
+- `frontend/src/pages/Marketplace.jsx` — BACKEND_URL `''` fallback (×4), Lightbox outside hover div, dispute scroll fix, own-listing filter, deal badges in MyListingsTab, `loadDeals()` on tab switch
+- `frontend/src/pages/Profile.jsx` — removed `showKyc` toggle, dedicated `handleVerify`, `origValues` dirty state, disabled Save when clean
+- `frontend/src/components/Navbar.jsx` — username → gold Link to /profile
+- `backend/src/routes/auth.js` — `POST /check-phone` endpoint, `loginOnly` flag in `verify-firebase-otp`
+- `backend/src/prisma/seed.js` — `emailVerified: true` for all users, `@bhavx.com` admin emails, `source: 'seed'` on LME/MCX rates
+- `backend/.env` — PRO_EMAILS updated with all test traders
+- `ROADMAP.md` — session 18 logged, completed items marked
+
+---
 
 ## Session 17 Changes (2026-04-21) — Full Detail
 
@@ -801,7 +887,8 @@ Grade names updated to match actual WhatsApp message format (so `normGrade` matc
 - **Legacy components**: Removed (session 12) — CitySelector, MetalCard, RateTable, LMERatesPanel deleted.
 - **Unused dependencies**: `ioredis` removed (session 12).
 - **Google OAuth**: Plug-and-play but shows greyed "Soon" when `GOOGLE_CLIENT_ID` not set.
-- **SMS OTP**: **DONE (session 17)** — Firebase Phone Auth sends real 6-digit SMS. No DLT registration needed. Backend `/verify-firebase-otp` endpoint live. MSG91 endpoints parked with comments for easy switch-back.
+- **SMS OTP**: **DONE (session 17+18)** — Firebase Phone Auth sends real 6-digit SMS. No DLT registration needed. Login pre-checks phone existence before sending OTP. `loginOnly: true` prevents silent account creation from login page. Requires ngrok for local testing (see ngrok section in session 18).
+- **ngrok for dev**: Must run `ngrok http 5173` before testing phone OTP locally. Authorized domain already added to Firebase Console. Vite config has `allowedHosts` + `/uploads` proxy.
 - **Subscription lookup**: Currently env-var based (`PRO_EMAILS`). Needs real subscription table + Razorpay webhook when payments go live.
 
 ## Session 11 Changes (2026-04-11) — Full Detail
@@ -1138,14 +1225,15 @@ Used in both Signup.jsx and Profile.jsx:
 - `backend/uploads/` — 11 real scrap metal photos + 2 industrial videos (local serving)
 - `backend/src/prisma/seed.js` — Updated to use local `/uploads/` paths (not CDN), proper metal-matched images per listing
 
-## Current Status (as of 2026-04-20, session 15)
-- **Auth**: Unified signup (email+phone+OTP mandatory), email+password login, phone OTP login, Google OAuth — prevents duplicate accounts. Phone normalization handles +91 prefix, spaces, dashes.
-- **Subscription**: Pro test user `test@metalxpress.in` / `test1234`, Admin user `admin@metalxpress.in` / `admin1234` — pro plan via PRO_EMAILS env var
+## Current Status (as of 2026-04-24, session 18)
+- **Auth**: Unified signup (email+phone+OTP mandatory), email+password login, phone OTP login (Firebase, real SMS), Google OAuth. Login phone flow pre-checks phone registration before spending Firebase OTP quota. `loginOnly: true` flag prevents account creation from login page.
+- **ngrok**: `https://dandy-headrest-depravity.ngrok-free.dev` → localhost:5173. Required for Firebase Phone Auth in local dev. Vite config has `allowedHosts` + `/uploads` proxy.
+- **Subscription**: Pro test user `test@bhavx.com` / `admin1234`, Admin user `admin@bhavx.com` / `admin1234` — pro plan via PRO_EMAILS env var. All test traders (amit, rajesh, suresh, vikram @test.com) also in PRO_EMAILS.
 - **Landing**: Hero section for non-logged-in users with feature cards and CTAs
 - **Paywall**: Local rates blurred/gated for non-subscribers with "Sign Up" or "Upgrade to Pro" overlay
-- **Marketplace**: Negotiation-first deal flow, 0.1% commission on agreed value, chat-style offer thread, direct file upload for photos/videos (multer → local disk), dispute/escrow mechanism, 4-tab UI. **KYC gate blocks entire marketplace** (browse/post/deals) for unverified users. Minimum 4 media required to post. Explicit T&C acceptance on both offer-making and listing. Lightbox gallery (click thumbnail → full-screen with nav arrows + thumbnail strip + video autoplay). Seed listings use local `/uploads/` photos+videos (real scrap metal content). "Make Offer" duplicate-deal bug fixed (navigates to existing deal).
+- **Marketplace**: Negotiation-first deal flow, 0.1% commission on agreed value, chat-style offer thread, direct file upload for photos/videos (multer → local disk), dispute/escrow mechanism, 4-tab UI. **KYC gate blocks entire marketplace** (browse/post/deals) for unverified users. Minimum 4 media required to post. Explicit T&C acceptance on both offer-making and listing. Lightbox gallery (click thumbnail → full-screen with nav arrows + thumbnail strip + video autoplay — renders outside hover div to prevent flicker). Seed listings use local `/uploads/` photos+videos served via Vite proxy (works on ngrok). "Make Offer" duplicate-deal bug fixed. Browse tab hides user's own listings. My Listings shows deal status pill badges.
 - **Disputes**: Full dispute lifecycle — raise dispute → admin reviews → refund/complete/cancel resolution
-- **Profile**: Complete rewrite — save now refreshes AuthContext immediately via `refreshUser()` (no stale data), phone change requires OTP verification, KYC status banner, inline PAN-based KYC form for unverified traders, all fields editable
+- **Profile**: Save refreshes AuthContext via `refreshUser()`, phone change requires OTP verification, KYC status banner, inline PAN-based KYC form (always visible when needed, no toggle button). Dedicated `handleVerify` for KYC. Save Changes button disabled when form is clean (dirty-state tracking via `origValues`).
 - **KYC**: PAN-based identity verification. Collects: PAN Card Number (required, format validated), Legal Name as on PAN (required), Trade Category (required), Business Name (optional), GSTIN (optional, format validated). Gates entire marketplace access. 3-step signup for Buyer/Seller (Details → OTP → KYC). Privacy messaging: "bank-grade encryption, solely for trader verification, never shared with external parties" — NO mention of government/tax/GST/Income Tax. Can skip during signup and verify later from Profile page.
 - **Admin**: 3-tab admin (Rate Management / Listings / Disputes), detailed listing verification with seller profile + KYC checklist, dispute resolution panel
 - **Accordion**: All metals default-open, per-metal collapse, Expand/Collapse All button
@@ -1759,12 +1847,18 @@ git push origin claude/great-goldwasser:main
 - KYC gates entire marketplace — user must be `kycVerified: true` to browse, post, or negotiate. Old `JustCheckingGate` component removed.
 - Pexels CDN images don't work as `<img src>` in browsers (hotlink blocked via Referer check). Always serve images from local `backend/uploads/` or use S3/Cloudinary.
 - Seed images/videos are in `backend/uploads/seed-*` — these are local files, not URLs. If uploads folder is cleared, re-run seed script to regenerate.
+- **BACKEND_URL in Marketplace.jsx**: Falls back to `''` (empty string), NOT `'http://localhost:3001'`. Empty string forces `/uploads/...` through the Vite proxy, making images work on both localhost and ngrok. If you change this to a hardcoded URL, images will break on ngrok.
+- **ngrok**: Required for Firebase Phone Auth in local dev. Run `ngrok http 5173`, use the `https://dandy-headrest-depravity.ngrok-free.dev` URL. Vite already configured with `allowedHosts`. Firebase domain already authorized. Without ngrok, phone OTP will fail with "auth/unauthorized-domain".
+- **Seed source field**: LME/MCX rates in seed.js use `source: 'seed'`. This prevents them from triggering the 15-minute admin-override window. If you reseed and rates stop updating from Yahoo Finance, check that seed rates use `source: 'seed'` not `'admin'`.
 - PAN format validation: `/^[A-Z]{5}[0-9]{4}[A-Z]$/` (e.g. ABCDE1234F). GSTIN format: `/^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z][A-Z0-9]Z[A-Z0-9]$/` (15 chars).
 
-## Test Accounts
-| Email | Password | Role | Subscription |
-|-------|----------|------|-------------|
-| `admin@metalxpress.in` | `admin1234` | Admin + Trader | Pro (via PRO_EMAILS) |
-| `test@metalxpress.in` | `test1234` | Pro Tester | Pro (via PRO_EMAILS) |
-| `rajesh@test.com` | `test1234` | Seller (Delhi) | Free |
-| Admin panel | password: `admin123` | Admin | N/A (header auth) |
+## Test Accounts (updated session 18)
+| Email | Password | Role | Notes |
+|-------|----------|------|-------|
+| `admin@bhavx.com` | `admin1234` | Admin + Pro | emailVerified + kycVerified |
+| `test@bhavx.com` | `test1234` | Pro tester | emailVerified + kycVerified |
+| `rajesh@test.com` | `test1234` | Seller (Delhi) | emailVerified + kycVerified, copper listings, Pro |
+| `amit@test.com` | `test1234` | Buyer (Mumbai) | emailVerified + kycVerified, Pro |
+| `suresh@test.com` | `test1234` | Seller (Ahmedabad) | emailVerified + kycVerified, Pro |
+| `vikram@test.com` | `test1234` | Seller (Ludhiana) | emailVerified + kycVerified, Pro |
+| Admin panel | `admin123` | Admin panel | x-admin-password header |

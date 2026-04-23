@@ -163,7 +163,7 @@ export default function Marketplace() {
   };
 
   useEffect(() => { load(); }, [filterMetal, filterCity]);
-  useEffect(() => { if (tab === 'my-listings') loadMyListings(); }, [tab, user]);
+  useEffect(() => { if (tab === 'my-listings') { loadMyListings(); loadDeals(); } }, [tab, user]);
   useEffect(() => { if (tab === 'my-deals') loadDeals(); }, [tab, user]);
 
   // Poll deals every 30s when on deals tab
@@ -224,7 +224,7 @@ export default function Marketplace() {
             </>
         : <LoginPrompt navigate={navigate} />)}
 
-      {tab === 'my-listings' && <MyListingsTab listings={myListings} onRefresh={loadMyListings} onBrowseRefresh={load} />}
+      {tab === 'my-listings' && <MyListingsTab listings={myListings} onRefresh={loadMyListings} onBrowseRefresh={load} deals={deals} />}
 
       {tab === 'my-deals' && <>
         {isOnCooldown && (
@@ -252,6 +252,9 @@ export default function Marketplace() {
 
 /* ── Browse Tab ───────────────────────────────────────────────────── */
 function BrowseTab({ listings, loading, filterMetal, setFilterMetal, filterCity, setFilterCity, user, navigate, onMakeOffer, activeDeals, onViewDeal }) {
+  // Filter out the current user's own listings (can't make offer on own listing)
+  const visibleListings = listings.filter(l => !user || l.userId !== user.id);
+
   // Build a map: listingId → dealId for active (negotiating/agreed) deals
   const activeDealMap = {};
   if (activeDeals) {
@@ -298,10 +301,10 @@ function BrowseTab({ listings, loading, filterMetal, setFilterMetal, filterCity,
           </div>
         </div>
       ) : loading ? <p style={{ color: 'rgba(255,255,255,0.3)', textAlign: 'center', padding: 40 }}>Loading…</p>
-      : listings.length === 0
+      : visibleListings.length === 0
         ? <p style={{ color: 'rgba(255,255,255,0.3)', textAlign: 'center', padding: 40 }}>No listings found. Be the first to post!</p>
         : <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(min(100%, 320px), 1fr))', gap: 16 }}>
-            {listings.map(l => {
+            {visibleListings.map(l => {
               const existingDealId = user ? activeDealMap[l.id] : null;
               return (
                 <ListingCard key={l.id} listing={l}
@@ -320,7 +323,7 @@ function BrowseTab({ listings, loading, filterMetal, setFilterMetal, filterCity,
 function Lightbox({ items, startIndex, onClose }) {
   const [idx, setIdx] = useState(startIndex || 0);
   const videoRef = useRef(null);
-  const BACKEND = import.meta.env.VITE_API_URL?.replace('/api', '') || 'http://localhost:3001';
+  const BACKEND = import.meta.env.VITE_API_URL?.replace('/api', '') || '';
 
   const toSrc = (url) => url.startsWith('/uploads/') ? `${BACKEND}${url}` : url;
   const isVideo = (url) => /\.(mp4|mov|webm)$/i.test(url);
@@ -429,13 +432,14 @@ function ListingCard({ listing: l, onAction, actionLabel, showStatus, onDelete }
   const priceStr = l.price ? `₹${fmt(l.price)}` : 'Negotiate';
   const totalVal = l.price && l.qty ? l.price * l.qty : null;
   const [lightboxIdx, setLightboxIdx] = useState(null);
-  const BACKEND = import.meta.env.VITE_API_URL?.replace('/api', '') || 'http://localhost:3001';
+  const BACKEND = import.meta.env.VITE_API_URL?.replace('/api', '') || '';
 
   const toSrc = (url) => url.startsWith('/uploads/') ? `${BACKEND}${url}` : url;
   const isVideo = (url) => /\.(mp4|mov|webm)$/i.test(url);
 
   const [cardHovered, setCardHovered] = useState(false);
   return (
+    <>
     <div
       onMouseEnter={() => setCardHovered(true)}
       onMouseLeave={() => setCardHovered(false)}
@@ -513,11 +517,6 @@ function ListingCard({ listing: l, onAction, actionLabel, showStatus, onDelete }
         </div>
       )}
 
-      {/* Lightbox */}
-      {lightboxIdx !== null && (
-        <Lightbox items={l.imageUrls} startIndex={lightboxIdx} onClose={() => setLightboxIdx(null)} />
-      )}
-
       {l.description && <p style={{ fontSize: 12, color: 'rgba(255,255,255,0.5)', margin: '0 0 10px', lineHeight: 1.5 }}>
         {l.description.length > 100 ? l.description.slice(0, 100) + '…' : l.description}</p>}
 
@@ -549,6 +548,10 @@ function ListingCard({ listing: l, onAction, actionLabel, showStatus, onDelete }
         </div>
       </div>
     </div>
+    {lightboxIdx !== null && (
+      <Lightbox items={l.imageUrls} startIndex={lightboxIdx} onClose={() => setLightboxIdx(null)} />
+    )}
+    </>
   );
 }
 
@@ -832,7 +835,7 @@ function DealDetailPanel({ dealId, user, onClose }) {
         </div>
 
         {/* Action bar */}
-        <div style={{ padding: '16px 20px', borderTop: '1px solid rgba(255,255,255,0.06)' }}>
+        <div style={{ padding: '16px 20px', borderTop: '1px solid rgba(255,255,255,0.06)', overflowY: 'auto', maxHeight: '55vh' }}>
           {error && <p style={{ color: '#f87171', fontSize: 12, marginBottom: 8 }}>{error}</p>}
 
           {/* Negotiation actions */}
@@ -1226,8 +1229,17 @@ function MyDealsTab({ deals, user, onRefresh, onViewDeal }) {
 }
 
 /* ── My Listings Tab ──────────────────────────────────────────────── */
-function MyListingsTab({ listings, onRefresh, onBrowseRefresh }) {
+function MyListingsTab({ listings, onRefresh, onBrowseRefresh, deals = [] }) {
   const [deleting, setDeleting] = useState(null);
+
+  const listingDealMap = {};
+  deals.forEach(d => {
+    if (d.listing?.id && !['cancelled', 'expired'].includes(d.status)) {
+      if (!listingDealMap[d.listing.id] || d.status === 'negotiating') {
+        listingDealMap[d.listing.id] = d.status;
+      }
+    }
+  });
 
   const handleDelete = async (id) => {
     if (!confirm('Remove this listing?')) return;
@@ -1264,9 +1276,20 @@ function MyListingsTab({ listings, onRefresh, onBrowseRefresh }) {
                 {l.status === 'rejected' && <span style={{ fontSize: 10, fontWeight: 700, padding: '2px 8px',
                   borderRadius: 6, background: 'rgba(248,113,113,0.15)', color: '#f87171' }}>Rejected</span>}
               </div>
-              <h4 style={{ fontSize: 15, fontWeight: 700, color: '#fff', margin: '0 0 2px' }}>
-                {l.grade?.name || l.metal?.name}
-              </h4>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 2 }}>
+                <h4 style={{ fontSize: 15, fontWeight: 700, color: '#fff', margin: 0 }}>
+                  {l.grade?.name || l.metal?.name}
+                </h4>
+                {listingDealMap[l.id] === 'negotiating' && (
+                  <span style={{ fontSize: 10, fontWeight: 700, padding: '2px 8px', borderRadius: 20, background: '#CFB53B', color: '#000' }}>Offer Pending</span>
+                )}
+                {listingDealMap[l.id] === 'agreed' && (
+                  <span style={{ fontSize: 10, fontWeight: 700, padding: '2px 8px', borderRadius: 20, background: '#34d399', color: '#000' }}>Deal Agreed</span>
+                )}
+                {(listingDealMap[l.id] === 'connected' || listingDealMap[l.id] === 'paid') && (
+                  <span style={{ fontSize: 10, fontWeight: 700, padding: '2px 8px', borderRadius: 20, background: '#38bdf8', color: '#000' }}>Connected</span>
+                )}
+              </div>
               <p style={{ fontSize: 11, color: 'rgba(255,255,255,0.3)' }}>
                 {fmt(l.qty)} kg · {l.location} {l.price ? `· ₹${fmt(l.price)}/kg` : '· Negotiable'}
               </p>
@@ -1398,10 +1421,10 @@ function PostForm({ user, onSuccess }) {
             {imageUrls.map((url, i) => (
               <div key={i} style={{ position: 'relative' }}>
                 {url.match(/\.(mp4|mov|webm)$/i) ? (
-                  <video src={`${import.meta.env.VITE_API_URL?.replace('/api', '') || 'http://localhost:3001'}${url}`}
+                  <video src={`${import.meta.env.VITE_API_URL?.replace('/api', '') || ''}${url}`}
                     style={{ width: 72, height: 72, objectFit: 'cover', borderRadius: 8, border: '1px solid rgba(255,255,255,0.1)' }} />
                 ) : (
-                  <img src={`${import.meta.env.VITE_API_URL?.replace('/api', '') || 'http://localhost:3001'}${url}`}
+                  <img src={`${import.meta.env.VITE_API_URL?.replace('/api', '') || ''}${url}`}
                     alt={`upload ${i + 1}`}
                     style={{ width: 72, height: 72, objectFit: 'cover', borderRadius: 8, border: '1px solid rgba(255,255,255,0.1)' }} />
                 )}

@@ -32,6 +32,10 @@ let app, auth;
 if (isConfigured) {
   app  = initializeApp(firebaseConfig);
   auth = getAuth(app);
+  // Bypass reCAPTCHA on localhost — real SMS still sent, just no bot-check
+  if (typeof window !== 'undefined' && window.location.hostname === 'localhost') {
+    auth.settings.appVerificationDisabledForTesting = true;
+  }
 } else {
   console.warn('[Firebase] Not configured — phone OTP will fall back to dev mode (any OTP accepted)');
   auth = null;

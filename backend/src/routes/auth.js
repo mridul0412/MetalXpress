@@ -86,12 +86,25 @@ function verifyJWT(req) {
 // });
 // ════════════════════════════════════════════════════════════════════════════
 
+// ── POST /api/auth/check-phone ───────────────────────────────────────────────
+// Quick check: is this phone number registered? Used by Login before sending OTP.
+router.post('/check-phone', async (req, res) => {
+  try {
+    const cleanPhone = normalizePhone(req.body.phone);
+    if (!cleanPhone) return res.status(400).json({ error: 'Invalid phone number' });
+    const user = await prisma.user.findUnique({ where: { phone: cleanPhone }, select: { id: true } });
+    res.json({ exists: !!user });
+  } catch (err) {
+    res.status(500).json({ error: 'Check failed' });
+  }
+});
+
 // ── POST /api/auth/verify-firebase-otp ──────────────────────────────────────
 // Firebase Phone Auth: frontend verifies OTP directly with Firebase,
 // then sends the resulting ID token here. We verify it and issue our JWT.
 router.post('/verify-firebase-otp', async (req, res) => {
   try {
-    const { firebaseToken, name, traderType, city } = req.body;
+    const { firebaseToken, name, traderType, city, loginOnly } = req.body;
     if (!firebaseToken) return res.status(400).json({ error: 'Firebase ID token required' });
 
     // Verify the token with Firebase Admin SDK
@@ -118,6 +131,9 @@ router.post('/verify-firebase-otp', async (req, res) => {
         },
       });
     } else {
+      if (loginOnly) {
+        return res.status(404).json({ error: 'No account found with this number. Please sign up first.' });
+      }
       user = await prisma.user.create({
         data: {
           phone: cleanPhone,

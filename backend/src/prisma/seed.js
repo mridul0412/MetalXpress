@@ -207,15 +207,15 @@ async function main() {
     console.log(`  ✅ Metal: ${metal.emoji} ${metal.name} (${metal.grades.length} grades)`);
   }
 
-  // Seed LME rates
+  // Seed LME rates — source: 'seed' so they don't block Yahoo Finance live fetch
   for (const rate of LME_RATES) {
-    await prisma.lMERate.create({ data: rate });
+    await prisma.lMERate.create({ data: { ...rate, source: 'seed' } });
   }
   console.log(`  ✅ LME rates: ${LME_RATES.length}`);
 
-  // Seed MCX rates
+  // Seed MCX rates — source: 'seed' so they don't block live fetch
   for (const rate of MCX_RATES) {
-    await prisma.mCXRate.create({ data: rate });
+    await prisma.mCXRate.create({ data: { ...rate, source: 'seed' } });
   }
   console.log(`  ✅ MCX rates: ${MCX_RATES.length}`);
 
@@ -279,27 +279,27 @@ async function main() {
   const rajesh = await prisma.user.create({ data: {
     phone: '9876543210', email: 'rajesh@test.com', passwordHash: testHash,
     name: 'Rajesh Kumar', city: 'Delhi', traderType: 'SELLER',
-    phoneVerified: true, kycVerified: true,
+    phoneVerified: true, emailVerified: true, kycVerified: true,
   }});
   const amit = await prisma.user.create({ data: {
     phone: '9876543211', email: 'amit@test.com', passwordHash: testHash,
     name: 'Amit Sharma', city: 'Mumbai', traderType: 'BUYER',
-    phoneVerified: true, kycVerified: true,
+    phoneVerified: true, emailVerified: true, kycVerified: true,
   }});
   const suresh = await prisma.user.create({ data: {
     phone: '9876543212', email: 'suresh@test.com', passwordHash: testHash,
     name: 'Suresh Patel', city: 'Ahmedabad', traderType: 'BOTH',
-    phoneVerified: true, kycVerified: true,
+    phoneVerified: true, emailVerified: true, kycVerified: true,
   }});
   const priya = await prisma.user.create({ data: {
     phone: '9876543213', email: 'priya@test.com', passwordHash: testHash,
     name: 'Priya Verma', city: 'Chennai', traderType: 'SELLER',
-    phoneVerified: true, kycVerified: false,
+    phoneVerified: true, emailVerified: true, kycVerified: false,
   }});
   const vikram = await prisma.user.create({ data: {
     phone: '9876543214', email: 'vikram@test.com', passwordHash: testHash,
     name: 'Vikram Singh', city: 'Ludhiana', traderType: 'BUYER',
-    phoneVerified: true, kycVerified: true,
+    phoneVerified: true, emailVerified: true, kycVerified: true,
   }});
 
   const userMap = {
@@ -314,32 +314,34 @@ async function main() {
   const ownerHash = await bcrypt.hash('test1234', 12);
   const ownerUser = await prisma.user.create({
     data: {
-      email: 'test@metalxpress.in',
+      email: 'test@bhavx.com',
       passwordHash: ownerHash,
       phone: '9999900000',
-      name: 'MX Pro Tester',
+      name: 'BhavX Pro Tester',
       city: 'Delhi',
       traderType: 'BOTH',
       phoneVerified: true,
-    },
-  });
-  console.log(`  ✅ Pro test user: test@metalxpress.in / test1234`);
-
-  // Admin test account with full subscription access (email: admin@metalxpress.in, password: admin1234)
-  const adminHash = await bcrypt.hash('admin1234', 12);
-  await prisma.user.create({
-    data: {
-      email: 'admin@metalxpress.in',
-      passwordHash: adminHash,
-      phone: '9999900001',
-      name: 'MX Admin',
-      city: 'Delhi',
-      traderType: 'BOTH',
-      phoneVerified: true,
+      emailVerified: true,
       kycVerified: true,
     },
   });
-  console.log(`  ✅ Admin user: admin@metalxpress.in / admin1234 (full pro access)`);
+  console.log(`  ✅ Pro test user: test@bhavx.com / test1234`);
+
+  const adminHash = await bcrypt.hash('admin1234', 12);
+  await prisma.user.create({
+    data: {
+      email: 'admin@bhavx.com',
+      passwordHash: adminHash,
+      phone: '9999900001',
+      name: 'BhavX Admin',
+      city: 'Delhi',
+      traderType: 'BOTH',
+      phoneVerified: true,
+      emailVerified: true,
+      kycVerified: true,
+    },
+  });
+  console.log(`  ✅ Admin user: admin@bhavx.com / admin1234 (full pro access)`);
   console.log(`  ✅ Test users: 7 (5 traders + pro tester + admin)`);
 
   // Seed sample marketplace listings
