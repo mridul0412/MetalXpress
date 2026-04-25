@@ -1,5 +1,22 @@
 # BhavX — Project Context & Requirements
 
+## 🎯 Current Business Focus (Month 1 — Foundation Sprint)
+> **Source of truth**: [BUSINESS_ROADMAP.md](./BUSINESS_ROADMAP.md) — full 6-month fundraise plan
+> **Product roadmap**: [ROADMAP.md](./ROADMAP.md) — keep separate from business
+>
+> **Right now (Month 1, Weeks 1-4)** — *Get to "VC-ready" state*:
+> 1. 🚀 **Production deploy** (Week 1) — Cloudinary → Railway backend → Vercel frontend → DNS to bhavx.com
+> 2. 👥 **Beta cohort** (Week 2) — onboard 20 hand-picked Delhi+Mumbai traders, daily check-ins
+> 3. 🤝 **Co-founder hunt** (Week 3) — start now; this is the #1 fundability blocker for solo founders
+> 4. 📊 **Pitch deck v1** (Week 4) — 10 slides + demo video + LinkedIn polish
+>
+> **Goal by end of Month 1**: live in production, 20 onboarded users, co-founder identified or in trial, deck v1 ready.
+> **6-month goal**: ₹10-25 Cr seed (realistic) / ₹50 Cr (stretch) / ₹2-5 Cr angel (floor — already achievable).
+>
+> **At every session**: glance at BUSINESS_ROADMAP.md for current week's checkboxes. Tick what's done. Update this block when crossing into Month 2.
+
+---
+
 ## What This App Is
 BhavX (formerly MetalXpress) is a real-time metal intelligence platform for Indian traders. It replaces WhatsApp broadcast messages with a clean, organized mobile-first web app. Features: live LME/MCX rates, local spot rates by city, verified B2B marketplace with negotiation flow, and pro analytics. Admin pastes WhatsApp messages to update local rates.
 
