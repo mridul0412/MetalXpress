@@ -274,7 +274,7 @@ router.get('/live', async (req, res) => {
       for (const metalName of ['Lead', 'Tin']) {
         if (covered.has(metalName)) continue;
         const dbRate = await prisma.lMERate.findFirst({
-          where: { metal: { contains: metalName }, createdAt: { gte: CUTOFF_7D }, source: 'admin' },
+          where: { metal: { contains: metalName }, createdAt: { gte: CUTOFF_7D } },
           orderBy: { createdAt: 'desc' },
         }).catch(() => null);
         if (dbRate) {
@@ -309,7 +309,7 @@ router.get('/live', async (req, res) => {
     });
 
     res.json({
-      metals, forex, indices, crude, usdInr,
+      metals, precious: yahooData.precious ?? [], forex, indices, crude, usdInr,
       lmeSource,  lmeUpdatedAt:  lmeUpdatedAt?.toISOString()  || null,
       forexSource, forexUpdatedAt: forexUpdatedAt?.toISOString() || null,
       fetchedAt: new Date().toISOString(),

@@ -33,6 +33,13 @@ const STOOQ_METALS = [
   { metal: 'Nickel', symbol: 'NI.F', toMt: 22.0462 },
 ];
 
+// Precious metals — Yahoo COMEX futures (USD/troy oz)
+// MCX conventions: Gold ₹/10g, Silver ₹/kg. 1 troy oz = 31.1035 g.
+const PRECIOUS_METALS = [
+  { metal: 'Gold',   symbol: 'GC=F', mcxUnit: '₹/10g', mcxFactor: 10   / 31.1035 },
+  { metal: 'Silver', symbol: 'SI=F', mcxUnit: '₹/kg',  mcxFactor: 1000 / 31.1035 },
+];
+
 // metals-api.com symbols (spot price per troy oz in USD)
 const METALS_API_SYMBOLS = {
   Copper:    'XCU',
@@ -204,7 +211,21 @@ async function fetchLivePrices() {
     metals.push({ metal: m.metal, priceUsd, priceMcx, change, source: 'stooq' });
   });
 
-  return { metals, forex, indices, crude, usdInr };
+  // ── 3. Precious metals (Gold, Silver) — Yahoo COMEX, USD/oz ─────────────
+  const preciousMetas = await Promise.all(PRECIOUS_METALS.map(p => fetchYahooMeta(p.symbol)));
+  const precious = [];
+  PRECIOUS_METALS.forEach((p, i) => {
+    const meta = preciousMetas[i];
+    if (!meta) return;
+    const priceUsd = parseFloat(meta.price.toFixed(2));               // USD/troy oz
+    const priceMcx = parseFloat((priceUsd * usdInr * p.mcxFactor).toFixed(2));
+    let change = 0;
+    if (meta.changePct != null) change = parseFloat(meta.changePct.toFixed(2));
+    else if (meta.prevClose) change = calcChange(priceUsd, meta.prevClose);
+    precious.push({ metal: p.metal, priceUsd, priceMcx, change, mcxUnit: p.mcxUnit, source: 'yahoo' });
+  });
+
+  return { metals, precious, forex, indices, crude, usdInr };
 }
 
 module.exports = { fetchLivePrices };

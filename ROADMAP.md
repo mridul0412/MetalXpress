@@ -82,6 +82,8 @@
 - [x] Seed improvements — emailVerified users, source:'seed' on LME/MCX rates, bhavx.com admin emails
 - [x] Marketplace bug fixes (session 18) — images on ngrok, Lightbox flicker, dispute scroll, own-listing filter, deal badges, KYC two-button, dirty-state Save
 - [x] Navbar username → gold clickable link to /profile
+- [x] Precious Metals section — Gold + Silver via Yahoo `GC=F`/`SI=F`, MCX conversion (₹/10g for Gold, ₹/kg for Silver) ✅ (done 2026-04-26)
+- [x] Bug fixes (session 19) — Lead/Tin missing from LME (DB fallback `source` filter), sold listings still in Browse (relational filter + `isActive` on pay), Submit Dispute UX (inline error + canSubmit guard)
 
 ---
 
@@ -101,3 +103,4 @@
 | 2026-04-21 | 16 | BhavX hexagon logo (SVG), ROADMAP.md created, Resend domain verified ✅, email live to any inbox, hero CTA button → outline+hover |
 | 2026-04-21 | 17 | Firebase Phone Auth end-to-end — real SMS OTP replaces hardcoded `1234`, MSG91 parked, Login.jsx + Signup.jsx updated |
 | 2026-04-24 | 18 | ngrok setup, phone login UX fixes, seed improvements, 7 marketplace/profile bug fixes, navbar profile link |
+| 2026-04-26 | 19 | 3 bug fixes (Lead/Tin LME, sold listings, dispute UX); Gold + Silver Precious Metals section; strategy session — TAM analysis, $1B path requires embedded financing pivot |

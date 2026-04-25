@@ -994,10 +994,8 @@ function DealDetailPanel({ dealId, user, onClose }) {
                       </p>
 
                       {/* Dispute category */}
-                      <select value={disputeCategory} onChange={e => setDisputeCategory(e.target.value)} style={{
-                        width: '100%', background: '#0D1420', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 8,
-                        padding: '10px 12px', color: '#fff', fontFamily: 'monospace', fontSize: 12, marginBottom: 12, boxSizing: 'border-box',
-                      }}>
+                      <select value={disputeCategory} onChange={e => setDisputeCategory(e.target.value)}
+                        style={{ ...selectStyle, fontSize: 12, padding: '10px 14px', marginBottom: 12 }}>
                         <option value="" style={optionStyle}>Select issue type...</option>
                         <option value="seller_no_response" style={optionStyle}>Seller never responded after connection</option>
                         <option value="buyer_ghosted" style={optionStyle}>Buyer stopped responding</option>
@@ -1058,18 +1056,37 @@ function DealDetailPanel({ dealId, user, onClose }) {
                         )}
                       </div>
 
-                      <div style={{ display: 'flex', gap: 8 }}>
-                        <button onClick={() => handleAction('dispute')} disabled={!!actionLoading}
-                          style={{ flex: 1, padding: '10px', borderRadius: 8, fontSize: 12, fontWeight: 700,
-                            background: '#f87171', color: '#000', border: 'none', cursor: 'pointer' }}>
-                          {actionLoading === 'dispute' ? 'Submitting…' : 'Submit Dispute'}
-                        </button>
-                        <button onClick={() => { setShowDispute(false); setDisputeReason(''); setDisputeCategory(''); setDisputeEvidence([]); }}
-                          style={{ padding: '10px 16px', borderRadius: 8, fontSize: 12,
-                            background: 'transparent', color: '#666', border: '1px solid rgba(255,255,255,0.1)', cursor: 'pointer' }}>
-                          Cancel
-                        </button>
-                      </div>
+                      {(() => {
+                        const reasonValid = disputeReason.trim().length >= 10;
+                        const canSubmit = !!disputeCategory && reasonValid && !actionLoading;
+                        const hint = !disputeCategory
+                          ? 'Select an issue type to continue'
+                          : !reasonValid
+                          ? `Describe the issue — ${10 - disputeReason.trim().length} more characters`
+                          : null;
+                        return (
+                          <>
+                            {error && <p style={{ color: '#f87171', fontSize: 11, margin: '0 0 8px', fontFamily: 'monospace' }}>{error}</p>}
+                            {hint && !error && (
+                              <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: 11, margin: '0 0 8px', fontFamily: 'monospace' }}>{hint}</p>
+                            )}
+                            <div style={{ display: 'flex', gap: 8 }}>
+                              <button onClick={() => handleAction('dispute')} disabled={!canSubmit}
+                                style={{ flex: 1, padding: '10px', borderRadius: 8, fontSize: 12, fontWeight: 700,
+                                  background: canSubmit ? '#f87171' : 'rgba(248,113,113,0.3)',
+                                  color: canSubmit ? '#000' : 'rgba(0,0,0,0.5)',
+                                  border: 'none', cursor: canSubmit ? 'pointer' : 'not-allowed' }}>
+                                {actionLoading === 'dispute' ? 'Submitting…' : 'Submit Dispute'}
+                              </button>
+                              <button onClick={() => { setShowDispute(false); setDisputeReason(''); setDisputeCategory(''); setDisputeEvidence([]); setError(''); }}
+                                style={{ padding: '10px 16px', borderRadius: 8, fontSize: 12,
+                                  background: 'transparent', color: '#666', border: '1px solid rgba(255,255,255,0.1)', cursor: 'pointer' }}>
+                                Cancel
+                              </button>
+                            </div>
+                          </>
+                        );
+                      })()}
                     </div>
                   )}
                 </div>

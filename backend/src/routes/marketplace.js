@@ -95,6 +95,8 @@ router.get('/listings', async (req, res) => {
       isActive: true,
       status: 'verified',
       expiresAt: { gt: new Date() },
+      // Hide listings that have already been sold (connected/completed deal)
+      deals: { none: { status: { in: ['connected', 'completed', 'paid'] } } },
     };
 
     if (metalId) {
@@ -516,6 +518,12 @@ router.post('/deals/:id/pay', authMiddleware, async (req, res) => {
         offers: { orderBy: { createdAt: 'asc' } },
       },
     });
+
+    // Listing is now sold — hide from Browse so other buyers can't offer on it
+    await prisma.listing.update({
+      where: { id: deal.listingId },
+      data: { isActive: false },
+    }).catch(() => {});
 
     res.json({
       success: true,

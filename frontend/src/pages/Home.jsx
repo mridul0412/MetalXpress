@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   TrendingUp, MapPin, Clock, RefreshCw, ArrowUpRight, ArrowDownRight,
-  Minus, ChevronRight, ChevronDown, Zap, Globe,
+  Minus, ChevronRight, ChevronDown, Zap, Globe, Sparkles,
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { useAuth } from '../context/AuthContext';
@@ -17,6 +17,8 @@ const METAL_META = {
   Zinc:           { color: '#60a5fa', dot: '#60a5fa', emoji: '🔵' },
   Nickel:         { color: '#a78bfa', dot: '#a78bfa', emoji: '⚡' },
   Tin:            { color: '#34d399', dot: '#34d399', emoji: '🔩' },
+  Gold:           { color: '#FFD700', dot: '#FFD700', emoji: '🥇' },
+  Silver:         { color: '#C0C0C0', dot: '#C0C0C0', emoji: '⚪' },
   'Other Metals': { color: '#fb923c', dot: '#fb923c', emoji: '⚙️' },
   'M.S.':         { color: '#818cf8', dot: '#818cf8', emoji: '🏗️' },
 };
@@ -148,6 +150,7 @@ export default function Home() {
   });
 
   const lmeRates = liveData?.metals ?? [];
+  const precious = liveData?.precious ?? [];
   const forex    = liveData?.forex  ?? {};
   const indices  = liveData?.indices ?? {};
   const crude    = liveData?.crude  ?? {};
@@ -260,6 +263,72 @@ export default function Home() {
           )}
         </div>
       </section>
+
+      {/* ── Precious Metals (Gold + Silver) ──────────────── */}
+      {!loadingLme && precious.length > 0 && (
+        <section>
+          <div className="flex items-center justify-between mb-3">
+            <div className="flex items-center gap-2">
+              <Sparkles size={15} color="#CFB53B" />
+              <span style={{ color: 'rgba(255,255,255,0.5)', fontSize: 11, fontWeight: 700,
+                textTransform: 'uppercase', letterSpacing: '0.08em' }}>
+                Precious Metals
+              </span>
+            </div>
+          </div>
+
+          <div style={{ borderRadius: 12, overflow: 'hidden', border: '1px solid rgba(255,255,255,0.09)', background: '#0d1420',
+            boxShadow: '0 4px 24px rgba(0,0,0,0.35)' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: '2fr 2fr 2fr 1.2fr',
+              padding: '10px 16px', background: 'rgba(255,255,255,0.025)', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
+              {['Metal', 'Intl ($/oz)', 'MCX (₹)', 'Chg%'].map((h, i) => (
+                <span key={h} style={{ fontSize: 10, fontWeight: 700, textTransform: 'uppercase',
+                  letterSpacing: '0.08em', color: 'rgba(255,255,255,0.3)', textAlign: i > 0 ? 'right' : 'left' }}>
+                  {h}
+                </span>
+              ))}
+            </div>
+
+            <div>
+              {precious.map((rate, idx) => {
+                const meta = getMeta(rate.metal);
+                const up = rate.change > 0, dn = rate.change < 0;
+                return (
+                  <div key={rate.metal} className="lme-row" style={{
+                    display: 'grid', gridTemplateColumns: '2fr 2fr 2fr 1.2fr',
+                    padding: '12px 16px', alignItems: 'center',
+                    borderBottom: idx < precious.length - 1 ? '1px solid rgba(255,255,255,0.04)' : 'none',
+                    transition: 'background 0.15s',
+                  }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                      <span style={{ width: 6, height: 6, borderRadius: '50%', flexShrink: 0, background: meta.dot }} />
+                      <span style={{ fontSize: 13, fontWeight: 700, color: '#fff' }}>{rate.metal}</span>
+                    </div>
+                    <span style={{ fontSize: 13, fontFamily: 'monospace', fontWeight: 600,
+                      color: 'rgba(255,255,255,0.75)', textAlign: 'right' }}>
+                      ${fmt(rate.priceUsd)}
+                    </span>
+                    <div style={{ textAlign: 'right' }}>
+                      <span style={{ fontSize: 13, fontFamily: 'monospace', fontWeight: 700, color: '#CFB53B' }}>
+                        ₹{fmt(rate.priceMcx)}
+                      </span>
+                      <span style={{ fontSize: 9, color: 'rgba(255,255,255,0.35)', marginLeft: 4 }}>
+                        {rate.mcxUnit}
+                      </span>
+                    </div>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: 2,
+                      fontSize: 12, fontWeight: 700,
+                      color: up ? '#34d399' : dn ? '#f87171' : 'rgba(255,255,255,0.25)' }}>
+                      {up ? <ArrowUpRight size={12} /> : dn ? <ArrowDownRight size={12} /> : <Minus size={12} />}
+                      {Math.abs(rate.change)}%
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </section>
+      )}
 
       {/* ── Forex & Indices ─────────────────────────────── */}
       {!loadingLme && hasForex && (
