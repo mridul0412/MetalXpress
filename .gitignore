@@ -8,7 +8,13 @@ build/
 npm-debug.log*
 .prisma/
 prisma/migrations/*.sql
-.claude/
+# .claude/ — share hook config + scripts, keep personal files local
+.claude/settings.local.json
+.claude/launch.json
+.claude/worktrees/
+.claude/agents/
+.claude/skills/
+.claude/plans/
 
 # Debug/temp files
 ali.json
