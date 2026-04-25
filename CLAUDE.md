@@ -191,8 +191,21 @@ BhavX (formerly MetalXpress) is a real-time metal intelligence platform for Indi
 - `backend/src/routes/marketplace.js` — sold-listing filter on GET `/listings`; mark listing `isActive: false` on `/deals/:id/pay`
 - `frontend/src/pages/Marketplace.jsx` — Submit Dispute UX fix (inline error/hint, `canSubmit` derived state, dispute dropdown selectStyle)
 - `frontend/src/pages/Home.jsx` — Sparkles import, Gold/Silver in `METAL_META`, new Precious Metals section
-- `CLAUDE.md` — session 19 added, current date bumped to 2026-04-26
+- `CLAUDE.md` — session 19 added, current date bumped to 2026-04-26, **`## 🎯 Current Business Focus` block added at top** (auto-loads each session)
 - `ROADMAP.md` — session 19 logged, Gold/Silver added to Completed
+- **`BUSINESS_ROADMAP.md` (NEW)** — 6-month fundraise plan, Month-by-Month with weekly granularity. Floor ₹2-5 Cr angel / Realistic ₹10-25 Cr seed / Stretch ₹50 Cr Pre-Series A. Target VC list, advisor strategy, term-sheet pitfalls, use-of-funds, investor pitch script.
+- **`.claude/settings.json` (NEW)** — SessionStart hook (matcher: `startup|resume|clear`) registered for `node .claude/scripts/session-brief.js`.
+- **`.claude/scripts/session-brief.js` (NEW)** — generates briefing from BUSINESS_ROADMAP.md (current month/week open items) + ROADMAP.md (critical-path blockers). Silent before 2026-05-01 (tech sprint mode). Activates automatically May 1. Skips `[x]` items so cutover-to-done doesn't clutter briefings.
+- **`.gitignore`** — flipped from "ignore `.claude/` wholesale" to "ignore specific personal files only" (`settings.local.json`, `launch.json`, `worktrees/`, `agents/`, `skills/`, `plans/`) so the shared SessionStart hook setup ships with the repo.
+
+### Cutover Workflow (going forward)
+- When you complete a roadmap item, edit `- [ ] item` → `- [x] item (done YYYY-MM-DD)`.
+- Lines stay in the file forever as history. Briefing script ignores `[x]` items.
+- Don't delete completed lines — that destroys progress history.
+
+### Activation timeline
+- **Apr 27-30 (tech sprint)**: SessionStart hook is silent. Focus on production deploy, Cloudinary, Razorpay prep. Nothing surfaces in Claude sessions.
+- **May 1 onwards**: Hook activates automatically. Every new Claude session starts with a Month/Week briefing block injected as `additionalContext`. Edit `ACTIVATION_DATE` / `START_DATE` in `.claude/scripts/session-brief.js` to shift.
 
 ---
 
