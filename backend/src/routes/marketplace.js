@@ -20,45 +20,46 @@ async function checkBanCooldown(userId) {
 
 // ─── FILE UPLOAD CONFIG ─────────────────────────────────────────────────────
 //
-//  CURRENT (MVP / local dev):
+//  PRIMARY (production-safe):
+//    Cloudinary CDN. Activated by setting CLOUDINARY_URL in .env.
+//    Returns full https://res.cloudinary.com/... URLs that survive Railway
+//    redeploys and serve via global CDN.
+//
+//  FALLBACK (dev only, when CLOUDINARY_URL is unset):
 //    Files saved to backend/uploads/ via multer disk storage.
 //    Served via express.static('/uploads', ...) in index.js.
 //    ⚠️  NOT suitable for production on stateless containers (Railway, Heroku,
 //        Render) — the uploads/ folder is wiped on every deploy/restart.
 //
-//  TO GO LIVE (cloud storage):
-//    Option A — Cloudinary (recommended, free tier: 25GB storage, 25GB/month BW):
-//      1. npm install cloudinary multer-storage-cloudinary
-//      2. Set in .env: CLOUDINARY_CLOUD_NAME, CLOUDINARY_API_KEY, CLOUDINARY_API_SECRET
-//      3. Replace `const storage = multer.diskStorage(...)` below with:
-//         const { CloudinaryStorage } = require('multer-storage-cloudinary');
-//         const cloudinary = require('cloudinary').v2;
-//         cloudinary.config({ cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
-//           api_key: process.env.CLOUDINARY_API_KEY, api_secret: process.env.CLOUDINARY_API_SECRET });
-//         const storage = new CloudinaryStorage({ cloudinary, params: {
-//           folder: 'metalxpress', allowed_formats: ['jpg','png','gif','webp','mp4','mov','webm'] }});
-//      4. The upload returns full https://res.cloudinary.com/... URLs — no /uploads/ prefix needed.
-//
-//    Option B — AWS S3 + multer-s3:
-//      npm install @aws-sdk/client-s3 multer-s3
-//      Set: AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, AWS_REGION, AWS_S3_BUCKET
-//
-//  Seed data (listings in seed.js) uses Pexels CDN + Wikimedia URLs directly —
-//  no local files, works in any environment including production cloud.
+//  See backend/src/services/cloudinary.js for upload/delete helpers.
 // ─────────────────────────────────────────────────────────────────────────────
 
-// Ensure uploads directory exists (for local dev / MVP)
+const cloudinaryService = require('../services/cloudinary');
+
+// Ensure uploads directory exists (used only when Cloudinary is disabled)
 const fs = require('fs');
 const UPLOADS_DIR = path.join(__dirname, '../../uploads');
 if (!fs.existsSync(UPLOADS_DIR)) fs.mkdirSync(UPLOADS_DIR, { recursive: true });
 
-const storage = multer.diskStorage({
+const diskStorage = multer.diskStorage({
   destination: UPLOADS_DIR,
   filename: (req, file, cb) => {
     const ext = path.extname(file.originalname) || '.jpg';
     cb(null, `${Date.now()}-${crypto.randomBytes(6).toString('hex')}${ext}`);
   },
 });
+
+// Use Cloudinary storage if configured, else fall back to disk
+const storage = cloudinaryService.enabled
+  ? cloudinaryService.makeStorage()
+  : diskStorage;
+
+if (cloudinaryService.enabled) {
+  console.log(`[upload] Cloudinary active (folder: ${cloudinaryService.FOLDER}/listings)`);
+} else {
+  console.warn('[upload] CLOUDINARY_URL not set — falling back to disk storage (dev only)');
+}
+
 const upload = multer({
   storage,
   limits: { fileSize: 5 * 1024 * 1024 }, // 5MB per file
@@ -75,9 +76,13 @@ router.post('/upload', authMiddleware, upload.array('files', 5), (req, res) => {
     if (!req.files || req.files.length === 0) {
       return res.status(400).json({ error: 'No files uploaded' });
     }
-    // Returns /uploads/filename paths — frontend prefixes with backend URL for display.
-    // When using Cloudinary/S3, this returns full https:// URLs instead.
-    const urls = req.files.map(f => `/uploads/${f.filename}`);
+    // Cloudinary path: multer-storage-cloudinary populates `path` with the full
+    //   secure HTTPS URL (e.g. https://res.cloudinary.com/.../listing.jpg).
+    // Disk path: file.filename is the local filename, served via /uploads/ proxy.
+    const urls = req.files.map(f => {
+      if (cloudinaryService.enabled) return f.path;            // full Cloudinary URL
+      return `/uploads/${f.filename}`;                          // dev fallback
+    });
     res.json({ urls });
   } catch (err) {
     console.error('Upload error:', err);

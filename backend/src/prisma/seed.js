@@ -352,30 +352,32 @@ async function main() {
   //   Seed videos use local /uploads/seed-*.webm (downloaded from Wikimedia Commons,
   //   CC-licensed industrial footage).
   //
-  //   These files live in backend/uploads/ and are served at http://localhost:3001/uploads/
-  //   For cloud deployment: copy uploads/ to server OR migrate to Cloudinary/S3.
-  //   For user-uploaded files: multer already configured in marketplace.js
+  //   Images + videos served from Cloudinary CDN (bhavx-dev/seed/* folder).
+  //   Originals were uploaded via src/scripts/migrate-uploads-to-cloudinary.js.
+  //   For prod: re-run the migration script with CLOUDINARY_FOLDER=bhavx-prod.
+  //   For user-uploaded files: multer + cloudinary configured in marketplace.js
   // ──────────────────────────────────────────────────────────────────────────
 
-  // Local seed image paths (served by express.static from backend/uploads/)
+  // Cloudinary CDN URLs — auto-resized + format-optimized via URL transformations.
+  // Originals also still in backend/uploads/ as a backup; can be deleted post-deploy.
   const IMG = {
-    scrapYard1:    '/uploads/seed-scrap-yard-1.jpg',    // scrap metal yard
-    scrapYard2:    '/uploads/seed-scrap-yard-2.jpg',    // scrap yard overhead
-    scrapYard3:    '/uploads/seed-scrap-yard-3.jpg',    // industrial scrap pile
-    metalWire:     '/uploads/seed-metal-wire-1.jpg',    // copper wire coils
-    metalIngot:    '/uploads/seed-metal-ingot-1.jpg',   // metal ingots/bars
-    metalPile:     '/uploads/seed-metal-pile-1.jpg',    // mixed metal pile
-    metalTexture:  '/uploads/seed-metal-texture-1.jpg', // metal surface close-up
-    metalScrap2:   '/uploads/seed-metal-scrap-2.jpg',   // scrap metal pieces
-    metalRecycle:  '/uploads/seed-metal-recycle-1.jpg', // recycling facility
-    metalFactory:  '/uploads/seed-metal-factory-1.jpg', // factory/smelter
-    metalScrap3:   '/uploads/seed-metal-scrap-3.jpg',   // mixed scrap
+    scrapYard1:    'https://res.cloudinary.com/dbaumhjh7/image/upload/v1777197896/bhavx-dev/seed/seed-scrap-yard-1.jpg',
+    scrapYard2:    'https://res.cloudinary.com/dbaumhjh7/image/upload/v1777197897/bhavx-dev/seed/seed-scrap-yard-2.jpg',
+    scrapYard3:    'https://res.cloudinary.com/dbaumhjh7/image/upload/v1777197898/bhavx-dev/seed/seed-scrap-yard-3.jpg',
+    metalWire:     'https://res.cloudinary.com/dbaumhjh7/image/upload/v1777197862/bhavx-dev/seed/seed-metal-wire-1.jpg',
+    metalIngot:    'https://res.cloudinary.com/dbaumhjh7/image/upload/v1777197856/bhavx-dev/seed/seed-metal-ingot-1.jpg',
+    metalPile:     'https://res.cloudinary.com/dbaumhjh7/image/upload/v1777197857/bhavx-dev/seed/seed-metal-pile-1.jpg',
+    metalTexture:  'https://res.cloudinary.com/dbaumhjh7/image/upload/v1777197861/bhavx-dev/seed/seed-metal-texture-1.jpg',
+    metalScrap2:   'https://res.cloudinary.com/dbaumhjh7/image/upload/v1777197859/bhavx-dev/seed/seed-metal-scrap-2.jpg',
+    metalRecycle:  'https://res.cloudinary.com/dbaumhjh7/image/upload/v1777197858/bhavx-dev/seed/seed-metal-recycle-1.jpg',
+    metalFactory:  'https://res.cloudinary.com/dbaumhjh7/image/upload/v1777197854/bhavx-dev/seed/seed-metal-factory-1.jpg',
+    metalScrap3:   'https://res.cloudinary.com/dbaumhjh7/image/upload/v1777197860/bhavx-dev/seed/seed-metal-scrap-3.jpg',
   };
 
-  // Local seed video paths (CC-licensed Wikimedia footage, downloaded to uploads/)
+  // CC-licensed Wikimedia videos, hosted on Cloudinary
   const VID = {
-    scrapYard:  '/uploads/seed-scrap-metal-recycle.webm', // scrap metal recycling process
-    copperPipe: '/uploads/seed-copper-pipe.webm',          // copper conductivity demo
+    scrapYard:  'https://res.cloudinary.com/dbaumhjh7/video/upload/v1777197894/bhavx-dev/seed/seed-scrap-metal-recycle.webm',
+    copperPipe: 'https://res.cloudinary.com/dbaumhjh7/video/upload/v1777197852/bhavx-dev/seed/seed-copper-pipe.webm',
   };
 
   const copperMetal = metalMap['Copper'];
