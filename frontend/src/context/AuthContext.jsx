@@ -49,8 +49,13 @@ export function AuthProvider({ children }) {
     localStorage.setItem('mx_token', token);
     localStorage.setItem('mx_user', JSON.stringify(userData));
     setUser(userData);
-    // Fetch subscription after login
-    setTimeout(refreshSubscription, 100);
+    // Defense in depth: re-fetch full user from /me so any field the auth
+    // endpoint forgot to include (kycVerified, city, KYC details, etc.) gets
+    // populated immediately. Without this, gates like the marketplace KYC
+    // gate flicker because `user.kycVerified` is undefined → falsy → blocks
+    // until the next page reload triggers /me on mount.
+    refreshUser();
+    refreshSubscription();
   };
 
   const logout = () => {

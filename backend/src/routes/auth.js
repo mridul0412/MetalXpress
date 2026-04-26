@@ -31,6 +31,39 @@ function generateToken(bytes = 32) {
   return crypto.randomBytes(bytes).toString('hex');
 }
 
+// Strip sensitive fields (passwordHash, OTP secrets, reset tokens) and return
+// the standardized public-facing user shape. Use this everywhere a token-issuing
+// endpoint sends a `user` object back to the frontend — keeps the AuthContext
+// state in sync with what GET /me returns, so KYC + verification gates don't
+// flicker between login and the first /me refresh.
+function publicUserFields(u) {
+  if (!u) return null;
+  return {
+    id:             u.id,
+    email:          u.email,
+    name:           u.name,
+    phone:          u.phone,
+    city:           u.city,
+    traderType:     u.traderType,
+    emailVerified:  u.emailVerified,
+    phoneVerified:  u.phoneVerified,
+    kycVerified:    u.kycVerified,
+    panNumber:      u.panNumber,
+    tradeCategory:  u.tradeCategory,
+    businessName:   u.businessName,
+    legalName:      u.legalName,
+    gstNumber:      u.gstNumber,
+    isBanned:       u.isBanned,
+    banReason:      u.banReason,
+    cooldownUntil:  u.cooldownUntil,
+    avgRating:      u.avgRating,
+    completedDeals: u.completedDeals,
+    disputeCount:   u.disputeCount,
+    termsAcceptedAt: u.termsAcceptedAt,
+    createdAt:      u.createdAt,
+  };
+}
+
 // Sign a JWT
 function signJWT(payload) {
   return jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: '30d' });
@@ -146,7 +179,7 @@ router.post('/verify-firebase-otp', async (req, res) => {
     }
 
     const token = signJWT({ userId: user.id, phone: user.phone });
-    res.json({ success: true, token, user });
+    res.json({ success: true, token, user: publicUserFields(user) });
   } catch (err) {
     console.error('/verify-firebase-otp error:', err);
     if (err.code === 'auth/id-token-expired') return res.status(401).json({ error: 'Firebase token expired, please try again' });
@@ -350,7 +383,7 @@ router.post('/register', async (req, res) => {
     res.json({
       success: true,
       token,
-      user: { id: user.id, email: user.email, name: user.name, phone: user.phone, traderType: user.traderType, emailVerified: false },
+      user: publicUserFields(user),
       emailVerificationSent: true,
     });
   } catch (err) {
@@ -375,7 +408,7 @@ router.post('/login', async (req, res) => {
     res.json({
       success: true,
       token,
-      user: { id: user.id, email: user.email, name: user.name, phone: user.phone, traderType: user.traderType, emailVerified: user.emailVerified },
+      user: publicUserFields(user),
     });
   } catch (err) {
     console.error('/api/auth/login error:', err);
