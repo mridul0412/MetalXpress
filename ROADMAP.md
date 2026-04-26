@@ -11,9 +11,16 @@
 - [x] **Phone login UX fixes** — pre-check blocks unregistered numbers before OTP send; removed name/trader-type from login OTP screen; `loginOnly:true` prevents silent account creation ✅ (done 2026-04-24)
 - [ ] **Deploy backend → Railway** — Node + PostgreSQL plugin, set DATABASE_URL
 - [ ] **Deploy frontend → Vercel** — free tier, set `VITE_API_URL` to Railway backend URL
-- [ ] **Production env vars** — new JWT_SECRET, ADMIN_PASSWORD, DATABASE_URL (never use dev values in prod)
-- [ ] **Cloudinary image storage** — local `backend/uploads/` wiped on Railway redeploy; migrate before deploy
-- [ ] **Contact page real numbers** — replace placeholder `XXXXX XXXXX` in Contact.jsx
+- [x] **Production env vars** — strong JWT_SECRET (64 hex), ADMIN_PASSWORD (20 chars+symbols), SESSION_SECRET generated; `backend/.env.production` template ready to paste into Railway ✅ (done 2026-04-27)
+- [x] **Cloudinary image storage** — multer migrated to Cloudinary; 13 seed files uploaded; seed.js uses Cloudinary URLs; disk fallback kept for local dev ✅ (done 2026-04-27)
+- [x] **Contact page real numbers** — +91 87077 18146 (call), +91 94736 36333 (WhatsApp), support@bhavx.com (email) ✅ (done 2026-04-27)
+- [ ] **Run seed on prod DB** — then admin pastes first real WhatsApp rate broadcast to go live
+
+---
+
+- [ ] **Forgot password email** — verify reset email still works in prod (Resend domain already verified); test end-to-end on Railway before go-live
+- [ ] **Deploy backend → Railway** — Node + PostgreSQL plugin, paste `.env.production` vars
+- [ ] **Deploy frontend → Vercel** — free tier, set `VITE_API_URL` to Railway backend URL
 - [ ] **Run seed on prod DB** — then admin pastes first real WhatsApp rate broadcast to go live
 
 ---
@@ -84,6 +91,12 @@
 - [x] Navbar username → gold clickable link to /profile
 - [x] Precious Metals section — Gold + Silver via Yahoo `GC=F`/`SI=F`, MCX conversion (₹/10g for Gold, ₹/kg for Silver) ✅ (done 2026-04-26)
 - [x] Bug fixes (session 19) — Lead/Tin missing from LME (DB fallback `source` filter), sold listings still in Browse (relational filter + `isActive` on pay), Submit Dispute UX (inline error + canSubmit guard)
+- [x] Cloudinary image storage — multer migrated, 13 seed files uploaded, disk fallback for local dev ✅ (done 2026-04-27)
+- [x] KYC re-verification bug fixed — `publicUserFields()` helper ensures kycVerified always returned on login ✅ (done 2026-04-27)
+- [x] Completed deal listing state bug fixed — "Verified & Live" suppressed, "Sold" badge shown, OR query keeps sold listings in My Listings ✅ (done 2026-04-27)
+- [x] Contact page — real phone numbers (+91 87077 18146, +91 94736 36333), support@bhavx.com email card ✅ (done 2026-04-27)
+- [x] Email forwarding — support@bhavx.com live via ImprovMX → forwards to Gmail; catch-all `*@bhavx.com` also active ✅ (done 2026-04-27)
+- [x] Production env vars — strong secrets generated, `backend/.env.production` template ready for Railway ✅ (done 2026-04-27)
 
 ---
 
@@ -104,3 +117,4 @@
 | 2026-04-21 | 17 | Firebase Phone Auth end-to-end — real SMS OTP replaces hardcoded `1234`, MSG91 parked, Login.jsx + Signup.jsx updated |
 | 2026-04-24 | 18 | ngrok setup, phone login UX fixes, seed improvements, 7 marketplace/profile bug fixes, navbar profile link |
 | 2026-04-26 | 19 | 3 bug fixes (Lead/Tin LME, sold listings, dispute UX); Gold + Silver Precious Metals section; strategy session — TAM analysis, $1B path requires embedded financing pivot |
+| 2026-04-27 | 20 | Cloudinary migration (images/videos); KYC re-verification bug; completed deal listing state bug; Contact page real numbers; support@bhavx.com email forwarding (ImprovMX); prod env vars generated |

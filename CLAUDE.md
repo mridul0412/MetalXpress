@@ -57,9 +57,10 @@ BhavX (formerly MetalXpress) is a real-time metal intelligence platform for Indi
 ```
 
 ## Current Date
-2026-04-26
+2026-04-27
 
 ## Session Log
+- **2026-04-27 (session 20)**: Cloudinary migration (images/videos off local disk); KYC re-verification bug fix (`publicUserFields()` helper); completed deal listing state bug (sold badge, OR query, isActive on complete); Contact page real numbers + email; support@bhavx.com forwarding via ImprovMX; prod env vars generated (`backend/.env.production`) — see Session 20 details below
 - **2026-04-26 (session 19)**: 3 bug fixes (Lead/Tin missing from LME after session 18 seed change, sold listings still in Browse, Submit Dispute UX); Gold + Silver added under new "Precious Metals" section (Yahoo `GC=F`/`SI=F`); strategy discussion — TAM analysis, $1B path requires embedded-financing pivot in Year 2, freight + lab-assaying ideas dropped — see Session 19 details below
 - **2026-04-24 (session 18)**: ngrok setup for Firebase localhost bypass; phone login UX fixes (pre-check + clean OTP screen); seed improvements (bhavx.com emails, emailVerified, source:'seed' for LME/MCX); 6 bug fixes (images on ngrok, Lightbox flicker, dispute scroll, own listings in browse, deal badges, KYC two-button, dirty-state Save); Navbar username → gold link to profile — see Session 18 details below
 - **2026-04-21 (session 17)**: Firebase Phone Auth integrated end-to-end — real SMS OTP replaces hardcoded `1234`; MSG91 endpoints parked with comments; Login.jsx + Signup.jsx updated; full Firebase explanation pending — see Session 17 details below
@@ -80,6 +81,118 @@ BhavX (formerly MetalXpress) is a real-time metal intelligence platform for Indi
 - **2026-04-14 (session 14)**: Landing page copy overhaul (new headline, hero, FAQ x11, 2-tier pricing), About page rewrite, font standardization, PaywallModal simplified, "Mandoli" removed — see Session 14 details below
 - **2026-04-20 (session 15)**: Full brand rename MetalXpress → BhavX, central brand config created, domains bhavx.com + bhavx.in purchased — see Session 15 details below
 - **2026-04-21 (session 16)**: BhavX hexagon logo (SVG, gold gradient, Navbar+Footer+favicon), ROADMAP.md created, Resend domain verified (bhavx.com), email now sends to any inbox from noreply@bhavx.com, hero CTA button changed to outline+hover-fill so OM watermark shows through — see Session 16 details below
+
+## Session 20 Changes (2026-04-27) — Full Detail
+
+### Cloudinary Image/Video Migration
+
+**Why**: Railway (production hosting) uses ephemeral containers — local `backend/uploads/` is wiped on every redeploy. Files must live on a CDN.
+
+**Implementation**:
+
+1. **`backend/src/services/cloudinary.js`** (NEW):
+   - Central Cloudinary config using `CLOUDINARY_URL` env var (single var, no separate key/secret needed)
+   - `makeStorage()` — returns `CloudinaryStorage` adapter for multer when `CLOUDINARY_URL` is set, `null` for disk fallback in local dev
+   - `uploadFile(localPath, folder)` — manual upload helper for migration script
+   - `deleteByUrl(url)` — deletes by Cloudinary URL (parses public_id)
+   - `ping()` — health check, logs Cloudinary connection status on backend startup
+   - Folder strategy: `bhavx-dev/listings/*` (user uploads) and `bhavx-dev/seed/*` (seed images)
+
+2. **`backend/src/routes/marketplace.js`** — upload route uses `makeStorage()` with disk fallback; returns `f.path` (full Cloudinary HTTPS URL) when enabled vs `/uploads/${f.filename}` for disk
+
+3. **`backend/src/scripts/migrate-uploads-to-cloudinary.js`** (NEW) — one-time migration script:
+   - Walks `backend/uploads/`, uploads each file with stable `public_id` (idempotent — `overwrite: false`)
+   - Patches `Listing.images` JSON in DB to replace local paths with Cloudinary URLs
+   - Result: 13 files uploaded, 9 listings patched
+
+4. **`backend/src/prisma/seed.js`** — `IMG` and `VID` maps updated to Cloudinary URLs (`res.cloudinary.com/dbaumhjh7/...`)
+
+5. **`backend/.env`** — `CLOUDINARY_URL` and `CLOUDINARY_FOLDER=bhavx-dev` added
+
+**Dev/prod parity**: `CLOUDINARY_URL` set in dev `.env` → uses Cloudinary everywhere. Remove it → falls back to local disk. No code changes needed.
+
+### KYC Re-Verification Bug Fix
+
+**Root cause**: Login endpoint (`/api/auth/login`, `/verify-firebase-otp`) returned a partial user object missing `kycVerified`, `panNumber`, `tradeCategory` and other KYC fields. `AuthContext.login()` stored this partial object → marketplace KYC gate saw `kycVerified: undefined` (falsy) → showed KYC form every login even for verified users.
+
+**Fix 1 — Backend** (`backend/src/routes/auth.js`):
+- New `publicUserFields(u)` helper — returns a consistent 22-field safe user shape from any Prisma user object. Fields: `id, email, name, phone, city, traderType, emailVerified, phoneVerified, kycVerified, panNumber, tradeCategory, businessName, legalName, gstNumber, isBanned, banReason, cooldownUntil, avgRating, completedDeals, disputeCount, termsAcceptedAt, createdAt`. Never includes `passwordHash`.
+- Applied to `/login`, `/register`, `/verify-firebase-otp` response shapes. `kycVerified` always present.
+
+**Fix 2 — Frontend** (`frontend/src/context/AuthContext.jsx`):
+- `login()` now immediately calls `refreshUser()` + `refreshSubscription()` after `setUser(userData)`. Defense-in-depth: even if login response is incomplete, `/me` re-fetch fills in all fields within milliseconds.
+
+### Completed Deal Listing State Bug
+
+**Root cause**: Multiple compounding issues:
+1. `/deals/:id/complete` didn't set `listing.isActive = false` — listing stayed "Verified & Live" after deal completed
+2. `GET /my-listings` filtered `isActive: true` only — sold/completed listings disappeared from seller's own tab
+3. `listingDealMap` in `MyListingsTab` had no priority system — lower-status deals (negotiating) could overwrite higher-status ones (completed)
+4. 2 existing DB listings had stale `isActive: true` with completed deals (from before session 19's `/pay` fix)
+
+**Fixes**:
+- `/deals/:id/complete` now also sets `listing.isActive = false` (idempotent, defense-in-depth)
+- `/my-listings` uses OR query: `{ OR: [{ isActive: true }, { isActive: false, deals: { some: { status: { in: ['connected','completed','paid'] } } } }] }` — keeps sold listings visible to seller
+- Priority map: `{ completed: 5, connected: 4, paid: 4, agreed: 3, negotiating: 2 }` — highest status wins
+- "Verified & Live" badge suppressed when listing has completed/connected/paid deal
+- "Sold" gray badge added for completed/connected/paid status
+- "Deal Completed" gray pill added in deal status display
+- One-time DB cleanup: `updateMany` set `isActive: false` for 2 stale listings
+
+### Contact Page Real Numbers
+- Removed placeholder `XXXXX XXXXX` numbers
+- WhatsApp: `+91 94736 36333` → `https://wa.me/919473636333`
+- Phone: `+91 87077 18146` → `tel:+918707718146`
+- Added `Mail` import + email card: `support@bhavx.com` → `mailto:support@bhavx.com`, "We reply within 24 hours"
+- Removed "How accurate are the rates?" FAQ entry (user request)
+- Removed stale `Mail` icon that was left after removing old email card in session 18
+
+### Email Forwarding — support@bhavx.com (ImprovMX)
+
+**Setup**: Since bhavx.com is domain-only on Hostinger (no hosting plan), Hostinger's free email forwarding isn't available. Used ImprovMX instead.
+
+**What was configured**:
+- `support@bhavx.com` → `mridul041298@gmail.com`
+- `*@bhavx.com` (catch-all) → `mridul041298@gmail.com`
+- MX records added to Hostinger DNS: `mx1.improvmx.com` (priority 10), `mx2.improvmx.com` (priority 20)
+- SPF TXT record: `v=spf1 include:spf.improvmx.com ~all`
+- ImprovMX shows "Email forwarding active" ✅
+- DNS propagated globally (verified via dnschecker.org) ✅
+- First emails delivered within ~10 min; landed in Gmail Promotions initially (normal for new domain — improves with volume)
+
+**Limitation**: Free ImprovMX plan = receive only. To reply *as* `support@bhavx.com`, needs ImprovMX Premium ($9/mo) or Hostinger mailbox + Gmail SMTP. Not needed at MVP stage.
+
+**Note**: Also reminded user to enable auto-renewal on bhavx.com in Hostinger (currently off, expires 2027-04-20).
+
+### Production Env Vars — `backend/.env.production`
+
+**Generated fresh secrets** (dev values `metalxpress-dev-secret-key-2024` / `admin123` are insecure):
+- `JWT_SECRET` — 64 random hex chars
+- `ADMIN_PASSWORD` — 20 chars with symbols
+- `SESSION_SECRET` — 32 random hex chars
+
+**`backend/.env.production`** (NEW, gitignored):
+- Ready-to-paste template for Railway dashboard
+- Pre-filled: JWT_SECRET, ADMIN_PASSWORD, SESSION_SECRET, CLOUDINARY_URL, EMAIL_FROM, CLOUDINARY_FOLDER=`bhavx-prod`
+- Placeholders for: DATABASE_URL (Railway supplies), RESEND_API_KEY, Firebase keys, CORS_ORIGIN
+- Comments explain which vars to copy from dev `.env` vs which Railway supplies automatically
+
+**Note**: `CLOUDINARY_FOLDER` changes from `bhavx-dev` → `bhavx-prod` in production so dev/prod uploads don't mix.
+
+### Files Modified (Session 20)
+- `backend/src/services/cloudinary.js` — NEW: Cloudinary config + multer storage + upload/delete helpers
+- `backend/src/scripts/migrate-uploads-to-cloudinary.js` — NEW: one-time migration script
+- `backend/src/routes/marketplace.js` — Cloudinary upload adapter; `/complete` sets `isActive: false`; `/my-listings` OR query
+- `backend/src/prisma/seed.js` — IMG/VID maps updated to Cloudinary URLs
+- `backend/src/routes/auth.js` — `publicUserFields()` helper, applied to login/register/verify-firebase-otp responses
+- `backend/.env` — CLOUDINARY_URL + CLOUDINARY_FOLDER added
+- `backend/.env.production` — NEW: prod env template (gitignored)
+- `frontend/src/context/AuthContext.jsx` — `login()` calls refreshUser() + refreshSubscription() immediately
+- `frontend/src/pages/Marketplace.jsx` — priority-based listingDealMap, "Sold" badge, "Verified & Live" suppression
+- `frontend/src/pages/Contact.jsx` — real phone numbers, support@bhavx.com email card, removed inaccurate FAQ entry
+- `CLAUDE.md` — session 20 added, current date bumped to 2026-04-27
+- `ROADMAP.md` — session 20 logged, completed items marked, deploy tasks reorganised
+- `MEMORY.md` — session 20 events added
 
 ## Session 19 Changes (2026-04-26) — Full Detail
 

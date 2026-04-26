@@ -1,4 +1,4 @@
-import { Phone, MapPin, MessageCircle } from 'lucide-react';
+import { Phone, MapPin, MessageCircle, Mail } from 'lucide-react';
 
 export default function Contact() {
   return (
@@ -15,6 +15,8 @@ export default function Contact() {
       </p>
 
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 16 }}>
+        <ContactCard icon={<Mail size={20} color="#CFB53B" />} title="Email" value="support@bhavx.com"
+          link="mailto:support@bhavx.com" subtitle="We reply within 24 hours" />
         <ContactCard icon={<MessageCircle size={20} color="#34d399" />} title="WhatsApp" value="+91 94736 36333"
           link="https://wa.me/919473636333" subtitle="Mon - Sat, 9 AM - 6 PM IST" />
         <ContactCard icon={<Phone size={20} color="#60a5fa" />} title="Phone" value="+91 87077 18146"
