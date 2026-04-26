@@ -1249,12 +1249,19 @@ function MyDealsTab({ deals, user, onRefresh, onViewDeal }) {
 function MyListingsTab({ listings, onRefresh, onBrowseRefresh, deals = [] }) {
   const [deleting, setDeleting] = useState(null);
 
+  // Build map of listing → most-relevant deal status.
+  // Priority: completed/connected/paid (sold) > agreed > negotiating.
+  // We need this priority because a listing can have multiple historical deals
+  // (e.g. one completed + one negotiating from a different buyer who didn't know
+  // the listing was sold yet).
   const listingDealMap = {};
+  const statusPriority = { completed: 5, connected: 4, paid: 4, agreed: 3, negotiating: 2 };
   deals.forEach(d => {
-    if (d.listing?.id && !['cancelled', 'expired'].includes(d.status)) {
-      if (!listingDealMap[d.listing.id] || d.status === 'negotiating') {
-        listingDealMap[d.listing.id] = d.status;
-      }
+    if (!d.listing?.id) return;
+    if (['cancelled', 'expired'].includes(d.status)) return;
+    const cur = listingDealMap[d.listing.id];
+    if (!cur || (statusPriority[d.status] || 0) > (statusPriority[cur] || 0)) {
+      listingDealMap[d.listing.id] = d.status;
     }
   });
 
@@ -1286,8 +1293,16 @@ function MyListingsTab({ listings, onRefresh, onBrowseRefresh, deals = [] }) {
               <div style={{ display: 'flex', gap: 6, marginBottom: 4 }}>
                 <span style={{ fontSize: 10, fontWeight: 700, padding: '2px 8px', borderRadius: 6,
                   background: 'rgba(207,181,59,0.15)', color: '#CFB53B' }}>{l.metal?.name}</span>
-                {l.status === 'verified' && <span style={{ fontSize: 10, fontWeight: 700, padding: '2px 8px',
-                  borderRadius: 6, background: 'rgba(52,211,153,0.15)', color: '#34d399' }}>Verified & Live</span>}
+                {/* Suppress "Verified & Live" when listing has been sold (deal completed/connected/paid).
+                    Otherwise it looks like the listing is still available for new offers. */}
+                {l.status === 'verified' && !['completed', 'connected', 'paid'].includes(listingDealMap[l.id]) && (
+                  <span style={{ fontSize: 10, fontWeight: 700, padding: '2px 8px',
+                    borderRadius: 6, background: 'rgba(52,211,153,0.15)', color: '#34d399' }}>Verified & Live</span>
+                )}
+                {l.status === 'verified' && listingDealMap[l.id] === 'completed' && (
+                  <span style={{ fontSize: 10, fontWeight: 700, padding: '2px 8px',
+                    borderRadius: 6, background: 'rgba(148,163,184,0.18)', color: '#94a3b8' }}>Sold</span>
+                )}
                 {l.status === 'pending' && <span style={{ fontSize: 10, fontWeight: 700, padding: '2px 8px',
                   borderRadius: 6, background: 'rgba(207,181,59,0.15)', color: '#CFB53B' }}>Pending Review</span>}
                 {l.status === 'rejected' && <span style={{ fontSize: 10, fontWeight: 700, padding: '2px 8px',
@@ -1305,6 +1320,9 @@ function MyListingsTab({ listings, onRefresh, onBrowseRefresh, deals = [] }) {
                 )}
                 {(listingDealMap[l.id] === 'connected' || listingDealMap[l.id] === 'paid') && (
                   <span style={{ fontSize: 10, fontWeight: 700, padding: '2px 8px', borderRadius: 20, background: '#38bdf8', color: '#000' }}>Connected</span>
+                )}
+                {listingDealMap[l.id] === 'completed' && (
+                  <span style={{ fontSize: 10, fontWeight: 700, padding: '2px 8px', borderRadius: 20, background: '#94a3b8', color: '#000' }}>Deal Completed</span>
                 )}
               </div>
               <p style={{ fontSize: 11, color: 'rgba(255,255,255,0.3)' }}>

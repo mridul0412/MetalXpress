@@ -147,11 +147,22 @@ router.get('/listings', async (req, res) => {
   }
 });
 
-// GET /api/marketplace/my-listings — user's own listings (all statuses)
+// GET /api/marketplace/my-listings — user's own listings (all statuses, including sold)
+// IMPORTANT: isActive=false is doing double duty in current schema:
+//   1. Sold (auto: /pay + /complete set isActive=false; HAS a connected/completed deal)
+//   2. User-deleted (manual: DELETE endpoint sets isActive=false; NO deal exists)
+// Sellers should see (1) with a "Sold" badge but NOT see (2). So we include
+// inactive listings only if they have at least one deal that explains why.
 router.get('/my-listings', authMiddleware, async (req, res) => {
   try {
     const listings = await prisma.listing.findMany({
-      where: { userId: req.user.userId, isActive: true },
+      where: {
+        userId: req.user.userId,
+        OR: [
+          { isActive: true },
+          { isActive: false, deals: { some: { status: { in: ['connected', 'completed', 'paid'] } } } },
+        ],
+      },
       include: { metal: true, grade: true },
       orderBy: { createdAt: 'desc' },
     });
@@ -805,6 +816,15 @@ router.patch('/deals/:id/complete', authMiddleware, async (req, res) => {
       where: { id: req.params.id },
       data: { status: 'completed', completedAt: new Date() },
     });
+
+    // Defense in depth: also mark listing inactive on completion. /pay already
+    // does this, but if a listing somehow slipped through (legacy data, or future
+    // path that bypasses /pay), this guarantees a completed deal closes the
+    // listing. Idempotent — no harm if already false.
+    await prisma.listing.update({
+      where: { id: deal.listingId },
+      data: { isActive: false },
+    }).catch(() => {});
 
     res.json({ success: true, deal: updated });
   } catch (err) {
