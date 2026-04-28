@@ -65,8 +65,8 @@ function baseTemplate(content) {
             <!-- Header -->
             <tr>
               <td style="background:linear-gradient(135deg,#0D1420,#1a2235);padding:28px 32px;text-align:center;border-bottom:1px solid rgba(207,181,59,0.2);">
-                <div style="font-size:22px;font-weight:700;letter-spacing:2px;color:#CFB53B;font-family:monospace;">
-                  ⚡ BHAVX
+                <div style="font-size:24px;font-weight:700;letter-spacing:0.3px;font-family:monospace;">
+                  <span style="color:#FFFFFF;">☀ Bhav</span><span style="color:#CFB53B;">X</span>
                 </div>
                 <div style="font-size:11px;color:rgba(207,181,59,0.5);margin-top:4px;letter-spacing:1px;">
                   INDIA'S REAL-TIME METAL RATE PLATFORM

@@ -37,9 +37,13 @@ export default function Contact() {
           <strong style={{ color: 'rgba(255,255,255,0.6)' }}>How do I get local spot rates?</strong>
           {' '}— Sign up for a Pro subscription (₹299/month).
         </p>
-        <p style={{ fontSize: 12, color: 'rgba(255,255,255,0.4)', margin: 0 }}>
+        <p style={{ fontSize: 12, color: 'rgba(255,255,255,0.4)', margin: '0 0 4px' }}>
           <strong style={{ color: 'rgba(255,255,255,0.6)' }}>Are LME/MCX rates free?</strong>
           {' '}— Yes, live global metal rates are free for all users.
+        </p>
+        <p style={{ fontSize: 12, color: 'rgba(255,255,255,0.4)', margin: 0 }}>
+          <strong style={{ color: 'rgba(255,255,255,0.6)' }}>How accurate are the rates?</strong>
+          {' '}— Same rates you'd get on WhatsApp, updated frequently from exchange feeds, formatted properly, and always available.
         </p>
       </div>
     </div>

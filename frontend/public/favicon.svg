@@ -1,20 +1,18 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
   <defs>
-    <linearGradient id="g1" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#E8CC5A"/>
-      <stop offset="50%" stop-color="#CFB53B"/>
-      <stop offset="100%" stop-color="#A89028"/>
-    </linearGradient>
-    <linearGradient id="g2" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#0D1420"/>
-      <stop offset="100%" stop-color="#080E1A"/>
+    <linearGradient id="blade" x1="8" y1="8" x2="56" y2="56" gradientUnits="userSpaceOnUse">
+      <stop offset="0%"   stop-color="#FFE9A8"/>
+      <stop offset="35%"  stop-color="#E8CC5A"/>
+      <stop offset="65%"  stop-color="#CFB53B"/>
+      <stop offset="100%" stop-color="#7A5A18"/>
     </linearGradient>
   </defs>
-  <!-- Hexagon background -->
-  <polygon points="32,3 58,17.5 58,46.5 32,61 6,46.5 6,17.5" fill="url(#g1)"/>
-  <polygon points="32,7 54,19.5 54,44.5 32,57 10,44.5 10,19.5" fill="url(#g2)"/>
-  <!-- B shape -->
-  <path d="M17 20h11c3.5 0 6 2 6 5.5 0 2-1 3.5-2.5 4.2C34 30.5 35.5 32.5 35.5 35c0 4-3 6-7 6H17V20zm4 4v6h6.5c1.5 0 2.5-1 2.5-3s-1-3-2.5-3H21zm0 10v7h7c2 0 3-1.2 3-3.5S30 31 28 31H21z" fill="url(#g1)"/>
-  <!-- X shape -->
-  <path d="M38 20l5.5 8 5.5-8h4.5l-7.5 11 7.5 10h-4.5L43.5 33 38 41h-4.5l7.5-10L33.5 20H38z" fill="url(#g1)"/>
+  <path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" fill="url(#blade)"/>
+  <path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" fill="url(#blade)" transform="rotate(45 32 32)"/>
+  <path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" fill="url(#blade)" transform="rotate(90 32 32)"/>
+  <path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" fill="url(#blade)" transform="rotate(135 32 32)"/>
+  <path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" fill="url(#blade)" transform="rotate(180 32 32)"/>
+  <path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" fill="url(#blade)" transform="rotate(225 32 32)"/>
+  <path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" fill="url(#blade)" transform="rotate(270 32 32)"/>
+  <path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" fill="url(#blade)" transform="rotate(315 32 32)"/>
 </svg>
