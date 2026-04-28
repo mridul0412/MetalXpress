@@ -57,9 +57,10 @@ BhavX (formerly MetalXpress) is a real-time metal intelligence platform for Indi
 ```
 
 ## Current Date
-2026-04-28
+2026-04-29
 
 ## Session Log
+- **2026-04-29 (session 22)**: Railway backend fully live — Postgres linked, DB schema pushed, seed ran (9 cities, all metals/grades, 27 Delhi Mandoli rates, 9 listings, test users), CRON saving LME/MCX every 15 min, Cloudinary active; domain `metalxpress-production.up.railway.app`; Vercel + DNS still pending — see Session 22 details below
 - **2026-04-28 (session 21)**: Logo redesigned (clean SVG iris, 8 parallelogram blades, gold gradient — Navbar/Footer/favicon); rates-accuracy FAQ restored on Contact page; production deploy STARTED — backend on Railway (project "BhavX", postinstall hook for `prisma generate`, multi-origin CORS, `prisma db push` runs on each deploy via start script, Postgres linked via `${{Postgres.DATABASE_URL}}`); Vercel + DNS pending — see Session 21 details below
 - **2026-04-27 (session 20)**: Cloudinary migration (images/videos off local disk); KYC re-verification bug fix (`publicUserFields()` helper); completed deal listing state bug (sold badge, OR query, isActive on complete); Contact page real numbers + email; support@bhavx.com forwarding via ImprovMX; prod env vars generated (`backend/.env.production`) — see Session 20 details below
 - **2026-04-26 (session 19)**: 3 bug fixes (Lead/Tin missing from LME after session 18 seed change, sold listings still in Browse, Submit Dispute UX); Gold + Silver added under new "Precious Metals" section (Yahoo `GC=F`/`SI=F`); strategy discussion — TAM analysis, $1B path requires embedded-financing pivot in Year 2, freight + lab-assaying ideas dropped — see Session 19 details below
@@ -82,6 +83,51 @@ BhavX (formerly MetalXpress) is a real-time metal intelligence platform for Indi
 - **2026-04-14 (session 14)**: Landing page copy overhaul (new headline, hero, FAQ x11, 2-tier pricing), About page rewrite, font standardization, PaywallModal simplified, "Mandoli" removed — see Session 14 details below
 - **2026-04-20 (session 15)**: Full brand rename MetalXpress → BhavX, central brand config created, domains bhavx.com + bhavx.in purchased — see Session 15 details below
 - **2026-04-21 (session 16)**: BhavX hexagon logo (SVG, gold gradient, Navbar+Footer+favicon), ROADMAP.md created, Resend domain verified (bhavx.com), email now sends to any inbox from noreply@bhavx.com, hero CTA button changed to outline+hover-fill so OM watermark shows through — see Session 16 details below
+
+## Session 22 Changes (2026-04-29) — Full Detail
+
+### Railway Backend — Fully Live ✅
+
+**What was completed this session:**
+
+1. **Postgres plugin added** to Railway project — auto-linked via `${{Postgres.DATABASE_URL}}` reference variable. No manual copy-paste needed.
+
+2. **DB schema pushed automatically** — `prisma db push --skip-generate` runs in the start script on every deploy. Confirmed in Deploy Logs: "Your database is now in sync with your Prisma schema. Done in 197ms"
+
+3. **Seed ran via temporary start script trick** — added `node src/prisma/seed.js` to start script, pushed to GitHub (Railway auto-deployed), seed completed, immediately reverted. Safe approach because Railway CLI shell not available on free plan.
+
+4. **Seed results (production DB):**
+   - 9 cities: Delhi, Mumbai, Ahmedabad, Chennai, Kolkata, Ludhiana, Jaipur, Kanpur, Hyderabad
+   - All metals + grades (Copper 6, Brass 3, Aluminium 5, Lead 3, Zinc 5, + others)
+   - Delhi Mandoli local rates: 27 grades
+   - LME rates: 6, MCX rates: 9, Forex rates: 4
+   - 7 test users (5 traders + pro tester + admin)
+   - 9 sample listings with Cloudinary images
+   - 3 sample deals with offer history + 6 ratings
+
+5. **CRON running** — `[CRON] Price snapshot saved — LME: 4, MCX: 4` confirmed in logs every 15 min
+
+6. **Cloudinary active** — `[upload] Cloudinary active (folder: bhavx-prod/listings)` confirmed
+
+7. **Public domain:** `metalxpress-production.up.railway.app`
+
+### Gotchas (Session 22)
+- **Railway Shell not available on free plan** — "..." menu only shows Restart/Redeploy/Remove. Use the temporary start-script trick or Railway CLI (`railway run npm run seed`) for one-off commands.
+- **"Deployment successful" ≠ app works** — always check Deploy Logs, not just the green badge. The badge only confirms the Node process started.
+- **Seed deletes everything first** (`deleteMany` on all tables) — never leave seed in the start script. Always revert immediately after seed run.
+
+### Pending (next session — Vercel + DNS)
+- Vercel: import GitHub repo → root dir `frontend` → env vars (`VITE_API_URL=https://metalxpress-production.up.railway.app/api`, `VITE_FIREBASE_*`) → deploy
+- DNS on Hostinger: `A bhavx.com → 76.76.21.21`, `CNAME www → cname.vercel-dns.com`, `CNAME api → metalxpress-production.up.railway.app`
+- Railway env update: add Vercel URL + bhavx.com to `CORS_ORIGIN`, update `FRONTEND_URL`
+- Firebase Console: add `bhavx.com` + Vercel URL to Authorized Domains
+- Smoke test: signup → email verify → phone OTP → marketplace browse → admin panel
+
+### Files Modified (Session 22)
+- `backend/package.json` — temporarily added seed to start script, then reverted (2 commits)
+- `CLAUDE.md` — session 22 added, date bumped to 2026-04-29
+
+---
 
 ## Session 21 Changes (2026-04-28) — Full Detail
 
