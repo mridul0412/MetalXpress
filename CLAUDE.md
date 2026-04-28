@@ -57,9 +57,10 @@ BhavX (formerly MetalXpress) is a real-time metal intelligence platform for Indi
 ```
 
 ## Current Date
-2026-04-27
+2026-04-28
 
 ## Session Log
+- **2026-04-28 (session 21)**: Logo redesigned (clean SVG iris, 8 parallelogram blades, gold gradient — Navbar/Footer/favicon); rates-accuracy FAQ restored on Contact page; production deploy STARTED — backend on Railway (project "BhavX", postinstall hook for `prisma generate`, multi-origin CORS, `prisma db push` runs on each deploy via start script, Postgres linked via `${{Postgres.DATABASE_URL}}`); Vercel + DNS pending — see Session 21 details below
 - **2026-04-27 (session 20)**: Cloudinary migration (images/videos off local disk); KYC re-verification bug fix (`publicUserFields()` helper); completed deal listing state bug (sold badge, OR query, isActive on complete); Contact page real numbers + email; support@bhavx.com forwarding via ImprovMX; prod env vars generated (`backend/.env.production`) — see Session 20 details below
 - **2026-04-26 (session 19)**: 3 bug fixes (Lead/Tin missing from LME after session 18 seed change, sold listings still in Browse, Submit Dispute UX); Gold + Silver added under new "Precious Metals" section (Yahoo `GC=F`/`SI=F`); strategy discussion — TAM analysis, $1B path requires embedded-financing pivot in Year 2, freight + lab-assaying ideas dropped — see Session 19 details below
 - **2026-04-24 (session 18)**: ngrok setup for Firebase localhost bypass; phone login UX fixes (pre-check + clean OTP screen); seed improvements (bhavx.com emails, emailVerified, source:'seed' for LME/MCX); 6 bug fixes (images on ngrok, Lightbox flicker, dispute scroll, own listings in browse, deal badges, KYC two-button, dirty-state Save); Navbar username → gold link to profile — see Session 18 details below
@@ -81,6 +82,72 @@ BhavX (formerly MetalXpress) is a real-time metal intelligence platform for Indi
 - **2026-04-14 (session 14)**: Landing page copy overhaul (new headline, hero, FAQ x11, 2-tier pricing), About page rewrite, font standardization, PaywallModal simplified, "Mandoli" removed — see Session 14 details below
 - **2026-04-20 (session 15)**: Full brand rename MetalXpress → BhavX, central brand config created, domains bhavx.com + bhavx.in purchased — see Session 15 details below
 - **2026-04-21 (session 16)**: BhavX hexagon logo (SVG, gold gradient, Navbar+Footer+favicon), ROADMAP.md created, Resend domain verified (bhavx.com), email now sends to any inbox from noreply@bhavx.com, hero CTA button changed to outline+hover-fill so OM watermark shows through — see Session 16 details below
+
+## Session 21 Changes (2026-04-28) — Full Detail
+
+### Logo Redesign (Clean SVG)
+- Iterated 5+ times: AI-generated PNG (black bg compression artifacts couldn't be `mix-blend-mode`'d cleanly), then committed to recreating in SVG
+- Final blade geometry: `M 21,7 L 43,7 L 29,22 L 26,23 Z` rotated 8× by 45° around `(32,32)` in a `0 0 64 64` viewBox
+- Outer edge wider than inner (parallelogram-trapezoid hybrid) → adjacent blades touch at outer rim, dark octagonal "iris hole" visible at center
+- Linear gradient `#FFE9A8 → #E8CC5A → #CFB53B → #7A5A18` with `gradientUnits="userSpaceOnUse"` → each rotated blade samples a different gradient slice → natural directional metallic shimmer without per-blade gradients
+- Drop-shadow filter `0 0 6px rgba(207,181,59,0.45)` for subtle glow
+- Applied to Navbar (44×44), Footer (32×32), `favicon.svg` (plain SVG, kebab-case attrs)
+- Verified via `mcp__Claude_Preview__preview_screenshot` end-to-end
+- Orphan AI logo JPEG (`a-world-class-logo-design-for-bhavx-feat_*.jpeg`) deleted from `frontend/public/`
+
+### Contact Page — Rates Accuracy FAQ Restored
+- Removed in session 20 (per request), now back under Contact's "Common Questions" deflect block (3 entries: local rates / LME-MCX free / accuracy)
+- Same one-line treatment as the other two — kept short to match block style
+
+### Production Deploy — Backend (Railway)
+- **Project**: "BhavX" on Railway (renamed from auto-generated "heartfelt-essence")
+- **Services**:
+  - `MetalXpress` — Node 22 backend, root dir `backend`, branch `main`
+  - `Postgres` — managed plugin, auto-linked via `${{Postgres.DATABASE_URL}}` reference variable
+- **`backend/package.json` deploy hooks**:
+  - `postinstall: prisma generate` — Railway runs after `npm install`, generates Prisma client
+  - `start: prisma db push --skip-generate && node src/index.js` — pushes schema on every deploy (idempotent for additive changes), then starts server
+  - Rationale: avoids manual `npx prisma db push` after first deploy. Destructive schema changes will fail the deploy (good — fail-loud is correct for prod data).
+- **`backend/src/index.js` CORS rewrite**:
+  - `CORS_ORIGIN` now comma-separated list (e.g., `https://bhavx.com,https://www.bhavx.com,https://bhavx.in`)
+  - Wildcard match for `*.vercel.app` so PR preview deploys work without re-adding origins
+  - Allows no-origin requests (curl, server-to-server)
+- **Env vars pasted via Variables → Raw Editor**: NODE_ENV, PORT, JWT_SECRET (64-hex), ADMIN_PASSWORD (20-char), SESSION_SECRET (32-hex), DATABASE_URL (reference), CORS_ORIGIN (3 origins), APP_URL, FRONTEND_URL, RESEND_API_KEY, EMAIL_FROM, FIREBASE_PROJECT_ID, FIREBASE_CLIENT_EMAIL, FIREBASE_PRIVATE_KEY (multi-line PEM with `\n` escapes), CLOUDINARY_URL, CLOUDINARY_FOLDER (=`bhavx-prod`), PRO_EMAILS
+
+### Frontend Deploy Prep (Vercel)
+- **`frontend/vercel.json`** created — single rewrite rule `/(.*) → /index.html` so React Router routes don't 404 on direct visit / refresh
+- Vercel deploy itself NOT YET STARTED — pending Railway backend domain finalisation
+
+### Pending (next session)
+- Generate Railway backend public domain (Settings → Networking → "Generate Domain")
+- Railway one-shot seed run (`npm run seed` via Railway CLI or dashboard) to populate cities/hubs/metals/grades — without this, the app loads but has no metals to display
+- Vercel project import → set root dir `frontend`, env vars (`VITE_API_URL`, `VITE_FIREBASE_*`)
+- DNS records on Hostinger: `bhavx.com A` → Vercel, `www.bhavx.com CNAME` → Vercel, `api.bhavx.com CNAME` → Railway
+- Update Railway `CORS_ORIGIN` and `FRONTEND_URL` once Vercel URL is live
+- Firebase Console: add `bhavx.com` and Vercel `*.vercel.app` to Authorized Domains
+- End-to-end smoke test: signup → email verify → phone OTP → marketplace browse
+
+### Files Modified (Session 21)
+- `frontend/src/components/Navbar.jsx` — SVG iris (44×44, restored metallic-text BhavX wordmark, removed `hidden sm:block` so wordmark shows on narrow viewports)
+- `frontend/src/components/Footer.jsx` — SVG iris (32×32, gradient ID `ftBlade` to avoid SVG ID collision with Navbar)
+- `frontend/public/favicon.svg` — plain SVG iris with kebab-case attrs (8 explicit `<path>` elements with `transform="rotate(...)"` since plain SVG can't `.map()`)
+- `frontend/index.html` — favicon link reverted to `/favicon.svg` (briefly experimented with PNG)
+- `frontend/src/pages/Contact.jsx` — rates accuracy FAQ entry added back to "Common Questions" block
+- `frontend/vercel.json` — NEW: SPA rewrite for client-side routing
+- `frontend/public/a-world-class-logo-design-for-bhavx-feat_*.jpeg` — DELETED (orphan)
+- `backend/package.json` — `postinstall` + `start` updated for Railway deploy
+- `backend/src/index.js` — multi-origin CORS with vercel.app wildcard
+- `CLAUDE.md` — session 21 added, current date bumped to 2026-04-28
+- `MEMORY.md` (user-level) — Railway deploy entry added
+
+### Gotchas / Lessons
+- **JPEG `mix-blend-mode: screen` doesn't fully clear "black" backgrounds** because JPEG compression introduces near-black pixels (not pure 0,0,0). For logos on dark backgrounds, always use SVG.
+- **Railway "Deployment successful" ≠ app actually works** — Railway only checks the process is alive. Backend will start without env vars but crash on first DB query. Always validate with a real API call after deploy.
+- **Railway auto-detects from repo root** — fails with "Error creating build plan with Railpack" if backend is in a subdirectory. Fix: Settings → Source → Root Directory → `backend`.
+- **Railway's `${{ServiceName.VAR}}` reference variables** auto-link service vars (no manual copy-paste). `DATABASE_URL=${{Postgres.DATABASE_URL}}` is the canonical pattern.
+- **Worktree branches accumulate over months** — repo had `claude/great-goldwasser`, `claude/metalxpress-platform-CzcmZ`, etc. Railway connecting to wrong (old) branch is a common foot-gun. Always verify branch in Settings before first deploy.
+
+---
 
 ## Session 20 Changes (2026-04-27) — Full Detail
 
