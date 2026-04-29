@@ -1,148 +1,111 @@
 /**
- * Backfills 30 days of REAL historical LME + MCX prices from Yahoo Finance.
- * Uses chart API which returns daily OHLC data for futures contracts.
+ * Backfills 30 days of price history anchored to CURRENT live prices.
  *
- * Replaces the synthetic random-walk seed (seedPriceHistory.js).
- * Run: node src/scripts/backfillHistorical.js
+ * Strategy:
+ *   1. Fetch current live LME prices via fetchLivePrices() (Yahoo + DB fallback)
+ *   2. Generate 30 days of synthetic random-walk data ENDING at today's real price
+ *   3. So charts converge to the actual current price (not a stale hardcoded base)
+ *
+ * Run once via temp start-script trick. Idempotent for source: 'yahoo-historical'.
  */
 require('dotenv').config();
 const { PrismaClient } = require('@prisma/client');
+const { fetchLivePrices } = require('../services/livePriceFetcher');
+
 const prisma = new PrismaClient();
 
-const YAHOO_URL = 'https://query1.finance.yahoo.com/v8/finance/chart';
-const HEADERS = { 'User-Agent': 'Mozilla/5.0' };
+// Daily volatility per metal (approximate annualised vol → daily)
+const VOLATILITY = {
+  Copper:    0.012,
+  Aluminium: 0.010,
+  Zinc:      0.013,
+  Nickel:    0.018,
+  Lead:      0.011,
+  Tin:       0.015,
+};
 
-// Metals with real Yahoo historical data + conversion factor to USD/MT
-const METALS = [
-  { name: 'Copper',    symbol: 'HG=F',   toMt: 2204.62 }, // USD/lb → USD/MT
-  { name: 'Aluminium', symbol: 'ALI=F',  toMt: 1       }, // USD/MT
-  { name: 'Zinc',      symbol: 'ZNC=F',  toMt: 1       }, // USD/MT
-  // Lead, Tin, Nickel: Yahoo doesn't expose historical reliably. Use static base.
-];
-
-// Lead/Tin/Nickel — Yahoo historical is unreliable. Use last known prices + small drift.
-const FALLBACK_METALS = [
-  { name: 'Nickel', basePrice: 17000 },
-  { name: 'Lead',   basePrice: 1900  },
-  { name: 'Tin',    basePrice: 50000 },
-];
-
-async function fetchYahooHistorical(symbol) {
-  // 1mo of daily candles
-  const url = `${YAHOO_URL}/${encodeURIComponent(symbol)}?interval=1d&range=1mo`;
-  const res = await fetch(url, { headers: HEADERS, signal: AbortSignal.timeout(15000) });
-  const data = await res.json();
-  const result = data?.chart?.result?.[0];
-  if (!result) throw new Error(`No data for ${symbol}`);
-  const timestamps = result.timestamp || [];
-  const closes = result.indicators?.quote?.[0]?.close || [];
-  return timestamps.map((ts, i) => ({
-    date: new Date(ts * 1000),
-    close: closes[i],
-  })).filter(p => p.close != null);
-}
-
-async function fetchUsdInr() {
-  try {
-    const url = `${YAHOO_URL}/USDINR=X?interval=1d&range=5d`;
-    const res = await fetch(url, { headers: HEADERS, signal: AbortSignal.timeout(8000) });
-    const data = await res.json();
-    return data?.chart?.result?.[0]?.meta?.regularMarketPrice || 84;
-  } catch {
-    return 84;
-  }
-}
+// Fallback base prices if live fetch fails (close to recent real values)
+const FALLBACK_BASE = {
+  Copper:    13000,
+  Aluminium: 3400,
+  Zinc:      2530,
+  Nickel:    15700,
+  Lead:      1850,
+  Tin:       50000,
+};
 
 async function main() {
-  console.log('🌱 Backfilling 30 days of REAL historical prices from Yahoo Finance...\n');
+  console.log('🌱 Backfilling 30 days of price history anchored to live prices...\n');
 
-  const usdInr = await fetchUsdInr();
-  console.log(`💱 USD/INR: ${usdInr}\n`);
+  // Fetch current live prices to anchor the simulation
+  let liveData = null;
+  try {
+    liveData = await fetchLivePrices();
+    console.log(`💱 Live USD/INR: ${liveData.usdInr}`);
+    console.log(`📊 Live metals fetched: ${liveData.metals.map(m => m.metal).join(', ')}\n`);
+  } catch (err) {
+    console.error(`⚠️  Live fetch failed: ${err.message} — using fallback base prices\n`);
+  }
 
-  // Wipe old cron + synthetic data — keep admin/seed rows
+  const usdInr = liveData?.usdInr || 84;
+  const metalsToday = {};
+  for (const m of (liveData?.metals || [])) {
+    metalsToday[m.metal] = m.priceUsd;
+  }
+
+  // Wipe old historical data — keep admin/seed rows
   console.log('🗑️  Removing old cron + historical-seed data...');
   await prisma.lMERate.deleteMany({ where: { source: { in: ['cron', 'seed-history', 'yahoo-historical'] } } });
   await prisma.mCXRate.deleteMany({ where: { source: { in: ['cron', 'seed-history', 'yahoo-historical'] } } });
 
   let totalLme = 0, totalMcx = 0;
 
-  // 1) Real Yahoo data for Copper, Aluminium, Zinc (with delay to avoid rate-limiting)
-  for (const m of METALS) {
-    try {
-      console.log(`📈 Fetching ${m.name} (${m.symbol}) from Yahoo...`);
-      await new Promise(r => setTimeout(r, 2000)); // 2s pause between Yahoo calls
-      const points = await fetchYahooHistorical(m.symbol);
-      const lmeRecords = [];
-      const mcxRecords = [];
+  for (const [metal, vol] of Object.entries(VOLATILITY)) {
+    const endPrice = metalsToday[metal] || FALLBACK_BASE[metal];
+    const usedFallback = !metalsToday[metal];
 
-      let prevClose = null;
-      for (const p of points) {
-        const priceUsd = parseFloat((p.close * m.toMt).toFixed(2));
-        const change = prevClose ? parseFloat((priceUsd - prevClose).toFixed(2)) : 0;
-        prevClose = priceUsd;
-
-        lmeRecords.push({
-          metal: m.name, price: priceUsd, change, unit: '$/MT',
-          source: 'yahoo-historical', createdAt: p.date,
-        });
-
-        const priceMcx = parseFloat(((priceUsd * usdInr) / 1000).toFixed(2));
-        const prevMcx = mcxRecords[mcxRecords.length - 1]?.price;
-        const mcxChange = prevMcx ? parseFloat((priceMcx - prevMcx).toFixed(2)) : 0;
-        mcxRecords.push({
-          metal: m.name, price: priceMcx, change: mcxChange, unit: '₹/Kg',
-          source: 'yahoo-historical', createdAt: p.date,
-        });
-      }
-
-      await prisma.lMERate.createMany({ data: lmeRecords });
-      await prisma.mCXRate.createMany({ data: mcxRecords });
-      totalLme += lmeRecords.length;
-      totalMcx += mcxRecords.length;
-      console.log(`   ✅ ${m.name}: ${lmeRecords.length} LME + ${mcxRecords.length} MCX points`);
-    } catch (err) {
-      console.error(`   ❌ ${m.name} failed: ${err.message}`);
-    }
-  }
-
-  // 2) Realistic synthesis for Lead/Tin/Nickel (no reliable Yahoo historical)
-  console.log('\n📊 Generating synthetic data for Lead/Tin/Nickel (no live Yahoo historical)...');
-  const now = new Date();
-  for (const m of FALLBACK_METALS) {
+    // Walk BACKWARD from today's price, applying inverse random drift
+    // This ensures the chart ENDS at the real current price
     const lmeRecords = [];
     const mcxRecords = [];
-    let price = m.basePrice;
+    let price = endPrice;
 
-    // Generate 30 daily points
-    for (let day = 30; day >= 0; day--) {
+    const now = new Date();
+    // Generate 31 daily points (day 0 = today, day 30 = 30 days ago)
+    for (let day = 0; day <= 30; day++) {
       const date = new Date(now);
       date.setDate(now.getDate() - day);
       date.setHours(15, 0, 0, 0); // 3pm IST close
 
-      const drift = (Math.random() - 0.5) * 0.02 * price; // ±1% daily
-      const newPrice = parseFloat((price + drift).toFixed(2));
-      const change = parseFloat((newPrice - price).toFixed(2));
-      price = newPrice;
+      const priceUsd = parseFloat(price.toFixed(2));
+      const priceMcx = parseFloat(((priceUsd * usdInr) / 1000).toFixed(2));
 
-      lmeRecords.push({
-        metal: m.name, price, change, unit: '$/MT',
+      lmeRecords.unshift({  // unshift so oldest first
+        metal, price: priceUsd, change: 0, unit: '$/MT',
+        source: 'yahoo-historical', createdAt: date,
+      });
+      mcxRecords.unshift({
+        metal, price: priceMcx, change: 0, unit: '₹/Kg',
         source: 'yahoo-historical', createdAt: date,
       });
 
-      const priceMcx = parseFloat(((price * usdInr) / 1000).toFixed(2));
-      const prevMcx = mcxRecords[mcxRecords.length - 1]?.price;
-      mcxRecords.push({
-        metal: m.name, price: priceMcx,
-        change: prevMcx ? parseFloat((priceMcx - prevMcx).toFixed(2)) : 0,
-        unit: '₹/Kg', source: 'yahoo-historical', createdAt: date,
-      });
+      // Random walk backward (next iteration's price = previous day's price)
+      const drift = (Math.random() - 0.5) * 2 * vol * price;
+      price = price - drift;
+    }
+
+    // Compute change as diff between consecutive days
+    for (let i = 1; i < lmeRecords.length; i++) {
+      lmeRecords[i].change = parseFloat((lmeRecords[i].price - lmeRecords[i-1].price).toFixed(2));
+      mcxRecords[i].change = parseFloat((mcxRecords[i].price - mcxRecords[i-1].price).toFixed(2));
     }
 
     await prisma.lMERate.createMany({ data: lmeRecords });
     await prisma.mCXRate.createMany({ data: mcxRecords });
     totalLme += lmeRecords.length;
     totalMcx += mcxRecords.length;
-    console.log(`   ✅ ${m.name}: ${lmeRecords.length} LME + ${mcxRecords.length} MCX points (synthetic, anchored to $${m.basePrice})`);
+    const tag = usedFallback ? '(fallback base)' : `(anchored to live $${endPrice})`;
+    console.log(`   ✅ ${metal}: ${lmeRecords.length} LME + ${mcxRecords.length} MCX points ${tag}`);
   }
 
   console.log(`\n🎉 Backfill complete!`);
