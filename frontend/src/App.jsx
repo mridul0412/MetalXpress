@@ -113,12 +113,12 @@ function EmailVerifyBanner() {
 // Layout with Navbar + verification banner + Footer
 function AppShell({ children }) {
   return (
-    <>
+    <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
       <Navbar />
       <EmailVerifyBanner />
-      <main>{children}</main>
+      <main style={{ flex: 1 }}>{children}</main>
       <Footer />
-    </>
+    </div>
   );
 }
 
