@@ -269,9 +269,9 @@ router.get('/live', async (req, res) => {
       lmeSource = 'admin-update';
     } else {
       metals = yahooData.metals.map(m => ({ ...m }));
-      // DB fallback for Lead & Tin — also convert absolute → %
+      // DB fallback for ANY missing metal (Yahoo rate-limit, network failure, etc.)
       const covered = new Set(metals.map(m => m.metal));
-      for (const metalName of ['Lead', 'Tin']) {
+      for (const metalName of ALL_METALS) {
         if (covered.has(metalName)) continue;
         const dbRate = await prisma.lMERate.findFirst({
           where: { metal: { contains: metalName }, createdAt: { gte: CUTOFF_7D } },
@@ -280,7 +280,7 @@ router.get('/live', async (req, res) => {
         if (dbRate) {
           const priceUsd = parseFloat(dbRate.price);
           const absChange = parseFloat(dbRate.change) || 0;
-          metals.push({ metal: metalName, priceUsd, change: absToChangePct(priceUsd, absChange), source: 'admin-update' });
+          metals.push({ metal: metalName, priceUsd, change: absToChangePct(priceUsd, absChange), source: 'db-fallback' });
         }
       }
     }

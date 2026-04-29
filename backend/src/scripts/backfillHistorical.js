@@ -66,10 +66,11 @@ async function main() {
 
   let totalLme = 0, totalMcx = 0;
 
-  // 1) Real Yahoo data for Copper, Aluminium, Zinc
+  // 1) Real Yahoo data for Copper, Aluminium, Zinc (with delay to avoid rate-limiting)
   for (const m of METALS) {
     try {
       console.log(`📈 Fetching ${m.name} (${m.symbol}) from Yahoo...`);
+      await new Promise(r => setTimeout(r, 2000)); // 2s pause between Yahoo calls
       const points = await fetchYahooHistorical(m.symbol);
       const lmeRecords = [];
       const mcxRecords = [];
