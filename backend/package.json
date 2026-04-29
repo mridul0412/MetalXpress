@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "nodemon src/index.js",
-    "start": "prisma db push --skip-generate && node src/scripts/seedPriceHistory.js && node src/index.js",
+    "start": "prisma db push --skip-generate && node src/index.js",
     "postinstall": "prisma generate",
     "db:push": "prisma db push",
     "seed": "node src/prisma/seed.js",
