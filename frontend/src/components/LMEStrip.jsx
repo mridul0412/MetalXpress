@@ -5,7 +5,7 @@ export default function LMEStrip() {
   const [rates, setRates] = useState([]);
 
   useEffect(() => {
-    fetch('/api/rates/live')
+    fetch(`${import.meta.env.VITE_API_URL || ''}/api/rates/live`)
       .then(r => r.json())
       .then(d => { const r = d.metals ?? []; if (r.length) setRates(r); })
       .catch(() => {});

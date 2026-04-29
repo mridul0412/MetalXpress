@@ -462,7 +462,7 @@ function UnifiedParserPanel() {
   const [resolvedHub, setResolvedHub] = useState(null); // { slug, cityName } — only for local rates
 
   useEffect(() => {
-    fetch('/api/cities')
+    fetch(`${import.meta.env.VITE_API_URL || ''}/api/cities`)
       .then(r => r.json())
       .then(d => setCities(Array.isArray(d) ? d : (d.cities || [])))
       .catch(() => {});

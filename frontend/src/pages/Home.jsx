@@ -89,7 +89,7 @@ export default function Home() {
   const loadLme = useCallback(async (force = false) => {
     if (force) setRefreshingLme(true); else setLoadingLme(true);
     try {
-      const r = await fetch('/api/rates/live');
+      const r = await fetch(`${import.meta.env.VITE_API_URL || ''}/api/rates/live`);
       const d = await r.json();
       if (d.metals?.length || d.forex || d.indices) {
         setLiveData(d);
@@ -100,7 +100,7 @@ export default function Home() {
   }, []);
 
   useEffect(() => {
-    fetch('/api/cities')
+    fetch(`${import.meta.env.VITE_API_URL || ''}/api/cities`)
       .then(r => r.json())
       .then(d => {
         const list = Array.isArray(d) ? d : (d.cities || []);
@@ -117,7 +117,7 @@ export default function Home() {
     if (!hubSlug) return;
     if (isRefresh) setRefreshingLocal(true); else setLoadingLocal(true);
     try {
-      const r = await fetch(`/api/rates/local?hub=${hubSlug}`);
+      const r = await fetch(`${import.meta.env.VITE_API_URL || ''}/api/rates/local?hub=${hubSlug}`);
       const d = await r.json();
       setLocalRates(d);
       const ts = d.lastUpdated;
