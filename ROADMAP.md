@@ -9,19 +9,19 @@
 - [x] **Email domain on Resend** — bhavx.com verified, `EMAIL_FROM="BhavX <noreply@bhavx.com>"` set, sending to any inbox ✅ (done 2026-04-21)
 - [x] **SMS OTP real integration** — Firebase Phone Auth live; real 6-digit SMS; no DLT needed; MSG91 parked ✅ (done 2026-04-21)
 - [x] **Phone login UX fixes** — pre-check blocks unregistered numbers before OTP send; removed name/trader-type from login OTP screen; `loginOnly:true` prevents silent account creation ✅ (done 2026-04-24)
-- [ ] **Deploy backend → Railway** — Node + PostgreSQL plugin, set DATABASE_URL
-- [ ] **Deploy frontend → Vercel** — free tier, set `VITE_API_URL` to Railway backend URL
+- [x] **Deploy backend → Railway** — Node + PostgreSQL plugin, env vars set, multi-origin CORS, prisma db push on each deploy ✅ (done 2026-04-29)
+- [x] **Deploy frontend → Vercel** — `metal-xpress-three.vercel.app`, branch `main`, root dir `frontend`, all env vars baked in ✅ (done 2026-04-30)
 - [x] **Production env vars** — strong JWT_SECRET (64 hex), ADMIN_PASSWORD (20 chars+symbols), SESSION_SECRET generated; `backend/.env.production` template ready to paste into Railway ✅ (done 2026-04-27)
 - [x] **Cloudinary image storage** — multer migrated to Cloudinary; 13 seed files uploaded; seed.js uses Cloudinary URLs; disk fallback kept for local dev ✅ (done 2026-04-27)
 - [x] **Contact page real numbers** — +91 87077 18146 (call), +91 94736 36333 (WhatsApp), support@bhavx.com (email) ✅ (done 2026-04-27)
-- [ ] **Run seed on prod DB** — then admin pastes first real WhatsApp rate broadcast to go live
-
----
-
-- [ ] **Forgot password email** — verify reset email still works in prod (Resend domain already verified); test end-to-end on Railway before go-live
-- [ ] **Deploy backend → Railway** — Node + PostgreSQL plugin, paste `.env.production` vars
-- [ ] **Deploy frontend → Vercel** — free tier, set `VITE_API_URL` to Railway backend URL
-- [ ] **Run seed on prod DB** — then admin pastes first real WhatsApp rate broadcast to go live
+- [x] **Run seed on prod DB** — temp start-script trick; 9 cities, all metals/grades, 27 Delhi Mandoli rates, 9 listings, 7 test users ✅ (done 2026-04-29)
+- [x] **DNS cutover to bhavx.com** — A records on Hostinger, Vercel domains valid (bhavx.com + bhavx.in + www variants), 307 redirects to canonical www.bhavx.com ✅ (done 2026-04-30)
+- [x] **Firebase Authorized Domains** — bhavx.com, www.bhavx.com, bhavx.in, www.bhavx.in, metal-xpress-three.vercel.app added ✅ (done 2026-04-30)
+- [x] **Frontend API URL bugs** — 5 hardcoded `fetch('/api/...')` paths fixed (LMEStrip, Home×3, Admin); api.js axios baseURL now appends `/api` ✅ (done 2026-04-30)
+- [x] **Footer sticky-to-bottom** — flex-column AppShell with min-height: 100vh ✅ (done 2026-04-30)
+- [x] **DB fallback for ALL metals** — when Yahoo fails, fall back to most recent DB row for any of the 6 metals (was Lead/Tin only) ✅ (done 2026-04-30)
+- [x] **Synthetic price data wiped** — charts now populate honestly from real 15-min cron snapshots only; deleted seedPriceHistory.js + backfillHistorical.js ✅ (done 2026-04-30)
+- [x] **Forgot password email** — works in prod via Resend (domain verified) ✅ (validated 2026-04-30)
 
 ---
 
@@ -97,6 +97,9 @@
 - [x] Contact page — real phone numbers (+91 87077 18146, +91 94736 36333), support@bhavx.com email card ✅ (done 2026-04-27)
 - [x] Email forwarding — support@bhavx.com live via ImprovMX → forwards to Gmail; catch-all `*@bhavx.com` also active ✅ (done 2026-04-27)
 - [x] Production env vars — strong secrets generated, `backend/.env.production` template ready for Railway ✅ (done 2026-04-27)
+- [x] **🚀 PRODUCTION DEPLOY COMPLETE** — bhavx.com live, Railway backend, Vercel frontend, DNS cutover, SSL valid, Firebase domains, all 6 metals + Gold/Silver, CRON saving real data every 15 min ✅ (done 2026-04-30)
+- [x] Frontend API URL convention canonicalized — `VITE_API_URL` is base URL without `/api`; files append `/api/...` themselves ✅ (done 2026-04-30)
+- [x] Yahoo Finance historical data philosophy — accepted that real historical from cloud IPs is unreliable; charts populate from real cron going forward (honest approach) ✅ (done 2026-04-30)
 
 ---
 
@@ -118,3 +121,6 @@
 | 2026-04-24 | 18 | ngrok setup, phone login UX fixes, seed improvements, 7 marketplace/profile bug fixes, navbar profile link |
 | 2026-04-26 | 19 | 3 bug fixes (Lead/Tin LME, sold listings, dispute UX); Gold + Silver Precious Metals section; strategy session — TAM analysis, $1B path requires embedded financing pivot |
 | 2026-04-27 | 20 | Cloudinary migration (images/videos); KYC re-verification bug; completed deal listing state bug; Contact page real numbers; support@bhavx.com email forwarding (ImprovMX); prod env vars generated |
+| 2026-04-28 | 21 | Camera iris SVG logo redesign; Railway backend deploy started (postinstall + start hooks, multi-origin CORS); vercel.json SPA rewrite |
+| 2026-04-29 | 22 | Railway backend FULLY LIVE — Postgres linked, schema pushed, seed ran, CRON saving prices every 15 min, Cloudinary active |
+| 2026-04-30 | 23 | 🚀 **PRODUCTION DEPLOY COMPLETE** — Vercel frontend live at bhavx.com + bhavx.in (redirects); 5 frontend bugs fixed; footer sticky; synthetic price data wiped; Firebase domains; DNS cutover; SSL valid |
