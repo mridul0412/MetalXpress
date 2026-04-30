@@ -57,9 +57,10 @@ BhavX (formerly MetalXpress) is a real-time metal intelligence platform for Indi
 ```
 
 ## Current Date
-2026-04-29
+2026-04-30
 
 ## Session Log
+- **2026-04-30 (session 23)**: 🚀 **PRODUCTION DEPLOY COMPLETE** — Vercel frontend live at `bhavx.com` + `bhavx.in` (redirects to `.com`); 5 frontend bugs fixed (`fetch('/api/...')` hardcoded paths in LMEStrip/Home/Admin, `VITE_API_URL` build conventions, axios baseURL); footer sticks to bottom (flex layout); historical price data philosophy — wiped all synthetic data, charts now populate honestly from 15-min cron only; Firebase Authorized Domains updated; full DNS cutover with bhavx.in 307 → www.bhavx.com — see Session 23 details below
 - **2026-04-29 (session 22)**: Railway backend fully live — Postgres linked, DB schema pushed, seed ran (9 cities, all metals/grades, 27 Delhi Mandoli rates, 9 listings, test users), CRON saving LME/MCX every 15 min, Cloudinary active; domain `metalxpress-production.up.railway.app`; Vercel + DNS still pending — see Session 22 details below
 - **2026-04-28 (session 21)**: Logo redesigned (clean SVG iris, 8 parallelogram blades, gold gradient — Navbar/Footer/favicon); rates-accuracy FAQ restored on Contact page; production deploy STARTED — backend on Railway (project "BhavX", postinstall hook for `prisma generate`, multi-origin CORS, `prisma db push` runs on each deploy via start script, Postgres linked via `${{Postgres.DATABASE_URL}}`); Vercel + DNS pending — see Session 21 details below
 - **2026-04-27 (session 20)**: Cloudinary migration (images/videos off local disk); KYC re-verification bug fix (`publicUserFields()` helper); completed deal listing state bug (sold badge, OR query, isActive on complete); Contact page real numbers + email; support@bhavx.com forwarding via ImprovMX; prod env vars generated (`backend/.env.production`) — see Session 20 details below
@@ -83,6 +84,131 @@ BhavX (formerly MetalXpress) is a real-time metal intelligence platform for Indi
 - **2026-04-14 (session 14)**: Landing page copy overhaul (new headline, hero, FAQ x11, 2-tier pricing), About page rewrite, font standardization, PaywallModal simplified, "Mandoli" removed — see Session 14 details below
 - **2026-04-20 (session 15)**: Full brand rename MetalXpress → BhavX, central brand config created, domains bhavx.com + bhavx.in purchased — see Session 15 details below
 - **2026-04-21 (session 16)**: BhavX hexagon logo (SVG, gold gradient, Navbar+Footer+favicon), ROADMAP.md created, Resend domain verified (bhavx.com), email now sends to any inbox from noreply@bhavx.com, hero CTA button changed to outline+hover-fill so OM watermark shows through — see Session 16 details below
+
+## Session 23 Changes (2026-04-30) — Full Detail
+
+### 🚀 PRODUCTION DEPLOY COMPLETE — bhavx.com is LIVE
+
+**Final state:**
+- `https://bhavx.com` → 307 redirect → `https://www.bhavx.com` (canonical, served by Vercel)
+- `https://bhavx.in`, `https://www.bhavx.in` → 307 redirect → `https://www.bhavx.com`
+- `https://metalxpress-production.up.railway.app` → backend API (Express on Railway)
+- All 5 domains "Valid Configuration" on Vercel; SSL certs auto-issued
+
+### Vercel Frontend Deployment
+
+1. **Project setup**: Imported `mridul0412/MetalXpress` from GitHub, branch `main`, Root Directory = `frontend`
+2. **Env vars** (5): `VITE_API_URL=https://metalxpress-production.up.railway.app` (NO trailing `/api`), 4× Firebase vars
+3. **Initial bug**: Vercel auto-detected the repo as monorepo with "Services" preset — had to override to single-service with Root Directory = `frontend`
+4. **Branch override**: Initial deploy picked old branch `claude/metalxpress-platform-CzcmZ`. Pushed empty commit on main to force redeploy from correct branch.
+
+### Frontend Bug Fixes (5 hardcoded API paths)
+
+When deployed to Vercel, several components used `fetch('/api/...')` with relative paths assuming Vite's dev proxy. In production this hits Vercel's SPA rewrite (returns `index.html`) instead of the Railway backend.
+
+**Files patched:**
+- `frontend/src/components/LMEStrip.jsx` — line 8: `fetch('/api/rates/live')` → `fetch(\`${VITE_API_URL}/api/rates/live\`)`
+- `frontend/src/pages/Home.jsx` — 3 hardcoded paths (rates/live, cities, rates/local) → all prefixed with VITE_API_URL
+- `frontend/src/pages/Admin.jsx` — `fetch('/api/cities')` → prefixed with VITE_API_URL
+- `frontend/src/utils/api.js` — `const API_BASE = import.meta.env.VITE_API_URL || '/api'` → `\`${VITE_API_URL || ''}/api\`` (axios baseURL needs `/api` appended now that env var is base-only)
+
+**VITE_API_URL convention (canonicalised):** Base URL **without** `/api` suffix. Files that build full URLs (LMEStrip, Home, Admin, Landing, Analytics, Marketplace) all append `/api/...` themselves. Axios via `api.js` appends `/api` once at baseURL setup.
+
+### Footer Sticky-to-Bottom Fix
+
+`AppShell` was using fragment `<>...</>` causing footer to float mid-page on short content (Analytics page mainly). Switched to flex column with `min-height: 100vh` and `flex: 1` on `<main>`:
+```jsx
+<div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
+  <Navbar /><EmailVerifyBanner /><main style={{ flex: 1 }}>{children}</main><Footer />
+</div>
+```
+
+### Historical Price Data — Philosophy Pivot
+
+**Initial attempt**: Wrote `seedPriceHistory.js` (synthetic random walk) + `backfillHistorical.js` (real Yahoo Finance OHLC for Cu/Al/Zn). Both failed cleanly:
+- Yahoo's chart API for futures contracts (HG=F, ALI=F, ZNC=F) is unreliable from cloud IPs — returned 1 data point per metal even with 2s delay between calls.
+- Synthetic data with hardcoded base prices (e.g. Copper $12,800) was visibly wrong vs real ~$13,000.
+
+**Final solution**: Be honest about it. New `cleanupSyntheticData.js` script wipes ALL `yahoo-historical` + `seed-history` rows. Charts now display "No price history yet" until the 15-min cron accumulates real data over time.
+
+**Cron behaviour confirmed running**: `[CRON] Price snapshot saved — LME: 4, MCX: 4` every 15 min. After ~7 days there'll be ~672 real data points per metal. Honest data > fake data.
+
+**`source` taxonomy in DB:**
+- `seed` — initial 1 row per metal from `seed.js`
+- `admin` — pasted via Admin Smart Parser (15-min override window)
+- `cron` — every 15 min from Yahoo Finance (live)
+- `yahoo-historical`, `seed-history` — DEPRECATED, never write again
+
+### Backend Bug Fix — DB Fallback for ALL Metals
+
+`backend/src/routes/rates.js` `/api/rates/live` had DB fallback only for Lead/Tin. When Yahoo rate-limited (which happened during backfill testing), Cu/Al/Zn vanished entirely from API response.
+
+**Fix**: Extended fallback loop to iterate `ALL_METALS` and pull most-recent DB row (within 7-day window) for any metal Yahoo failed to return. Source tagged as `db-fallback` for telemetry.
+
+```js
+for (const metalName of ALL_METALS) {  // was ['Lead', 'Tin']
+  if (covered.has(metalName)) continue;
+  const dbRate = await prisma.lMERate.findFirst({...});
+  if (dbRate) metals.push({ ..., source: 'db-fallback' });
+}
+```
+
+### DNS / Domain Setup
+
+**Hostinger DNS records** (both `bhavx.com` and `bhavx.in`):
+- `A @ → 76.76.21.21` (Vercel IP — replaced default Hostinger parking IP `2.57.91.91`)
+- `CNAME www → bhavx.com` (was already there by Hostinger default — auto-followed apex A record)
+
+**Vercel domain config**:
+- `www.bhavx.com` = Production (canonical site)
+- `bhavx.com` = 307 redirect → `www.bhavx.com`
+- `bhavx.in` + `www.bhavx.in` = 307 redirects → `www.bhavx.com`
+
+**Firebase Authorized Domains** (Authentication → Settings):
+- bhavx.com, www.bhavx.com, bhavx.in, www.bhavx.in, metal-xpress-three.vercel.app
+
+**Railway Variables** (final):
+- `CORS_ORIGIN` = `https://bhavx.com,https://www.bhavx.com,https://bhavx.in,https://www.bhavx.in,https://metal-xpress-three.vercel.app`
+- `FRONTEND_URL` = `https://bhavx.com`
+
+### Lessons Learned (Session 23)
+
+- **Vercel + Vite env vars are baked at build time** — changing `VITE_*` requires a fresh build. Empty commits work to trigger redeploys.
+- **Vercel "Services" preset auto-detects monorepo** — must override Root Directory to single folder for our frontend-only setup.
+- **`@apex` A record + Hostinger's default `CNAME www → @`** = changing apex auto-propagates to www. Saves manual CNAME for www.
+- **307 vs 308 redirects**: 307 = temporary (browsers don't aggressively cache, easier to undo). 308 = permanent (better SEO). Currently using 307; can upgrade later.
+- **Yahoo Finance historical API is unreliable from cloud IPs.** For real historical data, paid API (metals-api.com $15/mo) is the right tool. For now, accept the "collecting data" honest state.
+- **Synthetic price data is worse than no data** — visibly wrong base prices undermine trust. Better to show "collecting data" empty state than fabrications.
+- **Railway free tier has no shell** — temp start-script trick (push seed → push revert) is the canonical way to run one-shot DB scripts.
+
+### Files Modified (Session 23)
+- `frontend/src/components/LMEStrip.jsx` — VITE_API_URL prefix
+- `frontend/src/pages/Home.jsx` — 3× VITE_API_URL prefix (rates/live, cities, rates/local)
+- `frontend/src/pages/Admin.jsx` — VITE_API_URL prefix on cities
+- `frontend/src/utils/api.js` — axios baseURL appends `/api`
+- `frontend/src/App.jsx` — flex column AppShell for sticky footer
+- `frontend/vercel.json` — SPA rewrite (added in earlier session)
+- `backend/src/routes/rates.js` — DB fallback for ALL metals
+- `backend/src/scripts/cleanupSyntheticData.js` — NEW: one-shot DB cleanup
+- `backend/src/scripts/seedPriceHistory.js` — DELETED (synthetic)
+- `backend/src/scripts/backfillHistorical.js` — DELETED (unreliable Yahoo)
+- `backend/package.json` — temp start-script trick used 3× (seedPriceHistory → backfill → cleanup), all reverted
+- `CLAUDE.md` — Session 23 added, date bumped to 2026-04-30
+
+### Status (after session 23)
+- ✅ Frontend live at https://bhavx.com (Vercel)
+- ✅ Backend live at https://metalxpress-production.up.railway.app (Railway)
+- ✅ Postgres on Railway (plugin)
+- ✅ Cloudinary for image/video storage
+- ✅ Firebase Phone Auth working on bhavx.com
+- ✅ All 6 metals + Gold/Silver live rates
+- ✅ Email via Resend (noreply@bhavx.com)
+- ✅ DNS: bhavx.com primary, bhavx.in redirects, all SSL valid
+- ⏳ Charts will populate from real cron data over the next 7+ days
+- ❌ Razorpay payments — NOT integrated (next major work)
+- ❌ Real SMS rate alerts — code stub only
+
+---
 
 ## Session 22 Changes (2026-04-29) — Full Detail
 
