@@ -1,18 +1,34 @@
 #!/usr/bin/env node
 /**
- * BhavX Session Brief Hook — v2 (pace-aware, auto-advance, criticality)
+ * BhavX Session Brief Hook — v3 (push notifications, pace-aware, auto-advance, criticality)
  * ─────────────────────────────────────────────────────────────────────────────
  * Fires on SessionStart and injects:
  *   1. Current Month/Week from BUSINESS_ROADMAP.md (auto-advances past completed weeks)
  *   2. Pending tech blockers from ROADMAP.md (CRITICAL → REVENUE if CRITICAL all done)
  *   3. Pace tracking: counts items completed in last 7 days, warns if behind
  *   4. Criticality banner during Month 1 (VC-readiness window)
+ *   5. 🔔 Push notification to phone via ntfy.sh when pace is RED or YELLOW
  *
  * Activation: 2026-05-01. Edit ACTIVATION_DATE to override.
+ *
+ * ── Push notification setup (one-time, 30 seconds) ────────────────────────
+ *   1. Install "ntfy" app on your phone (Android/iOS — free, no account)
+ *   2. Subscribe to topic: bhavx-mridul-alerts
+ *      (or change NTFY_TOPIC below to any unique string)
+ *   3. That's it. Notifications fire automatically when pace is behind.
+ *
+ * ── Standalone daily nudge (Windows Task Scheduler) ──────────────────────
+ *   To get nudged even on days you don't open Claude, run this script daily:
+ *   1. Open Task Scheduler → Create Basic Task
+ *   2. Trigger: Daily at 9:00 AM
+ *   3. Action: Start Program → node
+ *   4. Arguments: "C:\Users\Lenovo\Downloads\MetalXpress\.claude\worktrees\great-goldwasser\.claude\scripts\session-brief.js" --notify-only
+ *   5. Start in: C:\Users\Lenovo\Downloads\MetalXpress\.claude\worktrees\great-goldwasser
  */
 
-const fs        = require('fs');
-const path      = require('path');
+const fs           = require('fs');
+const path         = require('path');
+const https        = require('https');
 const { execSync } = require('child_process');
 
 // ─── Config ───────────────────────────────────────────────────────────────
@@ -25,16 +41,23 @@ const MAX_BIZ_ITEMS   = 10;
 const MAX_PROD_ITEMS  = 6;
 const PACE_TARGET     = 6; // Items expected to complete per week (Month 1 sprint pace)
 
+// ─── Push notification config (ntfy.sh — free, no account needed) ────────
+const NTFY_TOPIC   = 'bhavx-mridul-alerts'; // Change this to something unique to you
+const NTFY_ENABLED = true;                   // Set false to disable all push notifications
+
+// ─── CLI flag: --notify-only skips Claude output, just sends push ─────────
+const NOTIFY_ONLY = process.argv.includes('--notify-only');
+
 // ─── Silent exit if before activation ────────────────────────────────────
 const today = new Date();
-if (today < ACTIVATION_DATE) {
+if (today < ACTIVATION_DATE && !NOTIFY_ONLY) {
   process.stdout.write(JSON.stringify({ hookSpecificOutput: { hookEventName: 'SessionStart', additionalContext: '' } }));
   process.exit(0);
 }
 
 // ─── Calculate current Month + Week since START_DATE ─────────────────────
 const dayDelta  = Math.floor((today - START_DATE) / (1000 * 60 * 60 * 24));
-const monthIdx  = Math.floor(dayDelta / 30);
+const monthIdx  = Math.max(0, Math.floor(dayDelta / 30));
 const weekIdx   = Math.floor((dayDelta % 30) / 7);
 const month     = monthIdx + 1;
 let   week      = Math.min(weekIdx + 1, 4);
@@ -42,8 +65,28 @@ const monthName = ['Foundation', 'Public Launch', 'Angel Round', 'VC Pipeline', 
 const monthEmojis = ['🔴', '🟡', '🟢', '🔵', '🟣', '🌟'];
 const emoji = monthEmojis[monthIdx] || '🔴';
 
+// ─── Push notification helper ─────────────────────────────────────────────
+function sendPush(title, message, priority = 'default', tags = []) {
+  if (!NTFY_ENABLED) return;
+  const body = JSON.stringify({ topic: NTFY_TOPIC, title, message, priority, tags });
+  const req = https.request({
+    hostname: 'ntfy.sh',
+    port: 443,
+    path: '/',
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'Content-Length': Buffer.byteLength(body) },
+  }, () => {}); // fire-and-forget
+  req.on('error', () => {}); // silent on failure — don't break Claude session
+  req.write(body);
+  req.end();
+}
+
 // Past Month 6
 if (month > 6) {
+  if (NOTIFY_ONLY) {
+    sendPush('BhavX 🎯', 'Past the 6-month roadmap. Time to plan Series A!', 'default', ['tada']);
+    process.exit(0);
+  }
   const briefing = [
     '🎯 BHAVX — Post-Plan Period',
     '─────────────────────────────────────',
@@ -85,7 +128,7 @@ function extractOpenItems(md, startRegex, endRegex, max) {
 function findActiveWeek(md, currentWeek) {
   for (let w = currentWeek; w <= 4; w++) {
     const startRe = new RegExp(`### Week ${w}:[^\\n]*\\n`, 'i');
-    const endRe   = /\n### Week \d+:|\n## /;  // either next week or next H2
+    const endRe   = /\n### Week \d+:|\n## /;
     const items   = extractOpenItems(md, startRe, endRe, MAX_BIZ_ITEMS);
     if (items.length > 0) return { week: w, items };
   }
@@ -94,13 +137,11 @@ function findActiveWeek(md, currentWeek) {
 
 // Pace tracking: count items completed in last N days
 // Accepts any of these date stamp formats on `[x]` lines:
-//   ✅ (done YYYY-MM-DD)    ✅ (YYYY-MM-DD)
-//   (done YYYY-MM-DD)
+//   ✅ (done YYYY-MM-DD)    ✅ (YYYY-MM-DD)    (done YYYY-MM-DD)
 function countRecentlyCompleted(md, days = 7) {
   if (!md) return { count: 0 };
   const cutoff = new Date(today.getTime() - days * 24 * 60 * 60 * 1000);
   const cutoffStr = cutoff.toISOString().slice(0, 10);
-  // Walk every `- [x]` line, find the LAST date stamp on that line
   const lineRe = /^[ \t]*- \[x\][^\n]*$/gm;
   const dateRe = /(\d{4}-\d{2}-\d{2})/g;
   let count = 0;
@@ -115,8 +156,6 @@ function countRecentlyCompleted(md, days = 7) {
 }
 
 // ─── Pull items from BUSINESS_ROADMAP ─────────────────────────────────────
-// In Month 1 (sprint mode), always combine current week + next week so user
-// sees a 2-week look-ahead. Weeks with all items checked are silently skipped.
 const bizMd = safeRead(BIZ_FILE);
 
 function pullWeekItems(md, w) {
@@ -126,13 +165,12 @@ function pullWeekItems(md, w) {
 }
 
 // Find first 2 weeks (current onwards) that have any open items
-let bizSections = [];  // [{ week: N, items: [...] }, ...]
+let bizSections = [];
 for (let w = week; w <= 4 && bizSections.length < 2; w++) {
   const items = pullWeekItems(bizMd, w);
   if (items.length > 0) bizSections.push({ week: w, items });
 }
 
-// Track if first section is past-current-calendar (auto-advance)
 const firstWeekShown = bizSections[0]?.week ?? week;
 const advanced = firstWeekShown !== week;
 
@@ -155,7 +193,6 @@ const critEnd   = /\n## /;
 let prodItems   = extractOpenItems(prodMd, critStart, critEnd, MAX_PROD_ITEMS);
 let prodSection = 'CRITICAL — Before Go-Live';
 if (prodItems.length === 0) {
-  // CRITICAL all done — promote REVENUE blockers
   const revStart = /## 🟡 REVENUE[^\n]*\n/;
   const revEnd   = /\n## /;
   prodItems = extractOpenItems(prodMd, revStart, revEnd, MAX_PROD_ITEMS);
@@ -163,20 +200,52 @@ if (prodItems.length === 0) {
 }
 
 // ─── Pace tracking ───────────────────────────────────────────────────────
-const bizPace  = countRecentlyCompleted(bizMd, 7);
-const prodPace = countRecentlyCompleted(prodMd, 7);
+const bizPace   = countRecentlyCompleted(bizMd, 7);
+const prodPace  = countRecentlyCompleted(prodMd, 7);
 const totalDone = bizPace.count + prodPace.count;
-let paceLabel, paceEmoji;
+let paceLabel, paceEmoji, paceStatus;
 if (totalDone >= PACE_TARGET) {
-  paceLabel = `On pace — ${totalDone} items completed in last 7 days (target ${PACE_TARGET}+)`;
-  paceEmoji = '🟢';
+  paceLabel  = `On pace — ${totalDone} items completed in last 7 days (target ${PACE_TARGET}+)`;
+  paceEmoji  = '🟢';
+  paceStatus = 'green';
 } else if (totalDone >= PACE_TARGET / 2) {
-  paceLabel = `Mid-pace — ${totalDone} items completed in last 7 days (target ${PACE_TARGET}+)`;
-  paceEmoji = '🟡';
+  paceLabel  = `Mid-pace — ${totalDone} items completed in last 7 days (target ${PACE_TARGET}+)`;
+  paceEmoji  = '🟡';
+  paceStatus = 'yellow';
 } else {
-  paceLabel = `BEHIND PACE — only ${totalDone} items in last 7 days (target ${PACE_TARGET}+). Push harder.`;
-  paceEmoji = '🔴';
+  paceLabel  = `BEHIND PACE — only ${totalDone} items in last 7 days (target ${PACE_TARGET}+). Push harder.`;
+  paceEmoji  = '🔴';
+  paceStatus = 'red';
 }
+
+// ─── Push notification logic ─────────────────────────────────────────────
+// Fire push if pace is red or yellow (behind or mid-pace)
+// Also fires on --notify-only mode (daily Task Scheduler nudge)
+const nextItems = bizSections[0]?.items?.slice(0, 3) ?? [];
+const nextItemsStr = nextItems.map(t => `• ${t}`).join('\n');
+
+if (paceStatus === 'red') {
+  sendPush(
+    `🔴 BhavX — BEHIND PACE (Month ${month} Wk ${week})`,
+    `Only ${totalDone}/${PACE_TARGET} items done this week.\n\nNext up:\n${nextItemsStr}\n\nOpen Claude and ship something.`,
+    'high',
+    ['rotating_light', 'bhavx']
+  );
+} else if (paceStatus === 'yellow' || NOTIFY_ONLY) {
+  // Yellow pace or daily standalone nudge
+  const title = paceStatus === 'yellow'
+    ? `🟡 BhavX — Mid-Pace (Month ${month} Wk ${week})`
+    : `📋 BhavX Daily Check-In (Month ${month} Wk ${week})`;
+  sendPush(
+    title,
+    `${totalDone} items done this week (target: ${PACE_TARGET}+).\n\nNext up:\n${nextItemsStr}`,
+    paceStatus === 'yellow' ? 'default' : 'low',
+    ['bhavx']
+  );
+}
+
+// If --notify-only, stop here (no Claude output needed)
+if (NOTIFY_ONLY) process.exit(0);
 
 // ─── Build briefing ───────────────────────────────────────────────────────
 const dateStr = today.toISOString().slice(0, 10);
@@ -201,6 +270,9 @@ lines.push(
 
 // Pace
 lines.push('', `${paceEmoji} PACE: ${paceLabel}`);
+if (paceStatus === 'red') {
+  lines.push('   ⚠️  Push notification sent to your phone.');
+}
 
 // Auto-advance notice
 if (advanced) {
@@ -237,7 +309,9 @@ lines.push(
   '📁 Plans: BUSINESS_ROADMAP.md  |  ROADMAP.md',
   '',
   '⚠️ Mark items done by editing `[ ]` → `[x] (done YYYY-MM-DD)` —',
-  '   pace tracker depends on the YYYY-MM-DD date stamp.'
+  '   pace tracker depends on the YYYY-MM-DD date stamp.',
+  '',
+  '🔔 Push notifications: install ntfy app → subscribe to "bhavx-mridul-alerts"'
 );
 
 const briefing = lines.join('\n');
