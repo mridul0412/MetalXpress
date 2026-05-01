@@ -230,24 +230,51 @@ if (totalDone >= PACE_TARGET) {
 const nextItems = bizSections[0]?.items?.slice(0, 3) ?? [];
 const nextItemsStr = nextItems.map(t => `• ${t}`).join('\n');
 
-if (paceStatus === 'red') {
-  sendPush(
-    `🔴 BhavX — BEHIND PACE (Month ${month} Wk ${week})`,
-    `Only ${totalDone}/${PACE_TARGET} items done this week.\n\nNext up:\n${nextItemsStr}\n\nOpen Claude and ship something.`,
-    'high',
-    ['rotating_light', 'bhavx']
-  );
-} else if (paceStatus === 'yellow' || NOTIFY_ONLY) {
-  // Yellow pace or daily standalone nudge
-  const title = paceStatus === 'yellow'
-    ? `🟡 BhavX — Mid-Pace (Month ${month} Wk ${week})`
-    : `📋 BhavX Daily Check-In (Month ${month} Wk ${week})`;
-  sendPush(
-    title,
-    `${totalDone} items done this week (target: ${PACE_TARGET}+).\n\nNext up:\n${nextItemsStr}`,
-    paceStatus === 'yellow' ? 'default' : 'low',
-    ['bhavx']
-  );
+// ── Push logic ──
+// Session start (default mode): only push if pace is yellow/red (never spam green)
+// --notify-only mode (hourly Task Scheduler): smart — push every hour for red,
+//   every 3rd hour for yellow, once-per-day for green (morning kickoff)
+const hour = today.getHours();
+const isFirstHourOfDay = hour <= 9; // 9 AM kickoff push regardless of pace
+
+if (NOTIFY_ONLY) {
+  // Hourly Task Scheduler mode
+  if (paceStatus === 'red') {
+    sendPush(
+      `🔴 BhavX — BEHIND PACE (M${month}W${week})`,
+      `Only ${totalDone}/${PACE_TARGET} items this week.\n\nNext:\n${nextItemsStr}\n\nShip something. Now.`,
+      'high', ['rotating_light', 'bhavx']
+    );
+  } else if (paceStatus === 'yellow' && hour % 3 === 0) {
+    // yellow: every 3 hours
+    sendPush(
+      `🟡 BhavX — Mid-Pace (M${month}W${week})`,
+      `${totalDone}/${PACE_TARGET} items this week.\n\nNext:\n${nextItemsStr}`,
+      'default', ['bhavx']
+    );
+  } else if (paceStatus === 'green' && isFirstHourOfDay) {
+    // green: morning kickoff only
+    sendPush(
+      `📋 BhavX — M${month}W${week} kickoff`,
+      `On pace (${totalDone}/${PACE_TARGET}). Today's focus:\n${nextItemsStr}`,
+      'low', ['bhavx']
+    );
+  }
+} else {
+  // Session start mode — only push on yellow or red, never green
+  if (paceStatus === 'red') {
+    sendPush(
+      `🔴 BhavX — BEHIND PACE (M${month}W${week})`,
+      `Only ${totalDone}/${PACE_TARGET} items this week.\n\nNext:\n${nextItemsStr}\n\nOpen Claude and ship.`,
+      'high', ['rotating_light', 'bhavx']
+    );
+  } else if (paceStatus === 'yellow') {
+    sendPush(
+      `🟡 BhavX — Mid-Pace (M${month}W${week})`,
+      `${totalDone}/${PACE_TARGET} items this week.\n\nNext:\n${nextItemsStr}`,
+      'default', ['bhavx']
+    );
+  }
 }
 
 // If --notify-only, stop here (no Claude output needed)
