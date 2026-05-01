@@ -25,20 +25,49 @@
 
 ---
 
-## 🟡 REVENUE — Before First Paying Users
+## 🟠 PRE-BETA — Before Onboarding 20 Traders (BLOCKERS)
 
-- [ ] **Razorpay Pro subscription** — wire PaywallModal (₹299/mo) to Razorpay Checkout
-- [ ] **Razorpay deal commission** — replace dev-mode instant pay in `/deals/:id/pay` with real Razorpay flow
-- [ ] **Subscription DB model** — replace PRO_EMAILS env var with proper Subscription table + Razorpay webhook
-- [ ] **Price alert triggers** — cron job (node-cron installed) checks thresholds every 15min, fires SMS via MSG91
+- [ ] **Full E2E smoke test on bhavx.com** — signup, email verify, phone OTP, KYC, listing post (Cloudinary), offer flow, dispute, forgot password. Test on Chrome desktop + mobile Safari + mobile Chrome. (2-3 hours)
+- [ ] **PWA setup (Day 1 of Week 2)** — `frontend/public/manifest.json` + service worker (`vite-plugin-pwa`) + install prompt. Result: traders "Add to Home Screen" on Android → looks identical to native app. Zero new code beyond config.
+- [ ] **Firebase Cloud Messaging (FCM) for price alerts** — replaces SMS plan
+  - Frontend: request notification permission on login, save FCM token to backend
+  - Backend: `User.fcmToken` field; cron checks alerts every 5 min; Firebase Admin SDK fires push
+  - Reasoning: free, instant (<1s), works on web+Android+iOS, no DLT registration. SMS via MSG91 = ₹0.20/SMS, 7-day DLT wait, 85% delivery. FCM = 0 friction.
+- [ ] **Founding 20 free Pro setup** — add 20 trader emails to `PRO_EMAILS` env var as they sign up. "Founding Trader" lifetime free Pro.
+- [ ] **PostHog analytics integration** — free tier, track signup → first listing → first offer funnel. Frontend snippet only.
+- [ ] **Admin "Founding Trader" badge** — visual badge on profile + listing cards for the 20 alpha users (loyalty signal)
 
 ---
 
-## 🟢 GROWTH — Post-Launch
+## 🟡 REVENUE — Public Launch (Month 2 / Week 5+)
 
+**Pricing decision: Month 1 = 100% free for 20 alpha users. Charge from Week 5 (public launch).**
+*Reasoning: Friction kills feedback. VCs at angel stage care about engagement+retention, not ₹2K MRR. Don't put critical path on Razorpay/Pvt Ltd setup. Founding 20 keep lifetime free as a loyalty moat.*
+
+- [ ] **Pvt Ltd "BhavX Technologies" incorporation** (PREREQUISITE for Razorpay)
+  - Service: Vakilsearch / IndiaFilings (₹15-25K all-inclusive)
+  - Documents: PAN, Aadhaar, 2 directors, registered office address
+  - Output: CIN, Company PAN, TAN, MOA/AOA
+  - Time: 7-15 days for ROC name approval
+- [ ] **Open current account** — HDFC/Kotak in BhavX Technologies Pvt Ltd name (1 week after CIN)
+- [ ] **GST registration** — optional below ₹20L turnover but apply anyway (looks better for VCs, enables input credit)
+- [ ] **Razorpay Pro subscription** — wire PaywallModal (₹299/mo) to Razorpay Checkout. Requires Pvt Ltd CIN + current account.
+- [ ] **Razorpay deal commission** — replace dev-mode instant pay in `/deals/:id/pay` with real Razorpay flow (0.1% of agreed value)
+- [ ] **Subscription DB model** — replace `PRO_EMAILS` env var with `Subscription` table + Razorpay webhook for payment confirmation
+- [ ] **TWA wrapper for Play Store** (2-3 days) — Trusted Web Activity wraps PWA in APK. Submit to Play Store. ₹2,500 one-time Play Console fee. Looks identical to native React Native.
+
+---
+
+## 🟢 GROWTH — Post-Launch (Month 2-3)
+
+- [ ] **WhatsApp Business Cloud API (Meta)** — bhavx.com BECOMES the broadcaster
+  - Requires: Meta Business Manager + Pvt Ltd verification (CIN, GST)
+  - Free tier: 1,000 conversations/month
+  - Webhook: `POST /api/whatsapp/inbound` runs through existing rateParser.js
+  - Auto-reply bot: trader texts "RATES" → reply with bhavx.com snapshot
+  - **Cannot intercept other people's broadcasts** (against ToS, bannable). Path is to OWN the broadcast.
 - [ ] **Google OAuth** — set `GOOGLE_CLIENT_ID` + `GOOGLE_CLIENT_SECRET` in .env (fully coded, plug-and-play)
 - [ ] **metals-api.com real LME prices** — set `METALS_API_KEY` in .env (fully coded, plug-and-play)
-- [ ] **WhatsApp Business API** — webhook endpoint to auto-receive broadcast → parse → save (zero manual paste). Use Twilio sandbox for dev, Meta Cloud API for prod.
 - [ ] **Hindi language toggle** — huge TAM unlock for tier-2/3 city traders
 - [ ] **WebSocket/SSE** — replace 30s polling with real-time deal notifications
 - [ ] **KYC document upload** — PAN card photo upload for extra verification layer
@@ -50,12 +79,12 @@
 
 ---
 
-## 🔵 CAPITAL & SCALE
+## 🔵 CAPITAL & SCALE (Month 4+)
 
+- [ ] **Native React Native mobile app** — only after ₹50K+ MRR justifies the 4-6 week build. PWA+TWA serves users perfectly until then. iOS App Store skip until Month 6+ (₹8K/yr Apple Developer fee wasted pre-PMF).
 - [ ] **Pitch deck** — product screenshots, TAM (India metal trade ~$150B/yr), revenue model, traction metrics
 - [ ] **TypeScript migration** — frontend TS before hiring engineers
 - [ ] **Separate admin app** — decouple admin from consumer app for security
-- [ ] **PWA / Mobile app** — app store presence for traders
 - [ ] **Multi-city expansion** — automated hub onboarding, local admin per city
 - [ ] **GoDaddy → Cloudflare transfer** — do before April 2027 (saves ~₹720/yr on bhavx.com renewal)
 

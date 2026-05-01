@@ -35,17 +35,37 @@
 - [x] **Deploy frontend → Vercel** ✅ (2026-04-30) — `metal-xpress-three.vercel.app`
 - [x] **DNS** — point bhavx.com → Vercel, Hostinger DNS update ✅ (2026-04-30) — bhavx.com + bhavx.in both live with 307 redirects to www.bhavx.com
 - [x] **Run seed on prod DB** ✅ (2026-04-29) — 9 cities, metals, grades, 27 Delhi rates, 9 listings, 7 test users
-- [ ] ~~Smoke test~~ partial: pages load, rates show, login works on bhavx.com — still need full signup/KYC/deal-flow run on prod
+- [ ] **Full E2E smoke test on bhavx.com** (2-3 hours, BLOCKER for trader onboarding):
+  - [ ] Signup flow with new email → email verification arrives → click → verified
+  - [ ] Phone OTP via Firebase → real SMS lands → OTP verified
+  - [ ] KYC submission with PAN format validation
+  - [ ] Post listing with 4+ photos (Cloudinary upload + render)
+  - [ ] Make offer → counter-offer → accept → commission calc
+  - [ ] Pay flow (dev-mode) → contact reveal → mark complete
+  - [ ] Raise dispute → admin sees in panel
+  - [ ] Forgot password → reset email → reset works
+  - [ ] Test on Chrome desktop + mobile Safari + mobile Chrome (most users on mobile)
 
-### Week 2: Beta Recruitment
-- [ ] **Identify 20 hand-picked traders** (Delhi + Mumbai, mix of buyers/sellers)
-- [ ] **Personally onboard each one** — phone call, screen-share walkthrough
-- [ ] **Get them posting real listings** + having real conversations
-- [ ] **Daily check-ins** — they're your alpha cohort; their feedback rewrites your product
-- [ ] **Set up analytics** — PostHog or Mixpanel free tier (track DAU, retention, deal flow)
-- [ ] **Set up customer support** — at minimum a WhatsApp business number you respond to within 1 hour
+### Week 2: Beta Recruitment (KEEP EVERYTHING FREE — see Pricing Strategy below)
+- [ ] **PRICING DECISION — Month 1 is 100% free for beta cohort**
+  - Add all 20 trader emails to `PRO_EMAILS` env var → instant Pro access
+  - "Founding Trader" lifetime free badge — loyalty + word-of-mouth
+  - Reasoning: Friction kills feedback. VCs care about retention/engagement at angel stage, not ₹2K MRR. Don't put critical path on Razorpay/Pvt Ltd setup.
+- [ ] **PWA setup (1 day)** — manifest.json + service worker + install prompt → traders "Add to Home Screen" on Android, looks identical to native app
+- [ ] **Trader recruitment — split across channels (target 20 by Day 14)**:
+  - [ ] **Channel A — WhatsApp broadcast network (8 traders)** — reach out to admin who runs the metal broadcast you already receive. Offer: free Pro lifetime + co-marketing for sharing BhavX with their subscribers.
+  - [ ] **Channel B — Physical market visits (6 traders)** — 1 day in Delhi Mandoli + 1 day in Mumbai Masjid Bunder/Sewri. Bring printed one-pager with QR code to bhavx.com.
+  - [ ] **Channel C — LinkedIn cold outreach (4 traders)** — search "scrap dealer Delhi/Mumbai", "non-ferrous trader", "kabadiwala". Personalized DMs (NOT template).
+  - [ ] **Channel D — Personal network (2 traders)** — family/college contacts who know any metal traders.
+  - [ ] **Channel E — MRAI / All India Non-Ferrous Metals Exporters Association** — backup if A-D underperform. Member directory has thousands of leads.
+- [ ] **Personally onboard each one** — phone call (15-20 min) + screen-share walkthrough
+- [ ] **Get them posting real listings** within 48h of signup + verify deals are happening
+- [ ] **Daily check-ins** for first 2 weeks — they're your alpha cohort; their feedback rewrites your product
+- [ ] **Set up analytics** — PostHog free tier (track signup → first listing → first offer funnel)
+- [ ] **Set up customer support** — WhatsApp Business number (your phone with WhatsApp Business app installed). Respond within 1 hour during day.
+- [ ] **Create "Founding 20" private WhatsApp group** — daily updates, feature announcements, AMA
 
-### Week 3: Co-Founder Hunt (CRITICAL)
+### Week 3: Co-Founder Hunt (CRITICAL) + Pvt Ltd Incorporation (parallel)
 - [ ] **Decide co-founder profile**: Technical (CTO) OR Business (CBO/COO)
   - If you stay product+tech: find someone with metal-trade industry contacts
   - If you go biz/sales: find a senior engineer to take CTO role
@@ -54,6 +74,18 @@
 - [ ] **Reference checks on the 2-3 finalists** — call ex-bosses, ex-colleagues
 - [ ] **Equity discussion**: prepare to offer 25-40% with 4-year vesting + 1-year cliff
 - [ ] **Trial period**: 4-6 weeks before formally bringing on board
+
+**🏢 Incorporate "BhavX Technologies Pvt Ltd" (start NOW — 7-15 days for ROC approval)**
+- [ ] **Pick service**: Vakilsearch / IndiaFilings / ClearTax (₹15-25K all-inclusive)
+- [ ] **Documents needed**:
+  - Your PAN + Aadhaar
+  - 2nd director (trusted family member or co-founder when found)
+  - Registered office address proof (your home address + electricity bill works)
+  - 5 proposed company names (BhavX Technologies, BhavX Trade Tech, BhavX India, etc.)
+- [ ] **What you receive after**: CIN (Corporate Identification Number), Company PAN, TAN, MOA/AOA
+- [ ] **Open current account** at HDFC/Kotak/ICICI (1 week) — needed for Razorpay
+- [ ] **Apply for GST** (mandatory if turnover crosses ₹20 lakh/year, but optional below — apply anyway, looks better for VCs)
+- [ ] **Reasoning**: ₹2-5 Cr angel round (Month 3) requires Pvt Ltd. No investor signs SAFE/term sheet to sole proprietorship. Start ROC paperwork NOW so it's done by Month 2.
 
 ### Week 4: Pitch Materials v1
 - [ ] **Pitch deck v1** (10-12 slides):
@@ -79,18 +111,35 @@
 
 **Theme**: Go from 20 alpha users to 100-200 active users. First paying customers. Industry advisors signed.
 
-### Week 5: Open Launch in Delhi + Mumbai
+### Week 5: Open Launch in Delhi + Mumbai (FIRST PAID USERS)
+- [ ] **Razorpay activation** (requires Pvt Ltd CIN + current account from Week 3)
+  - [ ] Submit business KYC on Razorpay dashboard
+  - [ ] Wire `PaywallModal` → Razorpay Checkout for Pro ₹299/mo
+  - [ ] Wire `/deals/:id/pay` → Razorpay flow for 0.1% commission
+  - [ ] Razorpay webhook → update Subscription DB model (replace PRO_EMAILS hack)
+- [ ] **Founding 20 keep lifetime free Pro** (promised in Month 1, NEVER renege on this)
+- [ ] **New signups Week 5+ pay ₹299/mo** for local rates + marketplace + analytics
+- [ ] **TWA wrapper for Play Store** (2-3 days) — submit BhavX as Android app via Trusted Web Activity. ₹2,500 one-time Play Console fee. Looks identical to native.
 - [ ] **Launch on ProductHunt + Indie Hackers** (one-time press boost)
 - [ ] **LinkedIn launch post** — long-form story of why BhavX
 - [ ] **Twitter/X thread** with screenshots
 - [ ] **Reach out to metal trade media**: Recycling Today India, Steelmint, Scrap Magazine
-- [ ] **Inflection moment marketing**: Free Pro for first 100 signups (3-month comp)
+- [ ] **First 100 signups inflection**: Free Pro for 3 months (not lifetime — different from Founding 20)
 
-### Week 6: WhatsApp Group Infiltration (with permission)
+### Week 6: WhatsApp Group Infiltration + WhatsApp Business API
 - [ ] **Identify 10-15 active WhatsApp metal trader groups**
 - [ ] **Get permission from group admins** to share BhavX (offer them free Pro lifetime)
 - [ ] **Don't spam** — share value first (e.g., daily LME/MCX summary post linking to BhavX)
 - [ ] **Track conversion**: which groups convert best, which traders sign up
+
+**📱 WhatsApp Business Cloud API (Meta) — BhavX becomes the broadcaster**
+- [ ] **Create Meta Business Manager** account, verify with Pvt Ltd documents (CIN, GST)
+- [ ] **Apply for WhatsApp Business Cloud API access** — free tier: 1,000 conversations/month
+- [ ] **Get a dedicated bhavx.com WhatsApp number** (different from your personal)
+- [ ] **Backend webhook**: `POST /api/whatsapp/inbound` — receives messages, runs through existing rateParser.js, saves to DB
+- [ ] **Auto-reply bot**: trader texts "RATES" → reply with current bhavx.com snapshot
+- [ ] **Strategy**: BhavX BECOMES the broadcast service. Current metal-broadcast service is your competitor — you take their audience.
+- [ ] **Reality check**: cannot intercept other people's WhatsApp broadcasts (against ToS, bannable). The path is to OWN the broadcast, not scrape.
 
 ### Week 7: Advisors + Industry Credibility
 - [ ] **Approach 5 metal-industry seniors** for advisor roles:
