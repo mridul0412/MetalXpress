@@ -45,8 +45,9 @@ const PACE_TARGET     = 6; // Items expected to complete per week (Month 1 sprin
 const NTFY_TOPIC   = 'bhavx-mridul-alerts'; // Change this to something unique to you
 const NTFY_ENABLED = true;                   // Set false to disable all push notifications
 
-// ─── CLI flag: --notify-only skips Claude output, just sends push ─────────
+// ─── CLI flags ────────────────────────────────────────────────────────────
 const NOTIFY_ONLY = process.argv.includes('--notify-only');
+const TEST_PUSH   = process.argv.includes('--test-push'); // always pushes, ignores pace
 
 // ─── Silent exit if before activation ────────────────────────────────────
 const today = new Date();
@@ -237,7 +238,15 @@ const nextItemsStr = nextItems.map(t => `• ${t}`).join('\n');
 const hour = today.getHours();
 const isFirstHourOfDay = hour <= 9; // 9 AM kickoff push regardless of pace
 
-if (NOTIFY_ONLY) {
+if (TEST_PUSH) {
+  // Manual test push — always fires, ignores pace
+  sendPush(
+    `🧪 BhavX — Test Push (M${month}W${week})`,
+    `Pace: ${paceStatus.toUpperCase()} — ${totalDone}/${PACE_TARGET} items.\n\nNext:\n${nextItemsStr}\n\n(This is a manual test. Real nudges fire automatically.)`,
+    'default', ['test_tube', 'bhavx']
+  );
+  process.exit(0);
+} else if (NOTIFY_ONLY) {
   // Hourly Task Scheduler mode
   if (paceStatus === 'red') {
     sendPush(
