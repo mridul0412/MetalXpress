@@ -186,17 +186,23 @@ if (bizSections.length === 0 && bizMd) {
   }
 }
 
-// ─── Pull tech blockers (CRITICAL first, then REVENUE if CRITICAL is done) ──
+// ─── Pull tech blockers (priority chain: CRITICAL → PRE-BETA → REVENUE) ──
 const prodMd = safeRead(PROD_FILE);
-const critStart = /## 🔴 CRITICAL[^\n]*\n/;
-const critEnd   = /\n## /;
-let prodItems   = extractOpenItems(prodMd, critStart, critEnd, MAX_PROD_ITEMS);
-let prodSection = 'CRITICAL — Before Go-Live';
-if (prodItems.length === 0) {
-  const revStart = /## 🟡 REVENUE[^\n]*\n/;
-  const revEnd   = /\n## /;
-  prodItems = extractOpenItems(prodMd, revStart, revEnd, MAX_PROD_ITEMS);
-  prodSection = 'REVENUE — Next-Priority Tech (CRITICAL ✅ done)';
+const sectionChain = [
+  { regex: /## 🔴 CRITICAL[^\n]*\n/, label: 'CRITICAL — Before Go-Live' },
+  { regex: /## 🟠 PRE-BETA[^\n]*\n/, label: 'PRE-BETA — Week 1 Sprint (BLOCKERS for trader onboarding)' },
+  { regex: /## 🟡 REVENUE[^\n]*\n/, label: 'REVENUE — Public Launch (Month 2)' },
+];
+const sectionEnd = /\n## /;
+let prodItems = [];
+let prodSection = '';
+for (const sec of sectionChain) {
+  const items = extractOpenItems(prodMd, sec.regex, sectionEnd, MAX_PROD_ITEMS);
+  if (items.length > 0) {
+    prodItems = items;
+    prodSection = sec.label;
+    break;
+  }
 }
 
 // ─── Pace tracking ───────────────────────────────────────────────────────
