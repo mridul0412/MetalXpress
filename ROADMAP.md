@@ -25,17 +25,59 @@
 
 ---
 
-## 🟠 PRE-BETA — Before Onboarding 20 Traders (BLOCKERS)
+## 🟠 PRE-BETA — Before Onboarding 20 Traders (Week 1, BLOCKERS)
 
-- [ ] **Full E2E smoke test on bhavx.com** — signup, email verify, phone OTP, KYC, listing post (Cloudinary), offer flow, dispute, forgot password. Test on Chrome desktop + mobile Safari + mobile Chrome. (2-3 hours)
-- [ ] **PWA setup (Day 1 of Week 2)** — `frontend/public/manifest.json` + service worker (`vite-plugin-pwa`) + install prompt. Result: traders "Add to Home Screen" on Android → looks identical to native app. Zero new code beyond config.
-- [ ] **Firebase Cloud Messaging (FCM) for price alerts** — replaces SMS plan
-  - Frontend: request notification permission on login, save FCM token to backend
-  - Backend: `User.fcmToken` field; cron checks alerts every 5 min; Firebase Admin SDK fires push
-  - Reasoning: free, instant (<1s), works on web+Android+iOS, no DLT registration. SMS via MSG91 = ₹0.20/SMS, 7-day DLT wait, 85% delivery. FCM = 0 friction.
-- [ ] **Founding 20 free Pro setup** — add 20 trader emails to `PRO_EMAILS` env var as they sign up. "Founding Trader" lifetime free Pro.
-- [ ] **PostHog analytics integration** — free tier, track signup → first listing → first offer funnel. Frontend snippet only.
-- [ ] **Admin "Founding Trader" badge** — visual badge on profile + listing cards for the 20 alpha users (loyalty signal)
+**Sequence**: Smoke test (Day 1) → PWA + Razorpay-free UX (Day 2) → WhatsApp scraper (Day 3-4) → FCM (Day 5) → PAN verification (Day 6) → Verified badge UI (Day 7)
+
+### Day 1 — Smoke Test (Mridul, manual, ~90 min)
+- [ ] **Full E2E smoke test on bhavx.com** — signup, email verify, phone OTP, KYC, listing post (Cloudinary), offer/counter/accept, pay flow, dispute, forgot password. Test on Chrome desktop + mobile Safari + mobile Chrome.
+
+### Day 2 — PWA + Free Pro UX
+- [ ] **PWA setup** — `vite-plugin-pwa` + `manifest.json` + service worker + install prompt component. Files: `frontend/public/manifest.json`, `frontend/public/icon-192.png`, `frontend/public/icon-512.png`, `frontend/vite.config.js` plugin entry, `frontend/src/components/PWAInstallPrompt.jsx`. Result: bhavx.com installable on Android home screen, looks identical to native app.
+- [ ] **Razorpay-free "Subscribe" UX** — `frontend/src/components/PaywallModal.jsx` "Subscribe ₹299/mo" button → calls new `POST /api/auth/grant-pro` endpoint that sets user.plan = 'pro' for free → toast "Welcome to Pro 🎉". Backend: `backend/src/routes/auth.js` adds `/grant-pro` endpoint (later replaced by Razorpay webhook in Month 2).
+
+### Day 3-4 — WhatsApp Scraper (REPLACES manual admin paste)
+- [ ] **WhatsApp scraper service** using `whatsapp-web.js`:
+  - New service: `backend/src/services/whatsappScraper.js` — long-running, runs alongside main backend on Railway
+  - Loads `whatsapp-web.js` with `LocalAuth` strategy (persists session in `.wwebjs_auth/`)
+  - On startup: prints QR to logs, Mridul scans with dedicated phone (₹150 SIM)
+  - Filters incoming messages by group ID (only listens to metal-broadcast groups)
+  - On message: runs through existing `rateParser.js` → POSTs to `/api/rates/save-parsed`
+  - Auto-reconnects on disconnect
+- [ ] **Risk mitigation**: dedicated number ≠ Mridul's personal number. If banned, buy another SIM and re-scan. Personal WhatsApp untouched.
+- [ ] **Strategy note**: BhavX positions as "WhatsApp chaos → clean app". Scraper is internal plumbing. Traders never see it.
+
+### Day 5 — Firebase Cloud Messaging (FCM) for Alerts
+- [ ] **Frontend FCM integration**:
+  - `frontend/src/config/firebase.js` — add `getMessaging`, `getToken`, `onMessage`
+  - On login or post-auth: request notification permission, get FCM token
+  - PATCH `/api/auth/profile` with `{ fcmToken }`
+- [ ] **Backend FCM push**:
+  - Prisma schema: add `fcmToken String?` to `User`
+  - `backend/src/services/pushNotifier.js` — wrapper around `firebase-admin` `messaging().send()`
+  - `backend/src/services/alertService.js` — cron every 5 min, query alerts, compare to current rates, fire push for matches
+- [ ] **Cost**: ₹0. FCM is in Firebase always-free tier. No credit card, no usage caps for normal scale.
+- [ ] **Test**: alerts page → set threshold → cross threshold → notification arrives on phone.
+
+### Day 6 — Real KYC via Surepass PAN Verification
+- [ ] **Surepass account** at surepass.io (₹3-5 per PAN check, dev-friendly NSDL wrapper)
+- [ ] **Backend wiring** in `backend/src/routes/auth.js` PATCH `/profile`:
+  - Before setting `kycVerified: true`, call Surepass `/pan/verify` with `panNumber + legalName`
+  - On match: set `kycVerified: true`
+  - On mismatch: return 422 with helpful error
+- [ ] **Cost**: 100 users × ₹3 = ₹300 lifetime. Negligible.
+- [ ] **Result**: "Verified Trader" badge actually means something.
+
+### Day 7 — Verified Badge UI Throughout
+- [ ] **Listing cards in Browse tab** — green ✓ badge next to seller name when `seller.kycVerified`
+- [ ] **"Verified Only" filter toggle** in Browse tab
+- [ ] **Profile page** — prominent "Verified ✓" with hover tooltip "PAN-verified via NSDL"
+- [ ] **"Founding Trader" gold badge** — separate from KYC, shown for 20 alpha users (gold color, crown emoji 👑)
+- [ ] **Schema**: add `User.isFoundingTrader Boolean @default(false)` — set manually in DB for the 20
+
+### Founding 20 Setup
+- [ ] Add 20 trader emails to `PRO_EMAILS` env var as they sign up (instant Pro access)
+- [ ] PostHog analytics — frontend snippet, track signup → first listing → first offer funnel
 
 ---
 

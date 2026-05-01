@@ -27,43 +27,87 @@
 
 **Theme**: Get to a defensible "VC-ready" state. Product live, first users, co-founder hunt started.
 
-### Week 1: Production Deploy ✅ COMPLETE (done 2026-04-30)
-- [x] **Cloudinary migration** — move uploads from local disk to Cloudinary CDN (Railway redeploy will wipe local files) ✅ (2026-04-27)
-- [x] **Real contact numbers on Contact page** — replace placeholder `XXXXX XXXXX` ✅ (2026-04-27)
-- [x] **Production env vars** — generate strong JWT_SECRET, ADMIN_PASSWORD, prod DATABASE_URL ✅ (2026-04-27)
-- [x] **Deploy backend → Railway** (PostgreSQL plugin) ✅ (2026-04-29) — `metalxpress-production.up.railway.app`
-- [x] **Deploy frontend → Vercel** ✅ (2026-04-30) — `metal-xpress-three.vercel.app`
-- [x] **DNS** — point bhavx.com → Vercel, Hostinger DNS update ✅ (2026-04-30) — bhavx.com + bhavx.in both live with 307 redirects to www.bhavx.com
-- [x] **Run seed on prod DB** ✅ (2026-04-29) — 9 cities, metals, grades, 27 Delhi rates, 9 listings, 7 test users
-- [ ] **Full E2E smoke test on bhavx.com** (2-3 hours, BLOCKER for trader onboarding):
-  - [ ] Signup flow with new email → email verification arrives → click → verified
-  - [ ] Phone OTP via Firebase → real SMS lands → OTP verified
-  - [ ] KYC submission with PAN format validation
+### Week 1: Production Deploy + Pre-Beta Hardening
+**Goal**: Bhavx.com is rock-solid + auto-fed from WhatsApp + has real KYC verified badges + installable as a PWA. Then onboard traders Week 2.
+
+#### Production Deploy ✅ COMPLETE (done 2026-04-30)
+- [x] **Cloudinary migration** — move uploads from local disk to Cloudinary CDN ✅ (2026-04-27)
+- [x] **Real contact numbers on Contact page** ✅ (2026-04-27)
+- [x] **Production env vars** — JWT_SECRET, ADMIN_PASSWORD, DATABASE_URL ✅ (2026-04-27)
+- [x] **Deploy backend → Railway** ✅ (2026-04-29)
+- [x] **Deploy frontend → Vercel** ✅ (2026-04-30)
+- [x] **DNS cutover** — bhavx.com + bhavx.in live ✅ (2026-04-30)
+- [x] **Run seed on prod DB** ✅ (2026-04-29)
+
+#### Pre-Beta Hardening (BLOCKERS for trader onboarding — must finish this week)
+- [ ] **Day 1 — Full E2E smoke test on bhavx.com** (Mridul does this manually, ~90 min):
+  - [ ] Signup flow with new email → email verification → click → verified
+  - [ ] Phone OTP via Firebase → real SMS arrives → OTP verified
+  - [ ] KYC submission with PAN format
   - [ ] Post listing with 4+ photos (Cloudinary upload + render)
   - [ ] Make offer → counter-offer → accept → commission calc
   - [ ] Pay flow (dev-mode) → contact reveal → mark complete
   - [ ] Raise dispute → admin sees in panel
   - [ ] Forgot password → reset email → reset works
-  - [ ] Test on Chrome desktop + mobile Safari + mobile Chrome (most users on mobile)
+  - [ ] Test on Chrome desktop + mobile Safari + mobile Chrome
+- [ ] **Day 2 — PWA setup** — `manifest.json` + service worker (`vite-plugin-pwa`) + install prompt. Traders "Add to Home Screen" → looks like a native Android app. Same bhavx.com URL.
+- [ ] **Day 2 — Razorpay-free "Subscribe" UX** — `PaywallModal` "Subscribe ₹299/mo" button → just sets user as Pro for free, shows "Welcome to Pro 🎉". Real Razorpay wired in Month 2.
+- [ ] **Day 3-4 — WhatsApp scraper** (REPLACES manual admin paste):
+  - Library: `whatsapp-web.js` (Node.js, 14K stars, mature)
+  - Dedicated phone number (₹150 SIM, NOT your personal WhatsApp)
+  - Long-running service on Railway: listens to specific groups Mridul is in
+  - Auto-parses incoming rate broadcasts via existing `rateParser.js`
+  - POSTs to `/api/rates/save-parsed` → DB updated → frontend refreshes
+  - Risk: WhatsApp ban (low, mitigated by dedicated number — personal WhatsApp untouched)
+  - **Strategy alignment**: BhavX still positions as "WhatsApp chaos → clean app". Scraper is internal plumbing, traders never see it.
+- [ ] **Day 5 — Firebase Cloud Messaging (FCM) for in-app alerts**:
+  - Frontend: request notification permission on login → save FCM token to `User.fcmToken`
+  - Backend: cron checks alerts every 5 min → fires push via Firebase Admin SDK
+  - Cost: **₹0** (FCM is in Firebase always-free tier, no usage limits, no credit card)
+  - Replaces: SMS via MSG91 (which would require DLT + paid)
+  - Test: alerts page must work end-to-end (set threshold → cross threshold → push received)
+- [ ] **Day 6 — NSDL/Surepass PAN verification** (real KYC, not just regex):
+  - Wire Surepass API (₹3-5/check, dev-friendly wrapper around NSDL)
+  - On KYC submit: call API with PAN + Legal Name → if matched, set `kycVerified: true`
+  - 100 users = ₹300-500 lifetime cost. Negligible.
+  - Verified badge actually means something now.
+- [ ] **Day 7 — "Verified Trader" badge UI throughout**:
+  - Green ✓ badge on listing cards in Browse tab
+  - "Verified Filter" toggle in Browse
+  - Profile page: prominent "Verified ✓" with hover tooltip ("PAN-verified by NSDL")
+  - "Founding Trader" gold badge for the 20 alpha users (separate from KYC)
+- [ ] **Founding 20 free Pro setup** — add 20 trader emails to `PRO_EMAILS` env var as they sign up
+- [ ] **PostHog analytics** — free tier, track signup → first listing → first offer funnel
 
-### Week 2: Beta Recruitment (KEEP EVERYTHING FREE — see Pricing Strategy below)
-- [ ] **PRICING DECISION — Month 1 is 100% free for beta cohort**
-  - Add all 20 trader emails to `PRO_EMAILS` env var → instant Pro access
-  - "Founding Trader" lifetime free badge — loyalty + word-of-mouth
-  - Reasoning: Friction kills feedback. VCs care about retention/engagement at angel stage, not ₹2K MRR. Don't put critical path on Razorpay/Pvt Ltd setup.
-- [ ] **PWA setup (1 day)** — manifest.json + service worker + install prompt → traders "Add to Home Screen" on Android, looks identical to native app
-- [ ] **Trader recruitment — split across channels (target 20 by Day 14)**:
-  - [ ] **Channel A — WhatsApp broadcast network (8 traders)** — reach out to admin who runs the metal broadcast you already receive. Offer: free Pro lifetime + co-marketing for sharing BhavX with their subscribers.
-  - [ ] **Channel B — Physical market visits (6 traders)** — 1 day in Delhi Mandoli + 1 day in Mumbai Masjid Bunder/Sewri. Bring printed one-pager with QR code to bhavx.com.
-  - [ ] **Channel C — LinkedIn cold outreach (4 traders)** — search "scrap dealer Delhi/Mumbai", "non-ferrous trader", "kabadiwala". Personalized DMs (NOT template).
-  - [ ] **Channel D — Personal network (2 traders)** — family/college contacts who know any metal traders.
-  - [ ] **Channel E — MRAI / All India Non-Ferrous Metals Exporters Association** — backup if A-D underperform. Member directory has thousands of leads.
-- [ ] **Personally onboard each one** — phone call (15-20 min) + screen-share walkthrough
-- [ ] **Get them posting real listings** within 48h of signup + verify deals are happening
-- [ ] **Daily check-ins** for first 2 weeks — they're your alpha cohort; their feedback rewrites your product
-- [ ] **Set up analytics** — PostHog free tier (track signup → first listing → first offer funnel)
-- [ ] **Set up customer support** — WhatsApp Business number (your phone with WhatsApp Business app installed). Respond within 1 hour during day.
-- [ ] **Create "Founding 20" private WhatsApp group** — daily updates, feature announcements, AMA
+#### Marketing prep (Camera-free)
+- [ ] **LinkedIn profile polish** — text-only updates, no photos/videos required. Cover image with bhavx.com link.
+- [ ] **First LinkedIn post** — "Built bhavx.com to fix WhatsApp metal rate chaos. Here's why." 200-400 words, text only.
+- [ ] **One-pager PDF for physical visits** — bhavx.com QR code + 5 bullet points + Mridul's WhatsApp number
+- [ ] **NO** Instagram, NO YouTube, NO mass SMS this month
+
+### Week 2: Beta Recruitment (Camera-free outreach — Founding 20)
+**Goal**: 20 traders signed up, posting real listings, having real conversations.
+
+- [ ] **Channel A — WhatsApp scraper feeds the funnel (8-12 traders)**
+  - Scraper collects phone numbers active in metal broadcast groups
+  - Mridul sends **personalized 1-on-1 DMs** (NOT bulk blast — that's spam + WhatsApp ban risk)
+  - Volume cap: 20-30 DMs/day max → 140-210 conversations over 7 days → 20-40 signups expected
+  - Template seed (personalize per trader): "Hi [Name], saw you trade [metal] in [city]. Built bhavx.com — replaces the WhatsApp rate chaos with a real app. Free for first 20 traders. 2 min to try?"
+- [ ] **Channel B — Physical market visits (4-6 traders)**
+  - 1 day in Delhi Mandoli + 1 day in Mumbai Masjid Bunder/Sewri
+  - Print 50 one-pager PDFs, hand out, collect business cards
+  - Higher conversion than DM (face-to-face trust)
+- [ ] **Channel C — Personal network (2-4 traders)**
+  - Family/college contacts who know any metal traders
+  - Warm intro = 50%+ conversion
+- [ ] **Channel D — IndiaMART scrape (backup)**
+  - IndiaMART metal-trader listings have public phone numbers
+  - Cold call (NOT cold WhatsApp — calls have higher trust)
+  - Pitch identical to DM template
+- [ ] **Personally onboard each one** — 15-20 min phone call + screen-share walkthrough
+- [ ] **Daily check-ins** for first 2 weeks
+- [ ] **Founding 20 private WhatsApp group** — daily updates, feature announcements
+- [ ] **Customer support** — WhatsApp Business number, respond within 1 hour during day
 
 ### Week 3: Co-Founder Hunt (CRITICAL) + Pvt Ltd Incorporation (parallel)
 - [ ] **Decide co-founder profile**: Technical (CTO) OR Business (CBO/COO)
