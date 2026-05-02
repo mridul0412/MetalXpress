@@ -5,10 +5,36 @@ export default function LMEStrip() {
   const [rates, setRates] = useState([]);
 
   useEffect(() => {
-    fetch(`${import.meta.env.VITE_API_URL || ''}/api/rates/live`)
-      .then(r => r.json())
-      .then(d => { const r = d.metals ?? []; if (r.length) setRates(r); })
-      .catch(() => {});
+    let cancelled = false;
+    let retryTimeout;
+
+    const load = async (attempt = 1) => {
+      try {
+        const r = await fetch(`${import.meta.env.VITE_API_URL || ''}/api/rates/live`);
+        if (!r.ok) throw new Error(`HTTP ${r.status}`);
+        const d = await r.json();
+        const arr = d.metals ?? [];
+        if (cancelled) return;
+        // Only update if we got real data — never overwrite good rates with empty
+        if (arr.length) setRates(arr);
+        else if (attempt < 3) retryTimeout = setTimeout(() => load(attempt + 1), 2000);
+      } catch (err) {
+        console.warn('[LMEStrip] fetch failed:', err.message, 'attempt', attempt);
+        if (cancelled) return;
+        // Exponential backoff: 2s, 4s, 8s — then give up until next poll
+        if (attempt < 4) retryTimeout = setTimeout(() => load(attempt + 1), 2000 * attempt);
+      }
+    };
+
+    load();
+    // Refresh every 5 minutes
+    const interval = setInterval(() => load(), 5 * 60 * 1000);
+
+    return () => {
+      cancelled = true;
+      clearInterval(interval);
+      if (retryTimeout) clearTimeout(retryTimeout);
+    };
   }, []);
 
   if (!rates.length) {

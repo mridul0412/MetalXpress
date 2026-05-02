@@ -85,18 +85,38 @@ export default function Home() {
     }
   };
 
-  // Fetch live LME + forex + indices
-  const loadLme = useCallback(async (force = false) => {
-    if (force) setRefreshingLme(true); else setLoadingLme(true);
+  // Fetch live LME + forex + indices — with retry + keep-last-good
+  const loadLme = useCallback(async (force = false, attempt = 1) => {
+    if (attempt === 1) {
+      if (force) setRefreshingLme(true); else setLoadingLme(true);
+    }
+    let shouldRetry = false;
     try {
       const r = await fetch(`${import.meta.env.VITE_API_URL || ''}/api/rates/live`);
+      if (!r.ok) throw new Error(`HTTP ${r.status}`);
       const d = await r.json();
-      if (d.metals?.length || d.forex || d.indices) {
+      // Strict guard: actual content, not just object existence
+      const hasContent =
+        (Array.isArray(d.metals) && d.metals.length > 0) ||
+        (d.forex && Object.keys(d.forex).length > 0) ||
+        (d.indices && Object.keys(d.indices).length > 0);
+      if (hasContent) {
         setLiveData(d);
         setLmeUpdatedAt(new Date());
+      } else {
+        console.warn('[loadLme] empty response, keeping last-good data', d);
       }
-    } catch {}
-    finally { setLoadingLme(false); setRefreshingLme(false); }
+    } catch (err) {
+      console.warn('[loadLme] fetch failed:', err.message, 'attempt', attempt);
+      // Retry up to 3 times on failure (only for initial load, not poll refresh)
+      if (!force && attempt < 4) shouldRetry = true;
+    }
+    if (shouldRetry) {
+      setTimeout(() => loadLme(force, attempt + 1), 2000 * attempt);
+    } else {
+      setLoadingLme(false);
+      setRefreshingLme(false);
+    }
   }, []);
 
   useEffect(() => {
