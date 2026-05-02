@@ -123,6 +123,7 @@ export default function Landing() {
           transform: 'translate(-50%, -50%)',
           fontSize: 'min(72vw, 560px)', lineHeight: 1,
           color: 'rgba(207,181,59,0.11)', fontWeight: 900,
+          fontFamily: '"Noto Sans Devanagari", serif',
           pointerEvents: 'none', userSelect: 'none', zIndex: 1,
           filter: 'blur(0.5px)',
         }}>{'\u0950'}</div>

@@ -9,14 +9,6 @@ export default function Footer() {
       marginTop: 40,
       position: 'relative', overflow: 'hidden',
     }}>
-      {/* Subtle ॐ watermark in footer */}
-      <div style={{
-        position: 'absolute', bottom: -20, right: 20,
-        fontSize: 120, fontWeight: 800, lineHeight: 1,
-        color: 'rgba(207,181,59,0.02)',
-        pointerEvents: 'none', userSelect: 'none',
-      }}>ॐ</div>
-
       <div className="max-w-5xl mx-auto px-4" style={{ position: 'relative', zIndex: 1 }}>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: 24, marginBottom: 24 }}>
           {/* Brand */}
