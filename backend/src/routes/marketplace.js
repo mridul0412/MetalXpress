@@ -400,37 +400,50 @@ router.post('/admin-wipe-test-users', async (req, res) => {
       return res.json({ success: true, deleted: 0, preserved: preserved.length, message: 'Nothing to delete' });
     }
 
-    // Cascade-clean child records — order matters due to FK RESTRICT constraints
-    // 1. Find all deals that will be deleted (where any party is a doomed user)
+    // Cascade-clean child records — order matters due to FK RESTRICT
+    // Strategy: NUKE all offers + all deals + listings/alerts referencing doomed users.
+    // Cleanest: just blow away EVERY offer that touches a doomed user OR a deal a doomed
+    // user is in. Splitting OR queries to avoid Prisma OR + FK quirks.
+
+    // 1. Find every deal that's getting nuked (doomed user is buyer OR seller)
     const dealsToDelete = await prisma.deal.findMany({
       where: { OR: [{ buyerId: { in: userIds } }, { sellerId: { in: userIds } }] },
       select: { id: true },
     });
     const dealIds = dealsToDelete.map(d => d.id);
 
-    // 2. Delete ALL offers attached to those deals (regardless of who made them)
-    //    Plus any orphan offers from doomed users on deals we're keeping
-    const offers = await prisma.offer.deleteMany({
-      where: {
-        OR: [
-          { dealId: { in: dealIds } },
-          { fromUserId: { in: userIds } },
-        ],
-      },
-    });
+    // 2. Delete offers in TWO separate sequential calls (avoid Prisma OR with FK)
+    //    a) Every offer attached to any doomed deal (regardless of offer author)
+    let offerCount = 0;
+    if (dealIds.length > 0) {
+      const r1 = await prisma.offer.deleteMany({ where: { dealId: { in: dealIds } } });
+      offerCount += r1.count;
+    }
+    //    b) Orphan offers from doomed users on preserved deals
+    const r2 = await prisma.offer.deleteMany({ where: { fromUserId: { in: userIds } } });
+    offerCount += r2.count;
 
     // 3. Now safe to delete deals
-    const deals = await prisma.deal.deleteMany({ where: { id: { in: dealIds } } });
+    let dealCount = 0;
+    if (dealIds.length > 0) {
+      const r = await prisma.deal.deleteMany({ where: { id: { in: dealIds } } });
+      dealCount = r.count;
+    }
 
-    // 4. Listings + alerts (no FK issues)
+    // 4. Listings + alerts
     const listings = await prisma.listing.deleteMany({ where: { userId: { in: userIds } } });
     const alerts = await prisma.alert.deleteMany({ where: { userId: { in: userIds } } });
 
     // 5. Finally users
     const users = await prisma.user.deleteMany({ where: { id: { in: userIds } } });
 
+    // Build response with new shape so we can confirm new code deployed
+    const offers = { count: offerCount };
+    const deals = { count: dealCount };
+
     res.json({
       success: true,
+      version: 'v2-split-or',
       deleted: {
         users: users.count, offers: offers.count, deals: deals.count,
         listings: listings.count, alerts: alerts.count,
