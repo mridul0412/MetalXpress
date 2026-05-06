@@ -400,13 +400,33 @@ router.post('/admin-wipe-test-users', async (req, res) => {
       return res.json({ success: true, deleted: 0, preserved: preserved.length, message: 'Nothing to delete' });
     }
 
-    // Cascade-clean child records sequentially (errors here would block user delete)
-    const offers = await prisma.offer.deleteMany({ where: { fromUserId: { in: userIds } } });
-    const deals = await prisma.deal.deleteMany({
+    // Cascade-clean child records — order matters due to FK RESTRICT constraints
+    // 1. Find all deals that will be deleted (where any party is a doomed user)
+    const dealsToDelete = await prisma.deal.findMany({
       where: { OR: [{ buyerId: { in: userIds } }, { sellerId: { in: userIds } }] },
+      select: { id: true },
     });
+    const dealIds = dealsToDelete.map(d => d.id);
+
+    // 2. Delete ALL offers attached to those deals (regardless of who made them)
+    //    Plus any orphan offers from doomed users on deals we're keeping
+    const offers = await prisma.offer.deleteMany({
+      where: {
+        OR: [
+          { dealId: { in: dealIds } },
+          { fromUserId: { in: userIds } },
+        ],
+      },
+    });
+
+    // 3. Now safe to delete deals
+    const deals = await prisma.deal.deleteMany({ where: { id: { in: dealIds } } });
+
+    // 4. Listings + alerts (no FK issues)
     const listings = await prisma.listing.deleteMany({ where: { userId: { in: userIds } } });
     const alerts = await prisma.alert.deleteMany({ where: { userId: { in: userIds } } });
+
+    // 5. Finally users
     const users = await prisma.user.deleteMany({ where: { id: { in: userIds } } });
 
     res.json({
