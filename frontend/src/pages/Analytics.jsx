@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import ReactApexChart from 'react-apexcharts';
+import PaywallModal from '../components/PaywallModal';
 import {
   BarChart3, TrendingUp, TrendingDown, Minus, Lock,
   ArrowUpRight, ArrowDownRight, Activity, Clock, Zap,
@@ -28,7 +29,9 @@ const fmtDate = (d) => new Date(d).toLocaleDateString('en-IN', { day: 'numeric',
 
 // ── Pro Gate ──────────────────────────────────────────────────────────────────
 function ProGate() {
+  const { user } = useAuth();
   const navigate = useNavigate();
+  const [showPaywall, setShowPaywall] = useState(false);
   return (
     <div style={{
       minHeight: 'calc(100vh - 200px)', display: 'flex', alignItems: 'center',
@@ -52,14 +55,19 @@ function ProGate() {
         <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.45)', lineHeight: 1.7, margin: '0 0 28px' }}>
           Price trends, buy/sell signals, and market depth are available for Pro subscribers.
         </p>
-        <button onClick={() => navigate('/')} style={{
+        <button onClick={() => user ? setShowPaywall(true) : navigate('/login')} style={{
           padding: '13px 32px', borderRadius: 12, fontSize: 14, fontWeight: 700,
           background: '#CFB53B', color: '#000', border: 'none', cursor: 'pointer',
           fontFamily: 'monospace', width: '100%',
         }}>
-          Upgrade to Pro — ₹299/mo
+          {user ? 'Get Pro — Free' : 'Login to Get Pro'}
         </button>
+        <p style={{ margin: '10px 0 0', fontSize: 11, color: 'rgba(255,255,255,0.4)', textAlign: 'center' }}>
+          <span style={{ textDecoration: 'line-through' }}>₹299/mo</span>
+          {'  '}<span style={{ color: '#34d399', fontWeight: 700 }}>Free for Founding Traders</span>
+        </p>
       </div>
+      <PaywallModal isOpen={showPaywall} onClose={() => setShowPaywall(false)} trigger="local_rates" />
     </div>
   );
 }

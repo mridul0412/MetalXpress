@@ -74,6 +74,7 @@ export const resetPassword = (data) => api.post('/auth/reset-password', data);
 
 // Subscription / paywall
 export const checkSubscription = () => api.get('/auth/subscription');
+export const grantPro = () => api.post('/auth/grant-pro');
 
 // Live prices (full shape: {metals, forex, indices, crude, usdInr, fetchedAt})
 export const fetchLivePricesDetailed = () => api.get('/rates/live');

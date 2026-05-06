@@ -1,6 +1,9 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Crown, X, Check, Lock } from 'lucide-react';
+import { useAuth } from '../context/AuthContext';
+import { useNavigate } from 'react-router-dom';
+import { grantPro } from '../utils/api';
 
 const PLANS = [
   {
@@ -47,6 +50,12 @@ const PLANS = [
  *   trigger   — 'local_rates' | 'listing_contact'
  */
 export default function PaywallModal({ isOpen, onClose, trigger = 'local_rates' }) {
+  const { user, refreshSubscription } = useAuth();
+  const navigate = useNavigate();
+  const [granting, setGranting] = useState(false);
+  const [grantError, setGrantError] = useState('');
+  const [granted, setGranted] = useState(false);
+
   // Close on Escape
   useEffect(() => {
     if (!isOpen) return;
@@ -55,18 +64,41 @@ export default function PaywallModal({ isOpen, onClose, trigger = 'local_rates' 
     return () => window.removeEventListener('keydown', onKey);
   }, [isOpen, onClose]);
 
+  // Reset state on re-open
+  useEffect(() => {
+    if (isOpen) {
+      setGranted(false);
+      setGrantError('');
+    }
+  }, [isOpen]);
+
   const headline = trigger === 'listing_contact'
     ? 'Unlock Seller Contact'
     : 'Upgrade to BhavX Pro';
 
   const subheadline = trigger === 'listing_contact'
-    ? 'Subscribe to reveal phone numbers and WhatsApp links for marketplace listings.'
+    ? 'Get full access — phone numbers, WhatsApp links, and verified marketplace.'
     : 'Access local spot rates, verified marketplace, and advanced analytics.';
 
-  const handleSubscribe = () => {
-    // Payment integration coming soon
-    onClose();
-    alert('Payment integration coming soon via Razorpay. We\'ll notify you when available!');
+  const handleSubscribe = async () => {
+    if (!user) {
+      onClose();
+      navigate('/login');
+      return;
+    }
+    setGranting(true);
+    setGrantError('');
+    try {
+      await grantPro();
+      if (refreshSubscription) await refreshSubscription();
+      setGranted(true);
+      // Auto-close after showing success briefly
+      setTimeout(() => { onClose(); setGranted(false); }, 1800);
+    } catch (err) {
+      setGrantError(err.response?.data?.error || 'Could not activate Pro. Please try again.');
+    } finally {
+      setGranting(false);
+    }
   };
 
   return (
@@ -167,15 +199,23 @@ export default function PaywallModal({ isOpen, onClose, trigger = 'local_rates' 
                         {plan.name}
                       </p>
                       {plan.price ? (
-                        <p style={{ margin: 0 }}>
-                          <span style={{ fontSize: 24, fontWeight: 800, color: plan.highlight ? '#CFB53B' : '#fff',
-                            fontFamily: 'monospace' }}>
-                            {plan.price}
-                          </span>
-                          <span style={{ fontSize: 12, color: 'rgba(255,255,255,0.35)', marginLeft: 2 }}>
-                            {plan.period}
-                          </span>
-                        </p>
+                        <div style={{ margin: 0 }}>
+                          {/* Strikethrough original price + FREE badge for Month 1 launch */}
+                          <p style={{ margin: 0, display: 'flex', alignItems: 'baseline', gap: 8, flexWrap: 'wrap' }}>
+                            <span style={{ fontSize: 16, fontWeight: 600, color: 'rgba(255,255,255,0.35)',
+                              fontFamily: 'monospace', textDecoration: 'line-through' }}>
+                              {plan.price}{plan.period}
+                            </span>
+                            <span style={{ fontSize: 22, fontWeight: 800, color: '#34d399',
+                              fontFamily: 'monospace', letterSpacing: '0.5px' }}>
+                              FREE
+                            </span>
+                          </p>
+                          <p style={{ margin: '4px 0 0', fontSize: 10, color: 'rgba(207,181,59,0.7)',
+                            letterSpacing: '0.5px', textTransform: 'uppercase', fontWeight: 600 }}>
+                            🎉 Free for Founding Traders — Limited Time
+                          </p>
+                        </div>
                       ) : (
                         <p style={{ fontSize: 20, fontWeight: 800, color: 'rgba(255,255,255,0.5)',
                           margin: 0, fontFamily: 'monospace' }}>
@@ -199,16 +239,24 @@ export default function PaywallModal({ isOpen, onClose, trigger = 'local_rates' 
 
                     {/* CTA */}
                     {plan.cta ? (
-                      <button onClick={handleSubscribe} style={{
-                        width: '100%', padding: '11px', borderRadius: 10, fontWeight: 700, fontSize: 13,
-                        border: 'none', cursor: 'pointer',
-                        background: plan.highlight ? '#CFB53B' : 'rgba(255,255,255,0.08)',
-                        color: plan.highlight ? '#000' : 'rgba(255,255,255,0.7)',
-                        transition: 'all 0.15s',
-                        boxShadow: plan.highlight ? '0 4px 16px rgba(207,181,59,0.25)' : 'none',
-                      }}>
-                        {plan.cta}
-                      </button>
+                      <div>
+                        <button onClick={handleSubscribe} disabled={granting || granted} style={{
+                          width: '100%', padding: '11px', borderRadius: 10, fontWeight: 700, fontSize: 13,
+                          border: 'none', cursor: (granting || granted) ? 'default' : 'pointer',
+                          background: granted ? '#34d399' : (plan.highlight ? '#CFB53B' : 'rgba(255,255,255,0.08)'),
+                          color: granted ? '#000' : (plan.highlight ? '#000' : 'rgba(255,255,255,0.7)'),
+                          opacity: granting ? 0.7 : 1,
+                          transition: 'all 0.15s',
+                          boxShadow: plan.highlight ? '0 4px 16px rgba(207,181,59,0.25)' : 'none',
+                        }}>
+                          {granted ? '✓ You\'re Pro!' : (granting ? 'Activating…' : (user ? 'Activate Free Pro' : 'Login to Subscribe'))}
+                        </button>
+                        {grantError && (
+                          <p style={{ marginTop: 8, fontSize: 11, color: '#f87171', textAlign: 'center' }}>
+                            {grantError}
+                          </p>
+                        )}
+                      </div>
                     ) : (
                       <div style={{ width: '100%', padding: '11px', borderRadius: 10, fontSize: 13,
                         textAlign: 'center', color: 'rgba(255,255,255,0.3)', fontWeight: 600,

@@ -33,6 +33,8 @@ model User {
   emailVerified       Boolean   @default(false)
   emailVerifyToken    String?
   emailVerifyExpiry   DateTime?
+  isPro               Boolean   @default(false)
+  proGrantedAt        DateTime?
   passwordResetToken  String?
   passwordResetExpiry DateTime?
   createdAt    DateTime    @default(now())

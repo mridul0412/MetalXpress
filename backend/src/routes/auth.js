@@ -300,14 +300,45 @@ router.get('/subscription', async (req, res) => {
     const user = await prisma.user.findUnique({ where: { id: payload.userId } });
     if (!user) return res.json({ plan: 'free', active: false });
 
+    // 1) DB flag (set via /grant-pro — Month 1 free Pro for beta cohort)
+    if (user.isPro) {
+      return res.json({ plan: 'pro', active: true, userId: user.id, source: 'db' });
+    }
+
+    // 2) Env-var override (legacy admin/test accounts)
     const proEmails = (process.env.PRO_EMAILS || 'test@metalxpress.in').split(',').map(e => e.trim().toLowerCase());
     if (user.email && proEmails.includes(user.email.toLowerCase())) {
-      return res.json({ plan: 'pro', active: true, userId: user.id });
+      return res.json({ plan: 'pro', active: true, userId: user.id, source: 'env' });
     }
 
     res.json({ plan: 'free', active: true, userId: user.id });
   } catch {
     res.json({ plan: 'free', active: false });
+  }
+});
+
+// ── POST /api/auth/grant-pro ─────────────────────────────────────────────────
+// Grants Pro access for FREE — Month 1 beta launch (no Razorpay yet)
+// When Razorpay goes live in Month 2, replace this with payment-gated webhook
+router.post('/grant-pro', async (req, res) => {
+  try {
+    const payload = verifyJWT(req);
+    const user = await prisma.user.findUnique({ where: { id: payload.userId } });
+    if (!user) return res.status(401).json({ error: 'Not authenticated' });
+
+    if (user.isPro) {
+      return res.json({ success: true, plan: 'pro', alreadyPro: true });
+    }
+
+    await prisma.user.update({
+      where: { id: user.id },
+      data: { isPro: true, proGrantedAt: new Date() },
+    });
+
+    res.json({ success: true, plan: 'pro', message: 'Welcome to BhavX Pro! 🎉' });
+  } catch (err) {
+    console.error('/grant-pro error:', err);
+    res.status(500).json({ error: 'Failed to grant Pro access. Please try again.' });
   }
 });
 

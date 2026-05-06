@@ -13,6 +13,7 @@ import {
 } from '../utils/api';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
+import PaywallModal from '../components/PaywallModal';
 
 /* ── shared styles ─────────────────────────────────────────────────── */
 const inputStyle = {
@@ -47,6 +48,7 @@ export default function Marketplace() {
   const [filterMetal, setFilterMetal] = useState('');
   const [filterCity, setFilterCity] = useState('');
   const [offerListing, setOfferListing] = useState(null); // listing to make offer on
+  const [showPaywall, setShowPaywall] = useState(false);
   const [activeDeal, setActiveDeal] = useState(null);     // deal detail view
   const { user, subscription } = useAuth();
   const navigate = useNavigate();
@@ -86,13 +88,17 @@ export default function Marketplace() {
           <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.42)', margin: '0 0 28px', lineHeight: 1.7 }}>
             The Metal Marketplace is available on the Pro plan. Post listings, negotiate deals, and connect with verified traders.
           </p>
+          <p style={{ fontSize: 12, color: 'rgba(255,255,255,0.5)', margin: '0 0 18px', textAlign: 'center' }}>
+            <span style={{ textDecoration: 'line-through' }}>₹299/mo</span>
+            {'  '}<span style={{ color: '#34d399', fontWeight: 700 }}>Free for Founding Traders</span>
+          </p>
           <div style={{ display: 'flex', gap: 10, justifyContent: 'center', flexWrap: 'wrap' }}>
-            <button onClick={() => window.dispatchEvent(new CustomEvent('open-paywall'))} style={{
+            <button onClick={() => setShowPaywall(true)} style={{
               padding: '12px 24px', borderRadius: 12, fontSize: 14, fontWeight: 700,
               background: '#CFB53B', color: '#000', border: 'none', cursor: 'pointer',
               fontFamily: 'monospace', flex: 1, maxWidth: 200,
             }}>
-              Upgrade to Pro
+              Get Pro — Free
             </button>
             <button onClick={() => window.history.back()} style={{
               padding: '12px 24px', borderRadius: 12, fontSize: 14, fontWeight: 600,
@@ -104,9 +110,10 @@ export default function Marketplace() {
             </button>
           </div>
           <p style={{ fontSize: 11, color: 'rgba(255,255,255,0.2)', marginTop: 20 }}>
-            Pro plan — ₹299/month · No commitment
+            Free for Month 1 · No payment required · Founding Trader perk
           </p>
         </div>
+        <PaywallModal isOpen={showPaywall} onClose={() => setShowPaywall(false)} trigger="listing_contact" />
       </div>
     );
   }

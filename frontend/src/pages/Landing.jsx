@@ -338,11 +338,11 @@ export default function Landing() {
               cta: 'Start Free \u2192', ctaLink: '/signup', highlight: false,
             },
             {
-              name: 'Pro', price: '\u20B9299', period: 'per month',
+              name: 'Pro', price: '\u20B9299', period: 'per month', strikethrough: true, freeBadge: true,
               features: ['Everything in Free', 'Full marketplace access', 'Local spot rates by city', 'Candlestick charts & advanced analytics', 'LME-MCX spread tracking', 'Verified traders & materials'],
-              cta: 'Go Pro \u2192', ctaLink: '/signup', highlight: true,
+              cta: 'Get Pro Free \u2192', ctaLink: '/signup', highlight: true,
             },
-          ].map(({ name, price, period, features, cta, ctaLink, highlight }) => (
+          ].map(({ name, price, period, features, cta, ctaLink, highlight, strikethrough, freeBadge }) => (
             <div key={name} style={{
               padding: '28px 24px', borderRadius: 20, position: 'relative',
               background: highlight ? 'rgba(207,181,59,0.04)' : 'rgba(13,20,32,0.7)',
@@ -358,10 +358,22 @@ export default function Landing() {
                 }}>Most Popular</div>
               )}
               <p style={{ fontSize: 12, fontWeight: 700, color: highlight ? '#CFB53B' : 'rgba(255,255,255,0.38)', margin: '0 0 12px', textTransform: 'uppercase', letterSpacing: '0.08em' }}>{name}</p>
-              <div style={{ display: 'flex', alignItems: 'baseline', gap: 5, marginBottom: 22 }}>
-                <span style={{ fontSize: 34, fontWeight: 800, color: '#fff', fontFamily: 'monospace' }}>{price}</span>
-                <span style={{ fontSize: 12, color: 'rgba(255,255,255,0.28)' }}>/{period}</span>
-              </div>
+              {strikethrough ? (
+                <div style={{ marginBottom: 22 }}>
+                  <div style={{ display: 'flex', alignItems: 'baseline', gap: 10, flexWrap: 'wrap' }}>
+                    <span style={{ fontSize: 18, fontWeight: 600, color: 'rgba(255,255,255,0.32)', fontFamily: 'monospace', textDecoration: 'line-through' }}>{price}/{period}</span>
+                    <span style={{ fontSize: 30, fontWeight: 800, color: '#34d399', fontFamily: 'monospace', letterSpacing: '0.5px' }}>FREE</span>
+                  </div>
+                  <p style={{ margin: '6px 0 0', fontSize: 10, color: 'rgba(207,181,59,0.75)', letterSpacing: '0.5px', textTransform: 'uppercase', fontWeight: 600 }}>
+                    🎉 Free for Founding Traders — Limited Time
+                  </p>
+                </div>
+              ) : (
+                <div style={{ display: 'flex', alignItems: 'baseline', gap: 5, marginBottom: 22 }}>
+                  <span style={{ fontSize: 34, fontWeight: 800, color: '#fff', fontFamily: 'monospace' }}>{price}</span>
+                  <span style={{ fontSize: 12, color: 'rgba(255,255,255,0.28)' }}>/{period}</span>
+                </div>
+              )}
               <div style={{ marginBottom: 24 }}>
                 {features.map(f => (
                   <div key={f} style={{ display: 'flex', alignItems: 'flex-start', gap: 9, marginBottom: 10 }}>
