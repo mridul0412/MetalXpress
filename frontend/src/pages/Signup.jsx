@@ -51,6 +51,8 @@ export default function Signup() {
   const [otp, setOtp]                       = useState('');
   const [confirmationResult, setConfirmationResult] = useState(null);
   const recaptchaVerifierRef                = useRef(null);
+  // Cached after successful OTP verify — lets us retry registration without re-OTP
+  const [verifiedFirebaseToken, setVerifiedFirebaseToken] = useState(null);
 
   const [loading, setLoading]               = useState(false);
   const [error, setError]                   = useState('');
@@ -70,21 +72,24 @@ export default function Signup() {
   }, []);
 
   // Build a fresh RecaptchaVerifier each time we need one.
-  // Clears the container's DOM first so Firebase doesn't complain about re-use.
+  // Recreates the container DOM element to avoid Firebase's "already rendered" error.
   async function buildVerifier() {
     // Destroy old instance if any
     if (recaptchaVerifierRef.current) {
       try { recaptchaVerifierRef.current.clear(); } catch (_) {}
       recaptchaVerifierRef.current = null;
     }
-    // Clear any Firebase-injected widget from the container
-    const container = document.getElementById('recaptcha-container-signup');
-    if (!container) throw new Error('reCAPTCHA container element not found in DOM');
-    container.innerHTML = '';
+    // NUKE the old container entirely and replace with a fresh one.
+    // Firebase keeps internal state on the DOM node, so just clearing innerHTML isn't enough.
+    const oldContainer = document.getElementById('recaptcha-container-signup');
+    if (oldContainer && oldContainer.parentNode) {
+      const fresh = document.createElement('div');
+      fresh.id = 'recaptcha-container-signup';
+      fresh.style.cssText = 'position: fixed; bottom: 0; left: 0;';
+      oldContainer.parentNode.replaceChild(fresh, oldContainer);
+    }
 
-    // Use string ID (not element ref) — more reliable across Firebase SDK versions
     const verifier = new RecaptchaVerifier(auth, 'recaptcha-container-signup', { size: 'invisible' });
-    // Let signInWithPhoneNumber call render() internally — calling it here causes double-render
     recaptchaVerifierRef.current = verifier;
     return verifier;
   }
@@ -145,18 +150,24 @@ export default function Signup() {
   const handleOtpVerify = async (e) => {
     e.preventDefault();
     if (otp.length < 6) return;
-    if (!confirmationResult) {
-      setError('Session expired. Go back and try again.');
-      setStep('form');
-      return;
-    }
 
     setLoading(true); setError('');
     try {
-      // Confirm OTP with Firebase
-      const credential = await confirmationResult.confirm(otp);
-      // Get Firebase ID token (proves phone ownership to our backend)
-      const firebaseToken = await credential.user.getIdToken();
+      // If we already verified the OTP successfully but registration failed,
+      // skip the Firebase confirm step (it can only run once per OTP) and reuse the cached token
+      let firebaseToken = verifiedFirebaseToken;
+      if (!firebaseToken) {
+        if (!confirmationResult) {
+          setError('Session expired. Go back and try again.');
+          setStep('form');
+          setLoading(false);
+          return;
+        }
+        // Confirm OTP with Firebase (one-time only)
+        const credential = await confirmationResult.confirm(otp);
+        firebaseToken = await credential.user.getIdToken();
+        setVerifiedFirebaseToken(firebaseToken); // cache for retry
+      }
 
       // Map multi-select trader types to DB enum
       const hasBuyer  = traderTypes.includes('BUYER');
@@ -198,6 +209,7 @@ export default function Signup() {
     setStep('form');
     setOtp('');
     setConfirmationResult(null);
+    setVerifiedFirebaseToken(null);
     setError('');
   };
 
