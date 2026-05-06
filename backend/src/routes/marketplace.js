@@ -373,6 +373,57 @@ router.patch('/kyc-reject/:userId', async (req, res) => {
   }
 });
 
+// ── POST /api/marketplace/admin-wipe-test-users — admin: nuke all non-seed users ──
+// One-shot endpoint to clear test users (preserves admin@bhavx.com, test@bhavx.com,
+// and the 4 trader test accounts). Call it via curl when you need a clean slate.
+router.post('/admin-wipe-test-users', async (req, res) => {
+  try {
+    const adminPass = req.headers['x-admin-password'];
+    if (adminPass !== process.env.ADMIN_PASSWORD) {
+      return res.status(403).json({ error: 'Admin access required' });
+    }
+    const PRESERVE = ['admin@bhavx.com', 'test@bhavx.com', 'rajesh@test.com', 'amit@test.com', 'suresh@test.com', 'vikram@test.com'];
+    // Find IDs to preserve (NULL-email-safe)
+    const preserved = await prisma.user.findMany({
+      where: { email: { in: PRESERVE } },
+      select: { id: true },
+    });
+    const preserveIds = preserved.map(u => u.id);
+
+    const usersToDelete = await prisma.user.findMany({
+      where: { id: { notIn: preserveIds } },
+      select: { id: true, email: true, phone: true },
+    });
+    const userIds = usersToDelete.map(u => u.id);
+
+    if (userIds.length === 0) {
+      return res.json({ success: true, deleted: 0, preserved: preserved.length, message: 'Nothing to delete' });
+    }
+
+    // Cascade-clean child records sequentially (errors here would block user delete)
+    const offers = await prisma.offer.deleteMany({ where: { fromUserId: { in: userIds } } });
+    const deals = await prisma.deal.deleteMany({
+      where: { OR: [{ buyerId: { in: userIds } }, { sellerId: { in: userIds } }] },
+    });
+    const listings = await prisma.listing.deleteMany({ where: { userId: { in: userIds } } });
+    const alerts = await prisma.alert.deleteMany({ where: { userId: { in: userIds } } });
+    const users = await prisma.user.deleteMany({ where: { id: { in: userIds } } });
+
+    res.json({
+      success: true,
+      deleted: {
+        users: users.count, offers: offers.count, deals: deals.count,
+        listings: listings.count, alerts: alerts.count,
+      },
+      preserved: preserved.length,
+      preservedEmails: PRESERVE,
+    });
+  } catch (err) {
+    console.error('/admin-wipe-test-users error:', err);
+    res.status(500).json({ error: err.message || 'Wipe failed' });
+  }
+});
+
 // Helper: expire stale deals (lazy check)
 async function expireStaleDeals(userId) {
   await prisma.deal.updateMany({
