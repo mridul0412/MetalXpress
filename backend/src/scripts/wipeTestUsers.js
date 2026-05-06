@@ -26,9 +26,17 @@ async function main() {
   const beforeCount = await prisma.user.count();
   console.log(`Total users before: ${beforeCount}`);
 
-  // Find users to delete (everyone NOT in preserve list)
+  // First find the IDs of users we want to PRESERVE (by email match)
+  const preserved = await prisma.user.findMany({
+    where: { email: { in: PRESERVE_EMAILS } },
+    select: { id: true, email: true },
+  });
+  const preserveIds = preserved.map(u => u.id);
+  console.log(`Preserving ${preserved.length} seed users:`, preserved.map(u => u.email).join(', '));
+
+  // Find ALL users NOT in the preserve set — this catches null-email orphans too
   const usersToDelete = await prisma.user.findMany({
-    where: { email: { notIn: PRESERVE_EMAILS } },
+    where: { id: { notIn: preserveIds } },
     select: { id: true, email: true, phone: true },
   });
   console.log(`Users to delete: ${usersToDelete.length}`);
