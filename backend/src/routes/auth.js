@@ -132,6 +132,21 @@ router.post('/check-phone', async (req, res) => {
   }
 });
 
+// ── POST /api/auth/check-email ───────────────────────────────────────────────
+// Quick check: is this email registered? Used by Signup before sending OTP.
+router.post('/check-email', async (req, res) => {
+  try {
+    const email = (req.body.email || '').toLowerCase().trim();
+    if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      return res.status(400).json({ error: 'Invalid email format' });
+    }
+    const user = await prisma.user.findUnique({ where: { email }, select: { id: true } });
+    res.json({ exists: !!user });
+  } catch (err) {
+    res.status(500).json({ error: 'Check failed' });
+  }
+});
+
 // ── POST /api/auth/verify-firebase-otp ──────────────────────────────────────
 // Firebase Phone Auth: frontend verifies OTP directly with Firebase,
 // then sends the resulting ID token here. We verify it and issue our JWT.

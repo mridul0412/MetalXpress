@@ -53,6 +53,7 @@ export const requestOTP = (phone) => api.post('/auth/request-otp', { phone });
 export const verifyOTP = (data) => api.post('/auth/verify-otp', data);
 // ── Firebase Phone Auth ──
 export const checkPhone = (phone) => api.post('/auth/check-phone', { phone });
+export const checkEmail = (email) => api.post('/auth/check-email', { email });
 export const verifyFirebaseOTP = (data) => api.post('/auth/verify-firebase-otp', data);
 export const fetchMe = () => api.get('/auth/me');
 export const registerEmail = (data) => api.post('/auth/register', data);

@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Shield, Mail, Lock, User, Eye, EyeOff, ArrowRight, Smartphone, CheckCircle } from 'lucide-react';
 import { RecaptchaVerifier, signInWithPhoneNumber } from 'firebase/auth';
 import { auth, isConfigured as firebaseConfigured } from '../config/firebase';
-import { registerEmail } from '../utils/api';
+import { registerEmail, checkPhone, checkEmail } from '../utils/api';
 import { useAuth } from '../context/AuthContext';
 
 const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID;
@@ -124,6 +124,21 @@ export default function Signup() {
 
     setLoading(true);
     try {
+      // Pre-check uniqueness BEFORE burning a Firebase OTP (1 SMS = real money)
+      // Run email + phone checks in parallel, fail fast if either is taken
+      const [emailCheck, phoneCheck] = await Promise.all([
+        checkEmail(email).catch(() => ({ data: { exists: false } })),
+        checkPhone(firebasePhone).catch(() => ({ data: { exists: false } })),
+      ]);
+      if (emailCheck.data.exists) {
+        setLoading(false);
+        return setError('An account with this email already exists. Try logging in instead.');
+      }
+      if (phoneCheck.data.exists) {
+        setLoading(false);
+        return setError('This phone number is already registered. Try logging in instead.');
+      }
+
       const verifier = await buildVerifier();
       const confirmation = await signInWithPhoneNumber(auth, firebasePhone, verifier);
       setConfirmationResult(confirmation);
