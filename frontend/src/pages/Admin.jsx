@@ -160,12 +160,35 @@ function MarketplaceAdmin() {
   const [loading, setLoading] = useState(true);
   const [actionId, setActionId] = useState('');
   const [expandedId, setExpandedId] = useState(null);
+  const [loadError, setLoadError] = useState('');
 
   const load = async () => {
     setLoading(true);
-    try { setListings((await fetchPendingListings()).data || []); }
-    catch { setListings([]); }
-    finally { setLoading(false); }
+    setLoadError('');
+    try {
+      setListings((await fetchPendingListings()).data || []);
+    } catch (err) {
+      setListings([]);
+      const status = err.response?.status;
+      if (status === 403) {
+        setLoadError('Admin password incorrect. Click "Reset admin password" below.');
+      } else if (status === 401) {
+        setLoadError('Admin authentication failed. Check password.');
+      } else {
+        setLoadError(err.response?.data?.error || err.message || 'Failed to load pending listings');
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const resetAdminPassword = () => {
+    localStorage.removeItem('mx_admin_pass');
+    const newPass = prompt('Enter admin password (production value, not dev):');
+    if (newPass) {
+      localStorage.setItem('mx_admin_pass', newPass);
+      load();
+    }
   };
 
   useEffect(() => { load(); }, []);
@@ -195,6 +218,15 @@ function MarketplaceAdmin() {
       </div>
 
       {loading ? <p style={{ color: 'rgba(255,255,255,0.3)' }}>Loading…</p>
+      : loadError
+        ? <div style={{ background: 'rgba(248,113,113,0.08)', borderRadius: 14, padding: 24,
+            border: '1px solid rgba(248,113,113,0.3)' }}>
+            <p style={{ color: '#f87171', fontSize: 14, fontWeight: 700, margin: '0 0 8px' }}>⚠ {loadError}</p>
+            <button onClick={resetAdminPassword} style={{
+              padding: '8px 16px', borderRadius: 8, fontSize: 13, fontWeight: 700,
+              background: '#CFB53B', color: '#000', border: 'none', cursor: 'pointer',
+            }}>Reset admin password</button>
+          </div>
       : listings.length === 0
         ? <div style={{ background: 'rgba(255,255,255,0.03)', borderRadius: 14, padding: 40,
             textAlign: 'center', border: '1px solid rgba(255,255,255,0.06)' }}>
