@@ -249,6 +249,12 @@ export default function Profile() {
               placeholder="Full name as printed on your PAN card" style={inputStyle}
               onFocus={e => e.target.style.borderColor = '#CFB53B'}
               onBlur={e => e.target.style.borderColor = 'rgba(255,255,255,0.1)'} />
+            {legalName && legalName.trim().length < 2 && (
+              <p style={{ fontSize: 10, color: '#f87171', margin: '4px 0 0' }}>Name must be at least 2 characters</p>
+            )}
+            {legalName && legalName.trim().length >= 2 && !/^[A-Za-z][A-Za-z\s.\-']*$/.test(legalName.trim()) && (
+              <p style={{ fontSize: 10, color: '#f87171', margin: '4px 0 0' }}>Letters, spaces, dots, hyphens only — no digits</p>
+            )}
           </div>
 
           <div style={{ marginBottom: 12 }}>
@@ -282,7 +288,8 @@ export default function Profile() {
 
           {(() => {
             const panValid = /^[A-Z]{5}[0-9]{4}[A-Z]$/.test(panNumber);
-            const kycReady = panValid && legalName.trim() !== '' && tradeCategory !== '';
+            const nameValid = legalName.trim().length >= 2 && /^[A-Za-z][A-Za-z\s.\-']*$/.test(legalName.trim());
+            const kycReady = panValid && nameValid && tradeCategory !== '';
             const handleVerify = async () => {
               setVerifying(true); setKycMessage('');
               try {

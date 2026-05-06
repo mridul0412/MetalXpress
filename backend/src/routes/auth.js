@@ -238,7 +238,20 @@ router.patch('/profile', async (req, res) => {
     if (city) updateData.city = city;
     if (businessName !== undefined) updateData.businessName = businessName;
     if (tradeCategory) updateData.tradeCategory = tradeCategory;
-    if (legalName) updateData.legalName = legalName;
+    if (legalName !== undefined) {
+      const trimmed = String(legalName).trim();
+      if (trimmed.length < 2) {
+        return res.status(400).json({ error: 'Legal name must be at least 2 characters' });
+      }
+      if (trimmed.length > 100) {
+        return res.status(400).json({ error: 'Legal name too long (max 100 characters)' });
+      }
+      // Indian PAN names: letters, spaces, dots, hyphens, apostrophes only — NO digits
+      if (!/^[A-Za-z][A-Za-z\s.\-']*$/.test(trimmed)) {
+        return res.status(400).json({ error: 'Legal name must contain only letters, spaces, dots, hyphens (e.g., "Mridul Sharma" or "T.K. Reddy")' });
+      }
+      updateData.legalName = trimmed;
+    }
 
     // PAN validation (ABCDE1234F format)
     if (panNumber) {
