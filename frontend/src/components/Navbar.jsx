@@ -1,14 +1,15 @@
 import { Link, useLocation } from 'react-router-dom';
-import { Activity, Bell, Briefcase, Settings, BarChart3 } from 'lucide-react';
+import { Activity, Briefcase, Settings, BarChart3 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import LMEStrip from './LMEStrip';
 import { BRAND } from '../config/brand';
 
+// Alerts hidden from nav until FCM push notifications wired (Day 5 of sprint).
+// Route still works via direct URL — just not visible/discoverable yet.
 const NAV_ITEMS = [
   { href: '/',            label: 'Rates',     icon: Activity   },
   { href: '/marketplace', label: 'Market',    icon: Briefcase  },
   { href: '/analytics',   label: 'Analytics', icon: BarChart3  },
-  { href: '/alerts',      label: 'Alerts',    icon: Bell       },
   { href: '/admin',       label: 'Admin',     icon: Settings   },
 ];
 

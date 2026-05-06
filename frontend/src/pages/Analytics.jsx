@@ -700,27 +700,6 @@ export default function Analytics() {
         display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
         gap: 16, marginBottom: 24,
       }}>
-        {/* Market Activity */}
-        <div style={{
-          background: '#0D1420', border: '1px solid rgba(255,255,255,0.07)',
-          borderRadius: 20, padding: '22px 24px',
-        }}>
-          <p style={{ fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', color: 'rgba(255,255,255,0.35)', margin: '0 0 18px' }}>
-            Marketplace Activity by Metal
-          </p>
-          {depthData.length > 0 ? (() => {
-            const maxL = Math.max(...depthData.map(d => d.listings));
-            return depthData.map(d => (
-              <ActivityBar key={d.metal} metal={d.metal} listings={d.listings} totalQty={d.totalQty} maxListings={maxL} />
-            ));
-          })() : (
-            <p style={{ color: 'rgba(255,255,255,0.25)', fontSize: 12 }}>No active listings yet.</p>
-          )}
-          <p style={{ fontSize: 10, color: 'rgba(255,255,255,0.2)', margin: '14px 0 0' }}>
-            Bar length = relative listing volume &nbsp;·&nbsp; T = tonnes
-          </p>
-        </div>
-
         {/* Price Extremes */}
         <div style={{
           background: '#0D1420', border: '1px solid rgba(255,255,255,0.07)',

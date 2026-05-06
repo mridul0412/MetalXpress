@@ -158,7 +158,10 @@ export default function Profile() {
   const isKycDone = user?.kycVerified;
   const isBuyer = traderTypes.includes('BUYER');
   const isSeller = traderTypes.includes('SELLER');
-  const needsKyc = (isBuyer || isSeller) && !isKycDone;
+  // Show KYC section to ALL unverified users so it's discoverable upfront.
+  // Mandatory enforcement still happens inside Marketplace + Analytics gates.
+  const needsKyc = !isKycDone;
+  const kycRequired = (isBuyer || isSeller); // visual emphasis only — required vs optional
 
   return (
     <div className="max-w-lg mx-auto px-4 py-6 pb-24 md:pb-8">
@@ -198,15 +201,15 @@ export default function Profile() {
           : <AlertCircle size={20} color={needsKyc ? '#CFB53B' : 'rgba(255,255,255,0.2)'} style={{ flexShrink: 0 }} />}
         <div style={{ flex: 1 }}>
           <p style={{ fontSize: 13, fontWeight: 700, margin: '0 0 2px',
-            color: isKycDone ? '#34d399' : needsKyc ? '#CFB53B' : 'rgba(255,255,255,0.4)' }}>
-            {isKycDone ? 'Identity Verified ✓' : needsKyc ? 'Verification Required for Trading' : 'No Verification Needed'}
+            color: isKycDone ? '#34d399' : kycRequired ? '#CFB53B' : '#CFB53B' }}>
+            {isKycDone ? 'Identity Verified ✓' : kycRequired ? 'Verification Required for Marketplace + Analytics' : 'Verification Recommended'}
           </p>
           <p style={{ fontSize: 11, color: 'rgba(255,255,255,0.4)', margin: 0 }}>
             {isKycDone
-              ? 'You can browse listings, post scrap, and make deals. Your verified badge is visible to other traders.'
-              : needsKyc
-              ? 'Complete PAN verification below to access the marketplace.'
-              : 'All marketplace users need identity verification.'}
+              ? 'You can browse listings, post metal, and make deals. Your verified badge is visible to other traders.'
+              : kycRequired
+              ? 'Complete PAN verification below to unlock marketplace, deals, and analytics.'
+              : 'Verify now to unlock marketplace + analytics if you ever want to trade. Takes 1 minute.'}
           </p>
         </div>
       </div>
