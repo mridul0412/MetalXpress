@@ -24,7 +24,7 @@ export default function Terms() {
         </p>
         <ul style={{ margin: 0, paddingLeft: 18, listStyleType: 'disc' }}>
           <li>BhavX is a <strong style={{ color: '#fff' }}>facilitator</strong>, not a broker, mediator, or guarantor of deals.</li>
-          <li>Commission of <strong style={{ color: '#fff' }}>0.1%</strong> is charged on agreed deal value and is <strong style={{ color: '#fff' }}>non-refundable</strong> once a connection is made, except in cases of confirmed fraud.</li>
+          <li><strong style={{ color: '#34d399' }}>0% commission for Founding Traders</strong> — limited-time launch perk. Standard 0.1% commission applies to new signups after the launch period (non-refundable once connection is made, except in cases of confirmed fraud).</li>
           <li><strong style={{ color: '#fff' }}>KYC verification</strong> (Aadhaar/PAN) is required before posting listings on the marketplace.</li>
           <li>All users must be <strong style={{ color: '#fff' }}>18 years or older</strong> and based in India.</li>
         </ul>

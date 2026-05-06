@@ -627,18 +627,21 @@ function OfferModal({ listing: l, onClose, onSuccess, isOnCooldown, cooldownDate
             style={{ ...inputStyle, minHeight: 60, resize: 'vertical' }} />
         </div>
 
-        {/* Commission preview */}
+        {/* Commission preview — FREE for Founding Traders */}
         {totalVal > 0 && (
-          <div style={{ background: 'rgba(207,181,59,0.08)', borderRadius: 10, padding: 12, marginBottom: 16,
-            border: '1px solid rgba(207,181,59,0.15)', fontSize: 12 }}>
+          <div style={{ background: 'rgba(52,211,153,0.08)', borderRadius: 10, padding: 12, marginBottom: 16,
+            border: '1px solid rgba(52,211,153,0.2)', fontSize: 12 }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', color: 'rgba(255,255,255,0.5)' }}>
               <span>Deal value</span><span>₹{fmt(totalVal)}</span>
             </div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', color: '#CFB53B', fontWeight: 700, marginTop: 4 }}>
-              <span>Commission (0.1%)</span><span>₹{fmt(commission)}</span>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginTop: 4, gap: 8, flexWrap: 'wrap' }}>
+              <span style={{ color: 'rgba(255,255,255,0.4)', textDecoration: 'line-through', fontSize: 11 }}>
+                Commission (0.1%): ₹{fmt(commission)}
+              </span>
+              <span style={{ color: '#34d399', fontWeight: 800, letterSpacing: '0.5px' }}>FREE</span>
             </div>
-            <p style={{ fontSize: 10, color: 'rgba(255,255,255,0.25)', margin: '6px 0 0' }}>
-              Commission is only charged after both parties agree on price
+            <p style={{ fontSize: 10, color: 'rgba(207,181,59,0.7)', margin: '6px 0 0', fontWeight: 600 }}>
+              🎉 0% commission for Founding Traders — limited time
             </p>
           </div>
         )}
@@ -653,7 +656,7 @@ function OfferModal({ listing: l, onClose, onSuccess, isOnCooldown, cooldownDate
         )}
 
         <p style={{ fontSize: 10, color: 'rgba(255,255,255,0.3)', marginBottom: 12, lineHeight: 1.5 }}>
-          0.1% commission charged only after both parties agree. Non-refundable after connection, except for fraud/no-response cases.
+          0% commission for Founding Traders — limited time. We'll honor this rate for life on your account.
           <a href="/terms#refund-policy" style={{ color: '#CFB53B' }}> View refund policy</a>
         </p>
 
@@ -909,7 +912,7 @@ function DealDetailPanel({ dealId, user, onClose }) {
             </div>
           )}
 
-          {/* Agreed — pay commission */}
+          {/* Agreed — pay commission (FREE for Founding Traders) */}
           {deal.status === 'agreed' && myRole === 'buyer' && (
             <div>
               <div style={{ background: 'rgba(52,211,153,0.08)', borderRadius: 10, padding: 14, marginBottom: 12,
@@ -920,21 +923,28 @@ function DealDetailPanel({ dealId, user, onClose }) {
                 <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.5)' }}>
                   ₹{fmt(deal.agreedPrice)}/kg × {fmt(deal.agreedQty)} kg = ₹{fmt(deal.dealAmount)}
                 </div>
-                <div style={{ fontSize: 13, fontWeight: 700, color: '#CFB53B', marginTop: 6 }}>
-                  Commission (0.1%): ₹{fmt(deal.commission)}
+                <div style={{ marginTop: 8, display: 'flex', alignItems: 'baseline', gap: 8, flexWrap: 'wrap' }}>
+                  <span style={{ fontSize: 13, color: 'rgba(255,255,255,0.4)', textDecoration: 'line-through' }}>
+                    Commission (0.1%): ₹{fmt(deal.commission)}
+                  </span>
+                  <span style={{ fontSize: 14, fontWeight: 800, color: '#34d399', letterSpacing: '0.5px' }}>
+                    FREE
+                  </span>
                 </div>
+                <p style={{ fontSize: 10, color: 'rgba(207,181,59,0.8)', margin: '4px 0 0', fontWeight: 600, letterSpacing: '0.3px' }}>
+                  🎉 0% commission for Founding Traders — limited time
+                </p>
               </div>
               <p style={{ fontSize: 10, color: 'rgba(255,255,255,0.3)', marginBottom: 8, lineHeight: 1.5 }}>
-                By paying, you agree to our <a href="/terms#commission" style={{ color: '#CFB53B' }}>commission</a> and <a href="/terms#refund-policy" style={{ color: '#CFB53B' }}>refund policy</a>.
-                Contact details will be shared after payment.
+                We're not charging you commission on this deal. Click below to instantly reveal the seller's contact and complete your trade off-platform.
               </p>
               <button onClick={() => handleAction('pay')} disabled={!!actionLoading}
                 style={{ width: '100%', padding: '14px', borderRadius: 10, fontSize: 14, fontWeight: 700,
                   background: '#34d399', color: '#000', border: 'none', cursor: 'pointer' }}>
-                {actionLoading === 'pay' ? 'Processing…' : `Pay ₹${fmt(deal.commission)} & Connect`}
+                {actionLoading === 'pay' ? 'Processing…' : 'Reveal Contact — Free'}
               </button>
               <p style={{ fontSize: 10, color: 'rgba(255,255,255,0.2)', textAlign: 'center', marginTop: 6 }}>
-                Dev mode — instant payment. Production will use Razorpay.
+                Founding Trader perk — no payment required.
               </p>
             </div>
           )}
@@ -942,9 +952,9 @@ function DealDetailPanel({ dealId, user, onClose }) {
             <div style={{ background: 'rgba(52,211,153,0.08)', borderRadius: 10, padding: 14,
               border: '1px solid rgba(52,211,153,0.15)', textAlign: 'center' }}>
               <Handshake size={20} style={{ color: '#34d399', marginBottom: 6 }} />
-              <p style={{ fontSize: 13, fontWeight: 700, color: '#34d399' }}>Deal agreed! Waiting for buyer to pay commission.</p>
+              <p style={{ fontSize: 13, fontWeight: 700, color: '#34d399' }}>Deal agreed! Waiting for buyer to confirm.</p>
               <p style={{ fontSize: 11, color: 'rgba(255,255,255,0.4)', marginTop: 4 }}>
-                ₹{fmt(deal.agreedPrice)}/kg × {fmt(deal.agreedQty)} kg · Commission: ₹{fmt(deal.commission)}
+                ₹{fmt(deal.agreedPrice)}/kg × {fmt(deal.agreedQty)} kg · 0% commission (Founding Trader)
               </p>
             </div>
           )}

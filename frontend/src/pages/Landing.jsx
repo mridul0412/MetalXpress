@@ -39,11 +39,11 @@ const FAQ_ITEMS = [
   },
   {
     q: 'How does commission work on deals?',
-    a: "You're charged a commission of 0.1% on the deal value only after both buyer and seller agree on price and quantity. Browsing, listing, negotiating \u2014 all completely free. You pay only when a deal is confirmed and both sides are happy.",
+    a: "Browsing, listing, negotiating, connecting \u2014 all FREE for Founding Traders. We're waiving commission entirely for our launch cohort. The standard 0.1% deal-value commission kicks in only for new signups joining after our launch period \u2014 and never for you.",
   },
   {
     q: 'What does the Pro plan include?',
-    a: 'Full marketplace access to post and negotiate deals, local city spot rates for Delhi, Mumbai, Ahmedabad, Ludhiana, Chennai, candlestick charts, trend analysis, momentum signals, and LME-MCX spread tracking. All for \u20B9299/month.',
+    a: "Full marketplace access to post and negotiate deals, local city spot rates for Delhi, Mumbai, Ahmedabad, Ludhiana, Chennai, candlestick charts, trend analysis, momentum signals, and LME-MCX spread tracking. Free for Founding Traders (later \u20B9299/month).",
   },
   {
     q: 'Which cities do you cover?',
@@ -253,7 +253,7 @@ export default function Landing() {
           {[
             { step: '01', icon: TrendingUp, title: 'Check Live Rates', desc: 'No more waiting for someone to forward today\'s rate. Live LME, MCX, and local spot prices for Copper, Aluminium, Zinc, Nickel, Lead, Tin and more. Updated throughout the day. Set price alerts and get notified the moment rates cross your number.' },
             { step: '02', icon: Briefcase, title: 'Buy & Sell on the Marketplace', desc: 'Post your listing \u2014 ferrous, non-ferrous, scrap, alloys, anything. Every seller is verified. Every metal listed is checked. Negotiate price and quantity in-app. Contacts revealed only after both parties agree.' },
-            { step: '03', icon: BarChart3, title: 'Upgrade for the Full Edge', desc: 'Unlock city-level spot rates, advanced analytics with candlestick charts and momentum signals, LME vs MCX spread tracking, and unlimited listings. Everything a serious trader needs \u2014 starting at \u20B9299/month.' },
+            { step: '03', icon: BarChart3, title: 'Upgrade for the Full Edge', desc: 'Unlock city-level spot rates, advanced analytics with candlestick charts and momentum signals, LME vs MCX spread tracking, and unlimited listings. FREE for Founding Traders (limited time).' },
           ].map(({ step, icon: Icon, title, desc }) => (
             <div key={step} style={{
               padding: '28px 22px', borderRadius: 18,
@@ -303,7 +303,7 @@ export default function Landing() {
           </div>
 
           {/* PRO */}
-          <p style={{ fontSize: 11, fontWeight: 700, color: '#CFB53B', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 10 }}>{'\u26A1'} Pro — {'\u20B9'}299/month</p>
+          <p style={{ fontSize: 11, fontWeight: 700, color: '#CFB53B', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 10 }}>{'\u26A1'} Pro — <span style={{ textDecoration: 'line-through', color: 'rgba(255,255,255,0.35)' }}>{'\u20B9'}299/month</span> <span style={{ color: '#34d399' }}>FREE for Founding Traders</span></p>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(210px, 1fr))', gap: 10 }}>
             {[
               { icon: MapPin, title: 'Local Spot Rates', desc: 'City-wise buy/sell prices per grade: Delhi, Mumbai, Ahmedabad, Ludhiana, Chennai. Sourced from real market broadcasts.' },
