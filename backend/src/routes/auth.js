@@ -48,6 +48,8 @@ function publicUserFields(u) {
     emailVerified:  u.emailVerified,
     phoneVerified:  u.phoneVerified,
     kycVerified:    u.kycVerified,
+    kycSubmittedAt: u.kycSubmittedAt,
+    kycRejectionReason: u.kycRejectionReason,
     panNumber:      u.panNumber,
     tradeCategory:  u.tradeCategory,
     businessName:   u.businessName,
@@ -212,6 +214,7 @@ router.get('/me', async (req, res) => {
       select: {
         id: true, phone: true, email: true, name: true, city: true, traderType: true,
         phoneVerified: true, emailVerified: true, kycVerified: true,
+        kycSubmittedAt: true, kycRejectionReason: true,
         createdAt: true, updatedAt: true,
         isBanned: true, banReason: true, cooldownUntil: true,
         completedDeals: true, avgRating: true, disputeCount: true,
@@ -271,13 +274,23 @@ router.patch('/profile', async (req, res) => {
       updateData.gstNumber = gst;
     }
 
-    // KYC completion: requires PAN
+    // KYC completion: requires PAN — submits for admin review (NOT auto-verified)
     if (kycComplete === true) {
-      if (!updateData.panNumber) {
-        const currentUser = await prisma.user.findUnique({ where: { id: payload.userId }, select: { panNumber: true } });
-        if (!currentUser?.panNumber) return res.status(400).json({ error: 'PAN Card number required to complete verification' });
+      const currentUser = await prisma.user.findUnique({
+        where: { id: payload.userId },
+        select: { panNumber: true, legalName: true, tradeCategory: true, kycVerified: true },
+      });
+      const finalPan = updateData.panNumber || currentUser?.panNumber;
+      const finalName = updateData.legalName || currentUser?.legalName;
+      const finalCat = updateData.tradeCategory || currentUser?.tradeCategory;
+      if (!finalPan) return res.status(400).json({ error: 'PAN number required for verification' });
+      if (!finalName) return res.status(400).json({ error: 'Legal name required for verification' });
+      if (!finalCat) return res.status(400).json({ error: 'Trade category required for verification' });
+      // Don't re-submit if already verified
+      if (!currentUser?.kycVerified) {
+        updateData.kycSubmittedAt = new Date();
+        updateData.kycRejectionReason = null;
       }
-      updateData.kycVerified = true;
     }
 
     // Link/change phone — requires OTP if changing existing phone

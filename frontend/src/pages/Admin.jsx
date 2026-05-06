@@ -4,7 +4,7 @@ import {
   Lock, Save, ClipboardPaste, ChevronLeft, LogOut,
   CheckCircle, AlertCircle, MapPin, Zap,
 } from 'lucide-react';
-import { adminParsePreview, saveParsedRates, fetchPendingListings, verifyListing, fetchDisputes, resolveDispute } from '../utils/api';
+import { adminParsePreview, saveParsedRates, fetchPendingListings, verifyListing, fetchDisputes, resolveDispute, fetchPendingKyc, approveKyc, rejectKyc } from '../utils/api';
 
 const ADMIN_PASS_KEY = 'mx_admin_pass';
 
@@ -121,7 +121,7 @@ export default function Admin() {
 // ── Admin Body with Tabs ──────────────────────────────────────────────────────
 function AdminBody() {
   const [adminTab, setAdminTab] = useState('rates');
-  const ADMIN_TABS = [['rates', 'Rate Management'], ['marketplace', 'Listings'], ['disputes', 'Disputes']];
+  const ADMIN_TABS = [['rates', 'Rate Management'], ['marketplace', 'Listings'], ['kyc', 'KYC Review'], ['disputes', 'Disputes']];
 
   return (
     <div style={{ maxWidth: 760, margin: '0 auto', padding: '28px 16px 80px' }}>
@@ -149,6 +149,7 @@ function AdminBody() {
       )}
 
       {adminTab === 'marketplace' && <MarketplaceAdmin />}
+      {adminTab === 'kyc' && <KycAdmin />}
       {adminTab === 'disputes' && <DisputesAdmin />}
     </div>
   );
@@ -358,6 +359,133 @@ function MarketplaceAdmin() {
               );
             })}
           </div>}
+    </div>
+  );
+}
+
+// ── KYC Admin ────────────────────────────────────────────────────────────────
+function KycAdmin() {
+  const [users, setUsers] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [actionId, setActionId] = useState('');
+  const [loadError, setLoadError] = useState('');
+
+  const load = async () => {
+    setLoading(true);
+    setLoadError('');
+    try {
+      setUsers((await fetchPendingKyc()).data || []);
+    } catch (err) {
+      setUsers([]);
+      setLoadError(err.response?.status === 403 ? 'Admin password incorrect.' : 'Failed to load pending KYC');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => { load(); }, []);
+
+  const handleApprove = async (userId) => {
+    setActionId(userId);
+    try {
+      await approveKyc(userId);
+      await load();
+    } catch (err) {
+      alert(err.response?.data?.error || 'Approval failed');
+    } finally {
+      setActionId('');
+    }
+  };
+
+  const handleReject = async (userId) => {
+    const reason = prompt('Rejection reason (visible to user, min 5 chars):');
+    if (!reason || reason.trim().length < 5) return;
+    setActionId(userId);
+    try {
+      await rejectKyc(userId, reason.trim());
+      await load();
+    } catch (err) {
+      alert(err.response?.data?.error || 'Rejection failed');
+    } finally {
+      setActionId('');
+    }
+  };
+
+  const cardBg = '#0D1420';
+  const kvStyle = { display: 'flex', justifyContent: 'space-between', padding: '6px 0', fontSize: 12, borderBottom: '1px solid rgba(255,255,255,0.04)' };
+  const kvLabel = { color: 'rgba(255,255,255,0.4)' };
+  const kvValue = { color: '#fff', fontWeight: 600, fontFamily: 'monospace' };
+
+  return (
+    <div>
+      <div style={{ marginBottom: 20 }}>
+        <h1 style={{ fontSize: 26, fontWeight: 700, color: '#fff', margin: '0 0 4px' }}>KYC Review</h1>
+        <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.4)', margin: '0 0 8px' }}>
+          Verify each PAN against the public NSDL database, then approve or reject.
+        </p>
+        <a href="https://www.tin-nsdl.com/services/pan/pan-verification-online.html" target="_blank" rel="noopener noreferrer"
+          style={{ fontSize: 12, color: '#CFB53B', textDecoration: 'underline' }}>
+          🔗 Open NSDL PAN verification (new tab)
+        </a>
+      </div>
+
+      {loading ? <p style={{ color: 'rgba(255,255,255,0.3)' }}>Loading…</p>
+      : loadError
+        ? <div style={{ background: 'rgba(248,113,113,0.08)', border: '1px solid rgba(248,113,113,0.3)', borderRadius: 14, padding: 24 }}>
+            <p style={{ color: '#f87171', fontSize: 14, fontWeight: 700, margin: 0 }}>⚠ {loadError}</p>
+          </div>
+      : users.length === 0
+        ? <div style={{ background: 'rgba(255,255,255,0.03)', borderRadius: 14, padding: 40, textAlign: 'center', border: '1px solid rgba(255,255,255,0.06)' }}>
+            <CheckCircle size={32} style={{ color: 'rgba(52,211,153,0.4)', marginBottom: 8 }} />
+            <p style={{ color: 'rgba(255,255,255,0.35)', fontSize: 14 }}>No KYC submissions awaiting review</p>
+          </div>
+        : <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+            {users.map(u => (
+              <div key={u.id} style={{ background: cardBg, borderRadius: 14, padding: 20, border: '1px solid rgba(255,255,255,0.07)' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 12 }}>
+                  <div>
+                    <p style={{ fontSize: 16, fontWeight: 700, color: '#fff', margin: '0 0 4px' }}>{u.legalName || u.name || '(no name)'}</p>
+                    <p style={{ fontSize: 12, color: 'rgba(255,255,255,0.4)', margin: 0 }}>
+                      {u.email} · {u.phone} · {u.city || '(no city)'}
+                    </p>
+                  </div>
+                  <span style={{ fontSize: 10, padding: '4px 8px', borderRadius: 99, background: 'rgba(99,102,241,0.15)', color: '#818cf8', fontWeight: 700, letterSpacing: '0.05em', textTransform: 'uppercase' }}>
+                    Submitted {u.kycSubmittedAt ? new Date(u.kycSubmittedAt).toLocaleString('en-IN', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }) : ''}
+                  </span>
+                </div>
+
+                <div style={{ background: 'rgba(255,255,255,0.03)', borderRadius: 10, padding: 14, marginBottom: 14 }}>
+                  <div style={kvStyle}><span style={kvLabel}>PAN Number</span>
+                    <span style={{ ...kvValue, color: '#CFB53B', letterSpacing: '0.1em' }}>{u.panNumber}</span></div>
+                  <div style={kvStyle}><span style={kvLabel}>Legal Name (as on PAN)</span><span style={kvValue}>{u.legalName}</span></div>
+                  <div style={kvStyle}><span style={kvLabel}>Trade Category</span><span style={kvValue}>{u.tradeCategory}</span></div>
+                  {u.businessName && <div style={kvStyle}><span style={kvLabel}>Business Name</span><span style={kvValue}>{u.businessName}</span></div>}
+                  {u.gstNumber && <div style={kvStyle}><span style={kvLabel}>GSTIN</span><span style={kvValue}>{u.gstNumber}</span></div>}
+                  <div style={kvStyle}><span style={kvLabel}>Trader Type</span><span style={kvValue}>{u.traderType}</span></div>
+                  <div style={{ ...kvStyle, borderBottom: 'none' }}><span style={kvLabel}>Account age</span>
+                    <span style={kvValue}>{u.createdAt ? Math.floor((Date.now() - new Date(u.createdAt)) / 86400000) : '?'} days</span></div>
+                </div>
+
+                <p style={{ fontSize: 11, color: 'rgba(255,255,255,0.4)', margin: '0 0 12px', lineHeight: 1.6 }}>
+                  ✓ Open NSDL link above → enter PAN <strong style={{ color: '#CFB53B' }}>{u.panNumber}</strong> → check if "{u.legalName}" matches the registered name.
+                </p>
+
+                <div style={{ display: 'flex', gap: 10 }}>
+                  <button onClick={() => handleApprove(u.id)} disabled={actionId === u.id}
+                    style={{ flex: 1, padding: '11px', borderRadius: 10, fontSize: 13, fontWeight: 700,
+                      background: '#34d399', color: '#000', border: 'none', cursor: 'pointer' }}>
+                    {actionId === u.id ? 'Working…' : '✓ Approve'}
+                  </button>
+                  <button onClick={() => handleReject(u.id)} disabled={actionId === u.id}
+                    style={{ flex: 1, padding: '11px', borderRadius: 10, fontSize: 13, fontWeight: 700,
+                      background: 'rgba(248,113,113,0.15)', color: '#f87171', border: '1px solid rgba(248,113,113,0.3)', cursor: 'pointer' }}>
+                    ✗ Reject
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+      }
     </div>
   );
 }

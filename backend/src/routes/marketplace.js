@@ -300,6 +300,79 @@ router.get('/pending', async (req, res) => {
   }
 });
 
+// ── GET /api/marketplace/kyc-pending — admin: users awaiting KYC review ──
+router.get('/kyc-pending', async (req, res) => {
+  try {
+    const adminPass = req.headers['x-admin-password'];
+    if (adminPass !== process.env.ADMIN_PASSWORD) {
+      return res.status(403).json({ error: 'Admin access required' });
+    }
+    const users = await prisma.user.findMany({
+      where: { kycSubmittedAt: { not: null }, kycVerified: false },
+      select: {
+        id: true, name: true, email: true, phone: true, city: true,
+        legalName: true, panNumber: true, gstNumber: true,
+        tradeCategory: true, businessName: true, traderType: true,
+        kycSubmittedAt: true, createdAt: true,
+      },
+      orderBy: { kycSubmittedAt: 'asc' },
+    });
+    res.json(users);
+  } catch (err) {
+    console.error('/kyc-pending error:', err);
+    res.status(500).json({ error: 'Failed to fetch pending KYC' });
+  }
+});
+
+// ── PATCH /api/marketplace/kyc-approve/:userId — admin approves KYC ──
+router.patch('/kyc-approve/:userId', async (req, res) => {
+  try {
+    const adminPass = req.headers['x-admin-password'];
+    if (adminPass !== process.env.ADMIN_PASSWORD) {
+      return res.status(403).json({ error: 'Admin access required' });
+    }
+    const updated = await prisma.user.update({
+      where: { id: req.params.userId },
+      data: {
+        kycVerified: true,
+        kycApprovedAt: new Date(),
+        kycApprovedBy: 'admin',
+        kycRejectionReason: null,
+      },
+      select: { id: true, email: true, kycVerified: true, kycApprovedAt: true },
+    });
+    res.json({ success: true, user: updated });
+  } catch (err) {
+    console.error('/kyc-approve error:', err);
+    res.status(500).json({ error: 'Failed to approve KYC' });
+  }
+});
+
+// ── PATCH /api/marketplace/kyc-reject/:userId — admin rejects KYC ──
+router.patch('/kyc-reject/:userId', async (req, res) => {
+  try {
+    const adminPass = req.headers['x-admin-password'];
+    if (adminPass !== process.env.ADMIN_PASSWORD) {
+      return res.status(403).json({ error: 'Admin access required' });
+    }
+    const reason = (req.body.reason || '').trim();
+    if (reason.length < 5) return res.status(400).json({ error: 'Rejection reason required (min 5 chars)' });
+    const updated = await prisma.user.update({
+      where: { id: req.params.userId },
+      data: {
+        kycVerified: false,
+        kycSubmittedAt: null, // clear so user can re-submit
+        kycRejectionReason: reason,
+      },
+      select: { id: true, email: true, kycVerified: true, kycRejectionReason: true },
+    });
+    res.json({ success: true, user: updated });
+  } catch (err) {
+    console.error('/kyc-reject error:', err);
+    res.status(500).json({ error: 'Failed to reject KYC' });
+  }
+});
+
 // Helper: expire stale deals (lazy check)
 async function expireStaleDeals(userId) {
   await prisma.deal.updateMany({

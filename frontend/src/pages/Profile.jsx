@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
-  User, Mail, Phone, MapPin, Shield, Save, LogOut,
+  User, Mail, Phone, MapPin, Shield, Save, LogOut, Clock,
   CheckCircle, AlertCircle, Smartphone, ChevronRight, Edit3,
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
@@ -156,11 +156,13 @@ export default function Profile() {
   );
 
   const isKycDone = user?.kycVerified;
+  const kycPending = !!user?.kycSubmittedAt && !isKycDone && !user?.kycRejectionReason;
+  const kycRejected = !!user?.kycRejectionReason;
   const isBuyer = traderTypes.includes('BUYER');
   const isSeller = traderTypes.includes('SELLER');
   // Show KYC section to ALL unverified users so it's discoverable upfront.
-  // Mandatory enforcement still happens inside Marketplace + Analytics gates.
-  const needsKyc = !isKycDone;
+  // Hide form when pending review — user can't change anything during review.
+  const needsKyc = !isKycDone && !kycPending;
   const kycRequired = (isBuyer || isSeller); // visual emphasis only — required vs optional
 
   return (
@@ -189,27 +191,37 @@ export default function Profile() {
         )}
       </div>
 
-      {/* KYC status banner */}
+      {/* KYC status banner — 4 states: verified, pending, rejected, not-submitted */}
       <div style={{
-        background: isKycDone ? 'rgba(52,211,153,0.08)' : needsKyc ? 'rgba(207,181,59,0.08)' : 'rgba(255,255,255,0.03)',
-        border: `1px solid ${isKycDone ? 'rgba(52,211,153,0.2)' : needsKyc ? 'rgba(207,181,59,0.2)' : 'rgba(255,255,255,0.07)'}`,
+        background: isKycDone ? 'rgba(52,211,153,0.08)' : kycPending ? 'rgba(99,102,241,0.08)' : kycRejected ? 'rgba(248,113,113,0.08)' : 'rgba(207,181,59,0.08)',
+        border: `1px solid ${isKycDone ? 'rgba(52,211,153,0.2)' : kycPending ? 'rgba(99,102,241,0.25)' : kycRejected ? 'rgba(248,113,113,0.3)' : 'rgba(207,181,59,0.2)'}`,
         borderRadius: 12, padding: '14px 18px', marginBottom: 16,
-        display: 'flex', alignItems: 'center', gap: 12,
+        display: 'flex', alignItems: 'flex-start', gap: 12,
       }}>
         {isKycDone
-          ? <CheckCircle size={20} color="#34d399" style={{ flexShrink: 0 }} />
-          : <AlertCircle size={20} color={needsKyc ? '#CFB53B' : 'rgba(255,255,255,0.2)'} style={{ flexShrink: 0 }} />}
+          ? <CheckCircle size={20} color="#34d399" style={{ flexShrink: 0, marginTop: 2 }} />
+          : kycPending
+          ? <Clock size={20} color="#818cf8" style={{ flexShrink: 0, marginTop: 2 }} />
+          : <AlertCircle size={20} color={kycRejected ? '#f87171' : '#CFB53B'} style={{ flexShrink: 0, marginTop: 2 }} />}
         <div style={{ flex: 1 }}>
           <p style={{ fontSize: 13, fontWeight: 700, margin: '0 0 2px',
-            color: isKycDone ? '#34d399' : kycRequired ? '#CFB53B' : '#CFB53B' }}>
-            {isKycDone ? 'Identity Verified ✓' : kycRequired ? 'Verification Required for Marketplace + Analytics' : 'Verification Recommended'}
+            color: isKycDone ? '#34d399' : kycPending ? '#818cf8' : kycRejected ? '#f87171' : '#CFB53B' }}>
+            {isKycDone ? 'Identity Verified ✓'
+              : kycPending ? 'Verification Submitted — Awaiting Review'
+              : kycRejected ? 'Verification Rejected'
+              : kycRequired ? 'Verification Required for Marketplace + Analytics'
+              : 'Verification Recommended'}
           </p>
-          <p style={{ fontSize: 11, color: 'rgba(255,255,255,0.4)', margin: 0 }}>
+          <p style={{ fontSize: 11, color: 'rgba(255,255,255,0.5)', margin: 0, lineHeight: 1.5 }}>
             {isKycDone
               ? 'You can browse listings, post metal, and make deals. Your verified badge is visible to other traders.'
+              : kycPending
+              ? 'We\'ll review your details against the NSDL PAN database within 24 hours. You\'ll be notified once approved.'
+              : kycRejected
+              ? `Reason: ${user?.kycRejectionReason}. Please correct the details below and resubmit.`
               : kycRequired
-              ? 'Complete PAN verification below to unlock marketplace, deals, and analytics.'
-              : 'Verify now to unlock marketplace + analytics if you ever want to trade. Takes 1 minute.'}
+              ? 'Submit PAN below for review. Takes 1 minute. Approved within 24 hours.'
+              : 'Verify now to unlock marketplace + analytics if you ever want to trade.'}
           </p>
         </div>
       </div>

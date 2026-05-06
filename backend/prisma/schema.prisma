@@ -35,6 +35,10 @@ model User {
   emailVerifyExpiry   DateTime?
   isPro               Boolean   @default(false)
   proGrantedAt        DateTime?
+  kycSubmittedAt      DateTime?       // set when user submits PAN; cleared on reject
+  kycApprovedAt       DateTime?
+  kycApprovedBy       String?         // admin identifier (free-form)
+  kycRejectionReason  String?  @db.Text
   passwordResetToken  String?
   passwordResetExpiry DateTime?
   createdAt    DateTime    @default(now())

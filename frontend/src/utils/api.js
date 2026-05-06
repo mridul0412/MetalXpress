@@ -108,6 +108,9 @@ export const fetchUserRatings = (userId) => api.get(`/marketplace/users/${userId
 // Admin marketplace
 export const fetchPendingListings = () => api.get('/marketplace/pending', { headers: adminHeaders() });
 export const verifyListing = (id, status) => api.patch(`/marketplace/listings/${id}/verify`, { status }, { headers: adminHeaders() });
+export const fetchPendingKyc   = () => api.get('/marketplace/kyc-pending', { headers: adminHeaders() });
+export const approveKyc        = (userId) => api.patch(`/marketplace/kyc-approve/${userId}`, {}, { headers: adminHeaders() });
+export const rejectKyc         = (userId, reason) => api.patch(`/marketplace/kyc-reject/${userId}`, { reason }, { headers: adminHeaders() });
 export const fetchDisputes = () => api.get('/marketplace/disputes', { headers: adminHeaders() });
 export const resolveDispute = (dealId, resolution) => api.patch(`/marketplace/deals/${dealId}/resolve-dispute`, { resolution }, { headers: adminHeaders() });
 
