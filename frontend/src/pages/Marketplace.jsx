@@ -274,6 +274,21 @@ function BrowseTab({ listings, loading, filterMetal, setFilterMetal, filterCity,
 
   return (
     <div>
+      {/* Trust strip — why BhavX > WhatsApp */}
+      <div style={{ background: 'linear-gradient(90deg, rgba(207,181,59,0.08), rgba(52,211,153,0.06))',
+        border: '1px solid rgba(207,181,59,0.2)', borderRadius: 12, padding: '14px 18px', marginBottom: 20 }}>
+        <p style={{ fontSize: 12, fontWeight: 700, color: '#CFB53B', margin: '0 0 8px',
+          letterSpacing: '0.05em', textTransform: 'uppercase' }}>
+          🛡️ Why BhavX vs WhatsApp deals
+        </p>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: 10, fontSize: 11, color: 'rgba(255,255,255,0.65)' }}>
+          <div>✅ <strong style={{ color: '#fff' }}>PAN-verified traders</strong> — no fake accounts</div>
+          <div>✅ <strong style={{ color: '#fff' }}>0% commission</strong> for Founding Traders</div>
+          <div>✅ <strong style={{ color: '#fff' }}>Dispute resolution</strong> — admin mediates</div>
+          <div>✅ <strong style={{ color: '#fff' }}>Deal history + ratings</strong> — see who you're dealing with</div>
+        </div>
+      </div>
+
       {/* Filters */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: 12, marginBottom: 20 }}>
         <div style={{ position: 'relative' }}>
@@ -476,18 +491,28 @@ function ListingCard({ listing: l, onAction, actionLabel, showStatus, onDelete }
       </div>
 
       <h3 style={{ fontSize: 17, fontWeight: 700, color: '#fff', margin: '0 0 4px' }}>{gradeName}</h3>
-      {l.sellerName && <p style={{ fontSize: 11, color: 'rgba(255,255,255,0.3)', margin: '0 0 8px' }}>
-        by {l.sellerName}
-        {(l.sellerCompletedDeals > 0 || l.sellerAvgRating > 0) && (
-          <span style={{ fontSize: 10, color: 'rgba(255,255,255,0.4)', marginLeft: 8 }}>
-            {l.sellerCompletedDeals > 0 && `${l.sellerCompletedDeals} deals`}
-            {l.sellerAvgRating > 0 && ` \u00b7 \u2605 ${l.sellerAvgRating.toFixed(1)}`}
+      {l.sellerName && (
+        <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 6, margin: '0 0 8px' }}>
+          <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.45)' }}>
+            by <strong style={{ color: '#fff' }}>{l.sellerName}</strong>
           </span>
-        )}
-        {l.sellerKycVerified && (
-          <span style={{ fontSize: 9, color: '#34d399', marginLeft: 6 }}>{'\u2713'} KYC</span>
-        )}
-      </p>}
+          {l.sellerKycVerified && (
+            <span style={{ fontSize: 9, fontWeight: 700, padding: '2px 7px', borderRadius: 4,
+              background: 'rgba(52,211,153,0.15)', color: '#34d399', border: '1px solid rgba(52,211,153,0.3)',
+              letterSpacing: '0.04em', display: 'inline-flex', alignItems: 'center', gap: 3 }}>
+              <ShieldCheck size={9} /> VERIFIED
+            </span>
+          )}
+          {l.sellerCompletedDeals > 0 && (
+            <span style={{ fontSize: 9, color: 'rgba(255,255,255,0.5)' }}>
+              {l.sellerCompletedDeals} prior deal{l.sellerCompletedDeals === 1 ? '' : 's'}
+            </span>
+          )}
+          {l.sellerAvgRating > 0 && (
+            <span style={{ fontSize: 9, color: '#fbbf24' }}>\u2605 {l.sellerAvgRating.toFixed(1)}</span>
+          )}
+        </div>
+      )}
 
       {/* Image thumbnails — click to open lightbox */}
       {l.imageUrls?.length > 0 && (
@@ -781,7 +806,7 @@ function DealDetailPanel({ dealId, user, onClose }) {
     <Overlay onClose={onClose}>
       <div onClick={e => e.stopPropagation()} style={{ width: '100%', maxWidth: 480, maxHeight: '90vh',
         borderRadius: 16, background: '#0D1420', border: '1px solid rgba(207,181,59,0.2)',
-        display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+        display: 'flex', flexDirection: 'column', overflowY: 'auto', overflowX: 'hidden' }}>
 
         {/* Header */}
         <div style={{ padding: '16px 20px', borderBottom: '1px solid rgba(255,255,255,0.06)',
@@ -803,8 +828,8 @@ function DealDetailPanel({ dealId, user, onClose }) {
           </div>
         </div>
 
-        {/* Offer history (chat-like) */}
-        <div style={{ flex: 1, overflowY: 'auto', padding: '16px 20px' }}>
+        {/* Offer history (chat-like) — natural height, parent panel scrolls */}
+        <div style={{ padding: '16px 20px' }}>
           {deal.offers?.map((offer, i) => {
             const isMine = offer.fromUserId === user?.id;
             return (
@@ -844,8 +869,8 @@ function DealDetailPanel({ dealId, user, onClose }) {
           )}
         </div>
 
-        {/* Action bar */}
-        <div style={{ padding: '16px 20px', borderTop: '1px solid rgba(255,255,255,0.06)', overflowY: 'auto', maxHeight: '55vh' }}>
+        {/* Action bar — non-scrolling. Outer panel (90vh) handles overflow. */}
+        <div style={{ padding: '16px 20px', borderTop: '1px solid rgba(255,255,255,0.06)' }}>
           {error && <p style={{ color: '#f87171', fontSize: 12, marginBottom: 8 }}>{error}</p>}
 
           {/* Negotiation actions */}
@@ -987,18 +1012,35 @@ function DealDetailPanel({ dealId, user, onClose }) {
                   </a>
                 )}
               </div>
-              {deal.status === 'connected' && (
+              {/* Show fraud-safety banner when completed by either side */}
+              {deal.status === 'completed' && (
+                <div style={{ background: 'rgba(251,191,36,0.06)', border: '1px solid rgba(251,191,36,0.2)',
+                  borderRadius: 10, padding: 12, marginBottom: 10 }}>
+                  <p style={{ fontSize: 12, fontWeight: 700, color: '#fbbf24', margin: '0 0 4px' }}>
+                    ⚠️ Marked complete — Did you actually receive the goods/payment?
+                  </p>
+                  <p style={{ fontSize: 11, color: 'rgba(255,255,255,0.55)', margin: 0, lineHeight: 1.5 }}>
+                    Either party can mark complete. If you didn't get what was promised,
+                    raise a dispute below within 48 hours and our admin will mediate.
+                  </p>
+                </div>
+              )}
+
+              {(deal.status === 'connected' || deal.status === 'completed') && (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                  <button onClick={() => handleAction('complete')} disabled={!!actionLoading}
-                    style={{ width: '100%', padding: '12px', borderRadius: 10, fontSize: 13, fontWeight: 700,
-                      background: 'rgba(34,197,94,0.15)', color: '#22c55e', border: '1px solid rgba(34,197,94,0.2)', cursor: 'pointer' }}>
-                    {actionLoading === 'complete' ? 'Completing…' : 'Mark Deal as Completed'}
-                  </button>
+                  {deal.status === 'connected' && (
+                    <button onClick={() => handleAction('complete')} disabled={!!actionLoading}
+                      style={{ width: '100%', padding: '12px', borderRadius: 10, fontSize: 13, fontWeight: 700,
+                        background: 'rgba(34,197,94,0.15)', color: '#22c55e', border: '1px solid rgba(34,197,94,0.2)', cursor: 'pointer' }}>
+                      {actionLoading === 'complete' ? 'Completing…' : 'Mark Deal as Completed'}
+                    </button>
+                  )}
                   {!showDispute ? (
                     <button onClick={() => setShowDispute(true)}
                       style={{ width: '100%', padding: '10px', borderRadius: 10, fontSize: 12, fontWeight: 600,
-                        background: 'transparent', color: '#f87171', border: '1px solid rgba(248,113,113,0.2)', cursor: 'pointer' }}>
-                      Report Issue / Raise Dispute
+                        background: deal.status === 'completed' ? 'rgba(248,113,113,0.12)' : 'transparent',
+                        color: '#f87171', border: '1px solid rgba(248,113,113,0.3)', cursor: 'pointer' }}>
+                      🚨 Report Issue / Raise Dispute
                     </button>
                   ) : (
                     <div style={{ background: 'rgba(248,113,113,0.06)', borderRadius: 10, padding: 14,
@@ -1129,11 +1171,21 @@ function DealDetailPanel({ dealId, user, onClose }) {
             </div>
           )}
 
-          {/* Cancelled/expired */}
+          {/* Cancelled / expired — show meaningful reason */}
           {['cancelled', 'expired'].includes(deal.status) && (
-            <p style={{ textAlign: 'center', fontSize: 13, color: '#6b7280', padding: '8px 0' }}>
-              This deal has been {deal.status}.
-            </p>
+            <div style={{ background: 'rgba(107,114,128,0.08)', borderRadius: 10,
+              border: '1px solid rgba(107,114,128,0.2)', padding: 14, textAlign: 'center' }}>
+              <p style={{ fontSize: 13, fontWeight: 700, color: 'rgba(255,255,255,0.65)', margin: '0 0 4px' }}>
+                Deal {deal.status}
+              </p>
+              <p style={{ fontSize: 11, color: 'rgba(255,255,255,0.4)', margin: 0, lineHeight: 1.5 }}>
+                {deal.cancellationReason === 'listing_sold_to_another_buyer'
+                  ? 'The seller accepted another buyer\'s offer. Browse other listings to find a similar match.'
+                  : deal.status === 'expired'
+                  ? 'No activity for 7+ days — auto-expired.'
+                  : 'This negotiation was cancelled.'}
+              </p>
+            </div>
           )}
         </div>
       </div>

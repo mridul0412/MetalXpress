@@ -698,6 +698,25 @@ router.post('/deals/:id/pay', authMiddleware, async (req, res) => {
       data: { isActive: false },
     }).catch(() => {});
 
+    // Auto-cancel ALL OTHER active deals on this listing (sibling buyers).
+    // Their negotiating/agreed offers become 'cancelled' with a system reason
+    // so frontend can show "Seller accepted another offer" instead of stuck negotiating.
+    const cancelled = await prisma.deal.updateMany({
+      where: {
+        listingId: deal.listingId,
+        id: { not: deal.id },
+        status: { in: ['negotiating', 'agreed'] },
+      },
+      data: {
+        status: 'cancelled',
+        cancelledAt: new Date(),
+        cancellationReason: 'listing_sold_to_another_buyer',
+      },
+    }).catch(err => { console.warn('sibling cancel failed (non-fatal):', err.message); return { count: 0 }; });
+    if (cancelled.count > 0) {
+      console.log(`[/pay] auto-cancelled ${cancelled.count} sibling deals on listing ${deal.listingId}`);
+    }
+
     res.json({
       success: true,
       deal: updated,

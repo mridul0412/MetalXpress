@@ -221,6 +221,8 @@ model Deal {
   expiresAt     DateTime?
   paidAt        DateTime?
   completedAt   DateTime?
+  cancelledAt        DateTime?
+  cancellationReason String?       // e.g. 'listing_sold_to_another_buyer', 'seller_rejected'
   disputeReason    String?   @db.Text
   disputedAt       DateTime?
   disputeEvidence  String?   @db.Text
