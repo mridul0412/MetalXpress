@@ -211,6 +211,15 @@ export default function Marketplace() {
             ))}
           </div>
         </div>
+        {/* Subtle trust micro-strip — full version on landing page */}
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 14, marginTop: 10,
+          fontSize: 11, color: 'rgba(255,255,255,0.4)' }}>
+          {['PAN-verified', '0% commission', 'Dispute mediation', 'Ratings + history', 'All India deals'].map(t => (
+            <span key={t} style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+              <span style={{ color: '#34d399' }}>✓</span> {t}
+            </span>
+          ))}
+        </div>
       </div>
 
       {tab === 'browse' && <BrowseTab listings={listings} loading={loading}
@@ -274,21 +283,6 @@ function BrowseTab({ listings, loading, filterMetal, setFilterMetal, filterCity,
 
   return (
     <div>
-      {/* Trust strip — why BhavX > WhatsApp */}
-      <div style={{ background: 'linear-gradient(90deg, rgba(207,181,59,0.08), rgba(52,211,153,0.06))',
-        border: '1px solid rgba(207,181,59,0.2)', borderRadius: 12, padding: '14px 18px', marginBottom: 20 }}>
-        <p style={{ fontSize: 12, fontWeight: 700, color: '#CFB53B', margin: '0 0 8px',
-          letterSpacing: '0.05em', textTransform: 'uppercase' }}>
-          🛡️ Why BhavX vs WhatsApp deals
-        </p>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: 10, fontSize: 11, color: 'rgba(255,255,255,0.65)' }}>
-          <div>✅ <strong style={{ color: '#fff' }}>PAN-verified traders</strong> — no fake accounts</div>
-          <div>✅ <strong style={{ color: '#fff' }}>0% commission</strong> for Founding Traders</div>
-          <div>✅ <strong style={{ color: '#fff' }}>Dispute resolution</strong> — admin mediates</div>
-          <div>✅ <strong style={{ color: '#fff' }}>Deal history + ratings</strong> — see who you're dealing with</div>
-        </div>
-      </div>
-
       {/* Filters */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: 12, marginBottom: 20 }}>
         <div style={{ position: 'relative' }}>

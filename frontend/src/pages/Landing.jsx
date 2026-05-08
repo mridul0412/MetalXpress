@@ -270,6 +270,42 @@ export default function Landing() {
         </div>
       </section>
 
+      {/* ── 3.5 WHY BhavX vs WhatsApp ── */}
+      <section style={{ padding: '48px 16px', background: 'rgba(207,181,59,0.04)',
+        borderTop: '1px solid rgba(207,181,59,0.12)', borderBottom: '1px solid rgba(207,181,59,0.12)' }}>
+        <div style={{ maxWidth: 920, margin: '0 auto' }}>
+          <p style={{ textAlign: 'center', fontSize: 11, color: 'rgba(207,181,59,0.7)',
+            letterSpacing: '0.12em', textTransform: 'uppercase', marginBottom: 10 }}>
+            🛡️ Why BhavX
+          </p>
+          <h2 style={{ textAlign: 'center', fontSize: 26, fontWeight: 700, color: '#fff', margin: '0 0 32px' }}>
+            Better than <span style={{ color: '#34d399' }}>WhatsApp</span> deals — by design
+          </h2>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 14 }}>
+            {[
+              { title: 'PAN-verified traders', desc: 'No fake accounts, no anonymous strangers. Every counterparty is identity-checked.' },
+              { title: '0% commission', desc: 'Free for Founding Traders — limited time. We earn only when you scale.' },
+              { title: 'Dispute resolution', desc: 'Goods didn\'t arrive? Payment held back? Our admin mediates and resolves.' },
+              { title: 'Deal history + ratings', desc: 'See past deals + ★ ratings before you commit. No more blind trust.' },
+              { title: 'Best deals from all over India', desc: 'Delhi, Mumbai, Ahmedabad, Ludhiana, Chennai and more — all on your phone, not scattered across 12 WhatsApp groups.' },
+            ].map(({ title, desc }) => (
+              <div key={title} style={{
+                padding: '20px 18px', borderRadius: 14,
+                background: 'rgba(13,20,32,0.7)', border: '1px solid rgba(52,211,153,0.18)',
+              }}>
+                <p style={{ fontSize: 14, fontWeight: 700, color: '#fff', margin: '0 0 6px',
+                  display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <span style={{ color: '#34d399', flexShrink: 0 }}>✓</span> {title}
+                </p>
+                <p style={{ fontSize: 12, color: 'rgba(255,255,255,0.5)', margin: 0, lineHeight: 1.6 }}>
+                  {desc}
+                </p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
       {/* ── 4. WHAT YOU GET ── */}
       <section style={{ padding: '64px 16px', background: 'rgba(13,20,32,0.5)' }}>
         <div style={{ maxWidth: 920, margin: '0 auto' }}>
