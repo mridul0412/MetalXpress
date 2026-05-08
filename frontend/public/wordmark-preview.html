@@ -3,196 +3,259 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>BhavX Wordmark Preview</title>
+<title>BhavX Wordmark — Bold Proposals</title>
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;800;900&family=DM+Serif+Display:wght@400&family=Inter:wght@600;700;800;900&family=Manrope:wght@700;800;900&family=Space+Grotesk:wght@500;600;700&family=JetBrains+Mono:wght@600;700;800&display=swap" rel="stylesheet" />
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;800;900&family=DM+Serif+Display:wght@400&family=Inter:wght@600;700;800;900&family=Manrope:wght@700;800;900&family=Space+Grotesk:wght@500;600;700&family=JetBrains+Mono:wght@600;700;800&family=Noto+Serif+Devanagari:wght@700;900&family=Cormorant+Garamond:wght@600;700;800&family=Big+Shoulders+Display:wght@700;800;900&display=swap" rel="stylesheet" />
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body { background: #080E1A; color: #fff; font-family: Inter, -apple-system, sans-serif; padding: 40px 24px; min-height: 100vh; }
-  body::before { content: ''; position: fixed; inset: 0; background: radial-gradient(circle at 50% 0%, rgba(207,181,59,0.05), transparent 60%); pointer-events: none; }
+  body::before { content: ''; position: fixed; inset: 0; background: radial-gradient(circle at 50% 0%, rgba(207,181,59,0.06), transparent 60%); pointer-events: none; }
   .container { max-width: 1100px; margin: 0 auto; position: relative; z-index: 1; }
-  h1 { font-size: 24px; font-weight: 700; margin-bottom: 8px; letter-spacing: -0.02em; }
-  .subtitle { color: rgba(255,255,255,0.5); font-size: 14px; margin-bottom: 40px; line-height: 1.6; }
-  .proposal { background: rgba(13,20,32,0.7); border: 1px solid rgba(255,255,255,0.07); border-radius: 16px; padding: 28px 28px 24px; margin-bottom: 24px; backdrop-filter: blur(10px); }
-  .proposal:hover { border-color: rgba(207,181,59,0.3); }
-  .proposal-header { display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 24px; padding-bottom: 16px; border-bottom: 1px solid rgba(255,255,255,0.05); flex-wrap: wrap; gap: 8px; }
-  .proposal-name { font-size: 16px; font-weight: 700; color: #CFB53B; letter-spacing: 0.05em; text-transform: uppercase; }
-  .proposal-vibe { font-size: 11px; color: rgba(255,255,255,0.4); font-style: italic; }
+  h1 { font-size: 28px; font-weight: 800; margin-bottom: 8px; letter-spacing: -0.02em; }
+  h1 .accent { color: #CFB53B; }
+  .subtitle { color: rgba(255,255,255,0.55); font-size: 14px; margin-bottom: 28px; line-height: 1.6; max-width: 720px; }
+  .section-divider { display: flex; align-items: center; gap: 12px; margin: 48px 0 20px; }
+  .section-divider::before, .section-divider::after { content: ''; flex: 1; height: 1px; background: linear-gradient(90deg, transparent, rgba(207,181,59,0.3), transparent); }
+  .section-divider span { font-size: 11px; font-weight: 800; color: #CFB53B; letter-spacing: 0.2em; text-transform: uppercase; white-space: nowrap; }
 
-  /* Size showcases */
-  .sizes { display: grid; gap: 18px; grid-template-columns: 1fr; }
-  .size-row { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 16px 18px; background: rgba(8,14,26,0.7); border: 1px solid rgba(255,255,255,0.04); border-radius: 10px; flex-wrap: wrap; }
+  .proposal { background: rgba(13,20,32,0.7); border: 1px solid rgba(255,255,255,0.07); border-radius: 16px; padding: 28px 28px 24px; margin-bottom: 24px; backdrop-filter: blur(10px); transition: border-color 0.2s; }
+  .proposal:hover { border-color: rgba(207,181,59,0.3); }
+  .proposal.bold { border: 1px solid rgba(207,181,59,0.25); background: linear-gradient(135deg, rgba(207,181,59,0.04), rgba(13,20,32,0.7)); }
+  .proposal-header { display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 8px; flex-wrap: wrap; gap: 8px; }
+  .proposal-name { font-size: 16px; font-weight: 800; color: #CFB53B; letter-spacing: 0.05em; text-transform: uppercase; }
+  .proposal-vibe { font-size: 11px; color: rgba(255,255,255,0.4); font-style: italic; }
+  .proposal-pitch { font-size: 13px; color: rgba(255,255,255,0.6); line-height: 1.6; padding: 12px 14px; background: rgba(8,14,26,0.6); border-left: 2px solid #CFB53B; border-radius: 0 8px 8px 0; margin-bottom: 20px; }
+
+  .sizes { display: grid; gap: 14px; grid-template-columns: 1fr; }
+  .size-row { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 16px 18px; background: rgba(8,14,26,0.7); border: 1px solid rgba(255,255,255,0.04); border-radius: 10px; flex-wrap: wrap; min-height: 56px; }
   .size-label { font-size: 10px; color: rgba(255,255,255,0.35); text-transform: uppercase; letter-spacing: 0.1em; min-width: 110px; }
 
-  /* ── Proposal A: Bhav·X (Anchor Dot) ── */
-  .a-hero { font-family: 'Playfair Display', serif; font-weight: 800; font-size: 64px; letter-spacing: -0.02em; line-height: 1; }
-  .a-hero .b { color: #fff; }
-  .a-hero .dot { color: #CFB53B; margin: 0 0.05em; font-weight: 900; }
-  .a-hero .x { color: #CFB53B; font-weight: 900; font-size: 1.1em; }
-  .a-nav { font-family: 'Playfair Display', serif; font-weight: 800; font-size: 22px; letter-spacing: -0.01em; }
-  .a-nav .b { color: #fff; }
-  .a-nav .dot { color: #CFB53B; margin: 0 0.05em; }
-  .a-nav .x { color: #CFB53B; font-size: 1.1em; }
-  .a-foot { font-family: 'Playfair Display', serif; font-weight: 800; font-size: 14px; }
-  .a-foot .b { color: #fff; }
-  .a-foot .dot { color: #CFB53B; margin: 0 0.04em; }
-  .a-foot .x { color: #CFB53B; font-size: 1.1em; }
+  /* ╔══════════════════════════════════════════════════════════════════════
+     ║   F — DEVANAGARI FUSION (भhavX)
+     ╚══════════════════════════════════════════════════════════════════════ */
+  .f-hero { font-family: 'Playfair Display', serif; font-weight: 800; font-size: 70px; line-height: 1; display: inline-flex; align-items: baseline; }
+  .f-hero .bha { font-family: 'Noto Serif Devanagari', serif; font-weight: 900; color: #CFB53B; font-size: 1em; line-height: 1; }
+  .f-hero .latin { color: #fff; font-style: italic; margin-left: 0.02em; }
+  .f-hero .x { color: #CFB53B; font-weight: 900; font-style: normal; font-size: 1.15em; margin-left: 0.04em; }
+  .f-nav { font-family: 'Playfair Display', serif; font-weight: 800; font-size: 24px; line-height: 1; display: inline-flex; align-items: baseline; }
+  .f-nav .bha { font-family: 'Noto Serif Devanagari', serif; font-weight: 900; color: #CFB53B; }
+  .f-nav .latin { color: #fff; font-style: italic; }
+  .f-nav .x { color: #CFB53B; font-weight: 900; font-size: 1.15em; margin-left: 0.04em; }
+  .f-foot { font-family: 'Playfair Display', serif; font-weight: 800; font-size: 16px; display: inline-flex; align-items: baseline; }
+  .f-foot .bha { font-family: 'Noto Serif Devanagari', serif; font-weight: 900; color: #CFB53B; }
+  .f-foot .latin { color: #fff; font-style: italic; }
+  .f-foot .x { color: #CFB53B; font-weight: 900; font-size: 1.15em; margin-left: 0.03em; }
 
-  /* ── Proposal B: Bhav | X (Ticker Bar) ── */
-  .b-hero { font-family: 'Inter', sans-serif; font-weight: 800; font-size: 60px; letter-spacing: -0.04em; line-height: 1; display: inline-flex; align-items: center; gap: 18px; }
-  .b-hero .b { color: #fff; }
-  .b-hero .bar { width: 3px; height: 0.8em; background: linear-gradient(180deg, transparent, #CFB53B 25%, #CFB53B 75%, transparent); border-radius: 2px; }
-  .b-hero .x { color: #CFB53B; font-weight: 800; }
-  .b-nav { font-family: 'Inter', sans-serif; font-weight: 800; font-size: 22px; letter-spacing: -0.02em; display: inline-flex; align-items: center; gap: 8px; }
-  .b-nav .b { color: #fff; }
-  .b-nav .bar { width: 2px; height: 0.85em; background: #CFB53B; border-radius: 1px; }
-  .b-nav .x { color: #CFB53B; }
-  .b-foot { font-family: 'Inter', sans-serif; font-weight: 800; font-size: 14px; display: inline-flex; align-items: center; gap: 6px; }
-  .b-foot .b { color: #fff; }
-  .b-foot .bar { width: 1.5px; height: 0.85em; background: #CFB53B; }
-  .b-foot .x { color: #CFB53B; }
+  /* ╔══════════════════════════════════════════════════════════════════════
+     ║   G — METAL-STAMPED (looks struck into gold sheet)
+     ╚══════════════════════════════════════════════════════════════════════ */
+  .g-hero { font-family: 'Big Shoulders Display', sans-serif; font-weight: 900; font-size: 92px; letter-spacing: 0.02em; line-height: 0.85; line-height: 1; display: inline-flex; align-items: baseline; gap: 4px;
+    background: linear-gradient(180deg, #FFE9A8 0%, #CFB53B 38%, #8C7820 75%, #5A4F18 100%);
+    -webkit-background-clip: text; background-clip: text; color: transparent;
+    text-shadow: 0 1px 0 rgba(255,233,168,0.18), 0 -1px 0 rgba(0,0,0,0.4), 0 0 24px rgba(207,181,59,0.2);
+    filter: drop-shadow(0 6px 12px rgba(0,0,0,0.5)); }
+  .g-hero .x { font-size: 1.18em; }
+  .g-nav { font-family: 'Big Shoulders Display', sans-serif; font-weight: 900; font-size: 28px; letter-spacing: 0.02em; line-height: 1; display: inline-flex; align-items: baseline; gap: 2px;
+    background: linear-gradient(180deg, #FFE9A8 0%, #CFB53B 40%, #8C7820 80%);
+    -webkit-background-clip: text; background-clip: text; color: transparent;
+    text-shadow: 0 1px 0 rgba(0,0,0,0.4); }
+  .g-nav .x { font-size: 1.18em; }
+  .g-foot { font-family: 'Big Shoulders Display', sans-serif; font-weight: 900; font-size: 18px; letter-spacing: 0.02em; display: inline-flex; align-items: baseline; gap: 1px;
+    background: linear-gradient(180deg, #FFE9A8, #CFB53B 50%, #8C7820);
+    -webkit-background-clip: text; background-clip: text; color: transparent; }
+  .g-foot .x { font-size: 1.18em; }
 
-  /* ── Proposal C: BHAV + Hero X ── */
-  .c-hero { font-family: 'Space Grotesk', sans-serif; font-weight: 700; letter-spacing: 0.04em; line-height: 1; display: inline-flex; align-items: center; gap: 18px; }
-  .c-hero .b { color: #fff; font-size: 56px; }
-  .c-hero .x { color: #CFB53B; font-size: 80px; font-weight: 700; transform: skewX(-6deg); display: inline-block; line-height: 0.9; }
-  .c-nav { font-family: 'Space Grotesk', sans-serif; font-weight: 700; letter-spacing: 0.05em; display: inline-flex; align-items: center; gap: 8px; }
-  .c-nav .b { color: #fff; font-size: 19px; }
-  .c-nav .x { color: #CFB53B; font-size: 26px; transform: skewX(-6deg); display: inline-block; line-height: 0.9; }
-  .c-foot { font-family: 'Space Grotesk', sans-serif; font-weight: 700; letter-spacing: 0.06em; display: inline-flex; align-items: center; gap: 5px; }
-  .c-foot .b { color: #fff; font-size: 13px; }
-  .c-foot .x { color: #CFB53B; font-size: 18px; transform: skewX(-6deg); display: inline-block; line-height: 0.9; }
+  /* ╔══════════════════════════════════════════════════════════════════════
+     ║   H — LIVE TICKER (Bhav·X with pulsing market-open dot)
+     ╚══════════════════════════════════════════════════════════════════════ */
+  @keyframes pulse-live { 0%,100% { box-shadow: 0 0 0 0 rgba(52,211,153,0.7), 0 0 6px rgba(52,211,153,0.5); } 50% { box-shadow: 0 0 0 6px rgba(52,211,153,0), 0 0 12px rgba(52,211,153,0.7); } }
+  .h-hero { font-family: 'Inter', sans-serif; font-weight: 900; font-size: 64px; letter-spacing: -0.04em; line-height: 1; display: inline-flex; align-items: center; }
+  .h-hero .bhav { color: #fff; }
+  .h-hero .pulse { width: 14px; height: 14px; border-radius: 50%; background: #34d399; margin: 0 14px 0 12px; animation: pulse-live 1.8s ease-in-out infinite; flex-shrink: 0; }
+  .h-hero .x { color: #CFB53B; font-weight: 900; }
+  .h-hero .live { font-size: 9px; color: #34d399; letter-spacing: 0.2em; text-transform: uppercase; font-weight: 800; align-self: flex-end; margin-left: 8px; padding-bottom: 12px; }
+  .h-nav { font-family: 'Inter', sans-serif; font-weight: 900; font-size: 22px; letter-spacing: -0.02em; display: inline-flex; align-items: center; }
+  .h-nav .bhav { color: #fff; }
+  .h-nav .pulse { width: 7px; height: 7px; border-radius: 50%; background: #34d399; margin: 0 7px; animation: pulse-live 1.8s ease-in-out infinite; }
+  .h-nav .x { color: #CFB53B; }
+  .h-foot { font-family: 'Inter', sans-serif; font-weight: 900; font-size: 14px; display: inline-flex; align-items: center; }
+  .h-foot .bhav { color: #fff; }
+  .h-foot .pulse { width: 5px; height: 5px; border-radius: 50%; background: #34d399; margin: 0 5px; }
+  .h-foot .x { color: #CFB53B; }
 
-  /* ── Proposal D: Bhav + X-circle stamp ── */
-  .d-hero { font-family: 'DM Serif Display', serif; font-size: 60px; line-height: 1; display: inline-flex; align-items: center; gap: 14px; }
-  .d-hero .b { color: #fff; }
-  .d-hero .circle { width: 60px; height: 60px; border-radius: 50%; border: 2.5px solid #CFB53B; display: inline-flex; align-items: center; justify-content: center; color: #CFB53B; font-size: 38px; font-weight: 400; }
-  .d-nav { font-family: 'DM Serif Display', serif; font-size: 22px; display: inline-flex; align-items: center; gap: 6px; }
-  .d-nav .b { color: #fff; }
-  .d-nav .circle { width: 24px; height: 24px; border-radius: 50%; border: 1.5px solid #CFB53B; display: inline-flex; align-items: center; justify-content: center; color: #CFB53B; font-size: 14px; }
-  .d-foot { font-family: 'DM Serif Display', serif; font-size: 14px; display: inline-flex; align-items: center; gap: 4px; }
-  .d-foot .b { color: #fff; }
-  .d-foot .circle { width: 16px; height: 16px; border-radius: 50%; border: 1px solid #CFB53B; display: inline-flex; align-items: center; justify-content: center; color: #CFB53B; font-size: 10px; }
+  /* ╔══════════════════════════════════════════════════════════════════════
+     ║   I — CHART-X (X formed by ascending+descending price lines)
+     ╚══════════════════════════════════════════════════════════════════════ */
+  .i-hero { font-family: 'Manrope', sans-serif; font-weight: 800; font-size: 64px; letter-spacing: -0.03em; line-height: 1; display: inline-flex; align-items: center; gap: 8px; }
+  .i-hero .bhav { color: #fff; }
+  .i-hero .chart-x { width: 56px; height: 56px; flex-shrink: 0; }
+  .i-nav { font-family: 'Manrope', sans-serif; font-weight: 800; font-size: 22px; display: inline-flex; align-items: center; gap: 4px; }
+  .i-nav .bhav { color: #fff; }
+  .i-nav .chart-x { width: 22px; height: 22px; }
+  .i-foot { font-family: 'Manrope', sans-serif; font-weight: 800; font-size: 14px; display: inline-flex; align-items: center; gap: 3px; }
+  .i-foot .bhav { color: #fff; }
+  .i-foot .chart-x { width: 14px; height: 14px; }
 
-  /* ── Proposal E: Refined monospace (current evolved) ── */
-  .e-hero { font-family: 'JetBrains Mono', monospace; font-weight: 800; font-size: 60px; letter-spacing: -0.02em; line-height: 1; }
-  .e-hero .b { color: #fff; }
-  .e-hero .x { color: #CFB53B; font-weight: 800; font-size: 1.05em; margin-left: 0.04em; }
-  .e-nav { font-family: 'JetBrains Mono', monospace; font-weight: 800; font-size: 22px; letter-spacing: -0.02em; }
-  .e-nav .b { color: #fff; }
-  .e-nav .x { color: #CFB53B; font-size: 1.05em; margin-left: 0.03em; }
-  .e-foot { font-family: 'JetBrains Mono', monospace; font-weight: 800; font-size: 14px; }
-  .e-foot .b { color: #fff; }
-  .e-foot .x { color: #CFB53B; font-size: 1.05em; margin-left: 0.03em; }
+  /* SAFE OPTIONS (collapsed/de-emphasized) */
+  details summary { cursor: pointer; font-size: 13px; color: rgba(255,255,255,0.45); padding: 12px 16px; background: rgba(255,255,255,0.03); border-radius: 8px; user-select: none; }
+  details summary:hover { color: rgba(255,255,255,0.7); }
+  details[open] summary { color: #CFB53B; margin-bottom: 16px; }
+  .safe-grid { display: grid; gap: 14px; }
+  .safe-row { padding: 16px 18px; background: rgba(8,14,26,0.5); border: 1px solid rgba(255,255,255,0.04); border-radius: 10px; display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
+  .safe-name { font-size: 11px; color: rgba(255,255,255,0.4); letter-spacing: 0.05em; text-transform: uppercase; min-width: 220px; }
+  .a-mark { font-family: 'Playfair Display', serif; font-weight: 800; font-size: 28px; }
+  .a-mark .b { color: #fff; } .a-mark .dot { color: #CFB53B; margin: 0 0.05em; } .a-mark .x { color: #CFB53B; font-size: 1.1em; }
+  .b-mark { font-family: 'Inter', sans-serif; font-weight: 800; font-size: 28px; display: inline-flex; align-items: center; gap: 8px; }
+  .b-mark .b { color: #fff; } .b-mark .bar { width: 2px; height: 0.85em; background: #CFB53B; } .b-mark .x { color: #CFB53B; }
+  .c-mark { font-family: 'Space Grotesk', sans-serif; font-weight: 700; display: inline-flex; align-items: center; gap: 6px; }
+  .c-mark .b { color: #fff; font-size: 24px; letter-spacing: 0.05em; } .c-mark .x { color: #CFB53B; font-size: 34px; transform: skewX(-6deg); display: inline-block; line-height: 0.9; }
+  .d-mark { font-family: 'DM Serif Display', serif; font-size: 28px; display: inline-flex; align-items: center; gap: 6px; }
+  .d-mark .b { color: #fff; } .d-mark .circle { width: 30px; height: 30px; border-radius: 50%; border: 1.5px solid #CFB53B; display: inline-flex; align-items: center; justify-content: center; color: #CFB53B; font-size: 18px; }
+  .e-mark { font-family: 'JetBrains Mono', monospace; font-weight: 800; font-size: 26px; }
+  .e-mark .b { color: #fff; } .e-mark .x { color: #CFB53B; font-size: 1.05em; margin-left: 0.03em; }
 
-  .footer { margin-top: 60px; padding: 24px; background: rgba(207,181,59,0.04); border: 1px solid rgba(207,181,59,0.15); border-radius: 12px; text-align: center; font-size: 13px; color: rgba(255,255,255,0.5); line-height: 1.7; }
+  .footer { margin-top: 60px; padding: 24px; background: rgba(207,181,59,0.05); border: 1px solid rgba(207,181,59,0.2); border-radius: 12px; text-align: center; font-size: 13px; color: rgba(255,255,255,0.55); line-height: 1.7; }
   .footer strong { color: #CFB53B; }
 </style>
 </head>
 <body>
 <div class="container">
-  <h1>BhavX Wordmark — 5 Proposals</h1>
-  <p class="subtitle">All rendered on the actual app background (#080E1A) with real Google Fonts.<br />Each proposal shown at 3 sizes: Hero (60–80px), Navbar (~22px), Footer (~14px). Pick one — I'll roll it out everywhere.</p>
+  <h1>BhavX Wordmark — <span class="accent">Bold Proposals</span></h1>
+  <p class="subtitle">Earth-shattering options that lean into BhavX's actual moat: Indian metal trading. Each proposal has a thesis — not just a font swap. Original 5 generic fintech options preserved at the bottom for comparison.</p>
 
-  <!-- ─────────────────────────────────────────── A ─────────────────────────────────────────── -->
-  <div class="proposal">
+  <div class="section-divider"><span>🔥 The Bold Bets</span></div>
+
+  <!-- ═══════════════════════════════════ F · DEVANAGARI FUSION ═══════════════════════════════════ -->
+  <div class="proposal bold">
     <div class="proposal-header">
-      <span class="proposal-name">A · Bhav·X (Anchor Dot)</span>
-      <span class="proposal-vibe">Playfair Display · Financial Times meets Robinhood · stock-ticker convention</span>
+      <span class="proposal-name">F · भhavX (Devanagari Fusion)</span>
+      <span class="proposal-vibe">Noto Serif Devanagari + Playfair Italic — culturally rooted, instantly Indian</span>
+    </div>
+    <div class="proposal-pitch">
+      <strong>Thesis:</strong> "Bhav" comes from भाव (Hindi). Replace the Latin "B" with the actual Devanagari letter <strong>भ</strong>. No competitor in metal trading does this — it's a cultural moat. The भ has a distinctive top horizontal stroke that visually anchors the wordmark + signals "this is built for India" in 0.2 seconds. The Latin italics for "hav" creates a cross-script tension that's deliberately striking. Bloomberg / IndiaMART / OfBusiness can't do this — it locks in the Indian-trader identity that competitors can't copy.
     </div>
     <div class="sizes">
-      <div class="size-row"><span class="size-label">Hero (Landing)</span>
-        <span class="a-hero"><span class="b">Bhav</span><span class="dot">·</span><span class="x">X</span></span>
+      <div class="size-row"><span class="size-label">Hero</span>
+        <span class="f-hero"><span class="bha">भ</span><span class="latin">hav</span><span class="x">X</span></span>
       </div>
       <div class="size-row"><span class="size-label">Navbar</span>
-        <span class="a-nav"><span class="b">Bhav</span><span class="dot">·</span><span class="x">X</span></span>
+        <span class="f-nav"><span class="bha">भ</span><span class="latin">hav</span><span class="x">X</span></span>
       </div>
       <div class="size-row"><span class="size-label">Footer / Email</span>
-        <span class="a-foot"><span class="b">Bhav</span><span class="dot">·</span><span class="x">X</span></span>
+        <span class="f-foot"><span class="bha">भ</span><span class="latin">hav</span><span class="x">X</span></span>
       </div>
     </div>
   </div>
 
-  <!-- ─────────────────────────────────────────── B ─────────────────────────────────────────── -->
-  <div class="proposal">
+  <!-- ═══════════════════════════════════ G · METAL-STAMPED ═══════════════════════════════════ -->
+  <div class="proposal bold">
     <div class="proposal-header">
-      <span class="proposal-name">B · Bhav | X (Ticker Bar)</span>
-      <span class="proposal-vibe">Inter Bold · Stripe meets NSE ticker · clean fintech</span>
+      <span class="proposal-name">G · METAL-STAMPED (cast-in-bullion)</span>
+      <span class="proposal-vibe">Big Shoulders Display + multi-stop gold gradient + drop shadow</span>
+    </div>
+    <div class="proposal-pitch">
+      <strong>Thesis:</strong> The brand IS metal. Show it. Heavy industrial display typeface (Big Shoulders) with a 4-stop gold gradient (highlight → mid-gold → shadow → deep) that makes the letters look <em>cast or stamped from molten bullion</em>. Subtle drop shadow lifts it off the dark background. This is the typography equivalent of the camera-iris logo — geometric, weighty, metallic. Best for hero shots and pitch decks. Direct visual association: BhavX = real metal, real money, real weight.
     </div>
     <div class="sizes">
-      <div class="size-row"><span class="size-label">Hero (Landing)</span>
-        <span class="b-hero"><span class="b">Bhav</span><span class="bar"></span><span class="x">X</span></span>
+      <div class="size-row"><span class="size-label">Hero</span>
+        <span class="g-hero">Bhav<span class="x">X</span></span>
       </div>
       <div class="size-row"><span class="size-label">Navbar</span>
-        <span class="b-nav"><span class="b">Bhav</span><span class="bar"></span><span class="x">X</span></span>
+        <span class="g-nav">Bhav<span class="x">X</span></span>
       </div>
       <div class="size-row"><span class="size-label">Footer / Email</span>
-        <span class="b-foot"><span class="b">Bhav</span><span class="bar"></span><span class="x">X</span></span>
+        <span class="g-foot">Bhav<span class="x">X</span></span>
       </div>
     </div>
   </div>
 
-  <!-- ─────────────────────────────────────────── C ─────────────────────────────────────────── -->
-  <div class="proposal">
+  <!-- ═══════════════════════════════════ H · LIVE TICKER ═══════════════════════════════════ -->
+  <div class="proposal bold">
     <div class="proposal-header">
-      <span class="proposal-name">C · BHAV + Hero X (Maximum X Pop)</span>
-      <span class="proposal-vibe">Space Grotesk · Tesla / Spotify / X.com energy · oversized slanted X</span>
+      <span class="proposal-name">H · Bhav •• X (Live Market Pulse)</span>
+      <span class="proposal-vibe">Inter Black + animated green pulse dot — Bloomberg's "live" signal</span>
+    </div>
+    <div class="proposal-pitch">
+      <strong>Thesis:</strong> The wordmark is <em>functional, not decorative</em>. A pulsing green dot between "Bhav" and "X" signals MARKETS LIVE in real-time. When LME closes (Sat-Sun), dot dims and shows "MARKETS CLOSED" subtle label. Every page-load tells the trader "this is live data, not a screenshot." This is what Bloomberg Terminal nailed — the tiny live indicator. Memorable because it MOVES. Defensible because it's a live data product, not just a logo. Functional product positioning embedded in the brand mark itself.
     </div>
     <div class="sizes">
-      <div class="size-row"><span class="size-label">Hero (Landing)</span>
-        <span class="c-hero"><span class="b">BHAV</span><span class="x">X</span></span>
+      <div class="size-row"><span class="size-label">Hero (animated)</span>
+        <span class="h-hero"><span class="bhav">Bhav</span><span class="pulse"></span><span class="x">X</span><span class="live">LIVE</span></span>
       </div>
       <div class="size-row"><span class="size-label">Navbar</span>
-        <span class="c-nav"><span class="b">BHAV</span><span class="x">X</span></span>
+        <span class="h-nav"><span class="bhav">Bhav</span><span class="pulse"></span><span class="x">X</span></span>
       </div>
-      <div class="size-row"><span class="size-label">Footer / Email</span>
-        <span class="c-foot"><span class="b">BHAV</span><span class="x">X</span></span>
+      <div class="size-row"><span class="size-label">Footer / Email (static)</span>
+        <span class="h-foot"><span class="bhav">Bhav</span><span class="pulse"></span><span class="x">X</span></span>
       </div>
     </div>
   </div>
 
-  <!-- ─────────────────────────────────────────── D ─────────────────────────────────────────── -->
-  <div class="proposal">
+  <!-- ═══════════════════════════════════ I · CHART-X ═══════════════════════════════════ -->
+  <div class="proposal bold">
     <div class="proposal-header">
-      <span class="proposal-name">D · Bhav + X-Circle Stamp</span>
-      <span class="proposal-vibe">DM Serif Display · BBC / NYT certification mark · authority + premium</span>
+      <span class="proposal-name">I · Bhav⤩ (Chart-Line X)</span>
+      <span class="proposal-vibe">Manrope + custom SVG X = green-up + red-down crossing lines</span>
+    </div>
+    <div class="proposal-pitch">
+      <strong>Thesis:</strong> The "X" is replaced with two crossed price-chart lines — one ascending (green, "up") and one descending (red, "down"). The X glyph itself <em>becomes a price chart</em>. Instantly tells you what BhavX does: shows you which way prices are moving. Works as standalone favicon + social avatar (the X mark alone). Memorable because the X is no longer a letter — it's a tiny semantic chart. Pairs visually with the camera-iris logo's geometric blades.
     </div>
     <div class="sizes">
-      <div class="size-row"><span class="size-label">Hero (Landing)</span>
-        <span class="d-hero"><span class="b">Bhav</span><span class="circle">X</span></span>
+      <div class="size-row"><span class="size-label">Hero</span>
+        <span class="i-hero"><span class="bhav">Bhav</span>
+          <svg class="chart-x" viewBox="0 0 56 56" fill="none" stroke-width="6" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M 6 50 L 50 6" stroke="#34d399" />
+            <path d="M 6 6 L 50 50" stroke="#f87171" />
+          </svg>
+        </span>
       </div>
       <div class="size-row"><span class="size-label">Navbar</span>
-        <span class="d-nav"><span class="b">Bhav</span><span class="circle">X</span></span>
+        <span class="i-nav"><span class="bhav">Bhav</span>
+          <svg class="chart-x" viewBox="0 0 22 22" fill="none" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M 3 19 L 19 3" stroke="#34d399" />
+            <path d="M 3 3 L 19 19" stroke="#f87171" />
+          </svg>
+        </span>
       </div>
       <div class="size-row"><span class="size-label">Footer / Email</span>
-        <span class="d-foot"><span class="b">Bhav</span><span class="circle">X</span></span>
+        <span class="i-foot"><span class="bhav">Bhav</span>
+          <svg class="chart-x" viewBox="0 0 14 14" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M 2 12 L 12 2" stroke="#34d399" />
+            <path d="M 2 2 L 12 12" stroke="#f87171" />
+          </svg>
+        </span>
       </div>
     </div>
   </div>
 
-  <!-- ─────────────────────────────────────────── E ─────────────────────────────────────────── -->
-  <div class="proposal">
-    <div class="proposal-header">
-      <span class="proposal-name">E · BhavX (Refined Mono — current evolved)</span>
-      <span class="proposal-vibe">JetBrains Mono · GitHub / Vercel · keeps the developer-tool DNA</span>
+  <div class="section-divider"><span>↓ Original Safe Options (compared)</span></div>
+
+  <details>
+    <summary>Show original 5 generic fintech options (A–E)</summary>
+    <div class="safe-grid">
+      <div class="safe-row"><span class="safe-name">A · Playfair + gold dot</span>
+        <span class="a-mark"><span class="b">Bhav</span><span class="dot">·</span><span class="x">X</span></span>
+      </div>
+      <div class="safe-row"><span class="safe-name">B · Inter + gold ticker bar</span>
+        <span class="b-mark"><span class="b">Bhav</span><span class="bar"></span><span class="x">X</span></span>
+      </div>
+      <div class="safe-row"><span class="safe-name">C · Space Grotesk + slanted X</span>
+        <span class="c-mark"><span class="b">BHAV</span><span class="x">X</span></span>
+      </div>
+      <div class="safe-row"><span class="safe-name">D · DM Serif + circle stamp</span>
+        <span class="d-mark"><span class="b">Bhav</span><span class="circle">X</span></span>
+      </div>
+      <div class="safe-row"><span class="safe-name">E · JetBrains Mono refined</span>
+        <span class="e-mark"><span class="b">Bhav</span><span class="x">X</span></span>
+      </div>
     </div>
-    <div class="sizes">
-      <div class="size-row"><span class="size-label">Hero (Landing)</span>
-        <span class="e-hero"><span class="b">Bhav</span><span class="x">X</span></span>
-      </div>
-      <div class="size-row"><span class="size-label">Navbar</span>
-        <span class="e-nav"><span class="b">Bhav</span><span class="x">X</span></span>
-      </div>
-      <div class="size-row"><span class="size-label">Footer / Email</span>
-        <span class="e-foot"><span class="b">Bhav</span><span class="x">X</span></span>
-      </div>
-    </div>
-  </div>
+  </details>
 
   <div class="footer">
-    💬 Reply with <strong>A</strong>, <strong>B</strong>, <strong>C</strong>, <strong>D</strong>, or <strong>E</strong> — I'll roll it out across Navbar, Footer, favicon, email templates, and Landing page hero.<br />
-    Or want a hybrid? E.g. "A's font + C's oversized X" — happy to mix.
+    <p style="margin-bottom: 8px;"><strong>The bold proposals (F-I) lean into BhavX's defensible moats:</strong></p>
+    <p>F = cultural (Devanagari) · G = thematic (cast metal) · H = functional (live data) · I = semantic (chart in the X)</p>
+    <p style="margin-top: 14px;">Reply with <strong>F</strong>, <strong>G</strong>, <strong>H</strong>, or <strong>I</strong> — or hybrid like "<strong>F's भ + G's metal effect</strong>" — and I'll roll out everywhere.</p>
   </div>
 </div>
 </body>
