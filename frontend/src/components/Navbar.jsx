@@ -1,8 +1,9 @@
-import { Link, useLocation } from 'react-router-dom';
-import { Activity, Briefcase, Settings, BarChart3 } from 'lucide-react';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { Activity, Briefcase, Settings, BarChart3, User as UserIcon, Key, LogOut, ChevronDown, ShieldCheck } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import LMEStrip from './LMEStrip';
 import { BRAND } from '../config/brand';
+import { useState, useRef, useEffect } from 'react';
 
 // Alerts hidden from nav until FCM push notifications wired (Day 5 of sprint).
 // Route still works via direct URL — just not visible/discoverable yet.
@@ -15,7 +16,26 @@ const NAV_ITEMS = [
 
 export default function Navbar() {
   const location = useLocation();
+  const navigate = useNavigate();
   const { user, logout } = useAuth();
+  const [menuOpen, setMenuOpen] = useState(false);
+  const menuRef = useRef(null);
+
+  // Close dropdown on outside click
+  useEffect(() => {
+    if (!menuOpen) return;
+    const onDocClick = (e) => {
+      if (menuRef.current && !menuRef.current.contains(e.target)) setMenuOpen(false);
+    };
+    document.addEventListener('mousedown', onDocClick);
+    return () => document.removeEventListener('mousedown', onDocClick);
+  }, [menuOpen]);
+
+  // Close dropdown on route change
+  useEffect(() => { setMenuOpen(false); }, [location.pathname]);
+
+  const initials = (user?.name || user?.email || user?.phone || '?').slice(0, 2).toUpperCase();
+  const displayLabel = user?.name || user?.email || user?.phone || 'Account';
 
   return (
     <>
@@ -89,30 +109,113 @@ export default function Navbar() {
           {/* Auth */}
           <div className="flex items-center gap-2">
             {user ? (
-              <>
-                <Link
-                  to="/profile"
-                  className="hidden sm:block text-xs"
-                  style={{ color: '#CFB53B', textDecoration: 'none', cursor: 'pointer' }}
-                  onMouseEnter={e => e.currentTarget.style.textDecoration = 'underline'}
-                  onMouseLeave={e => e.currentTarget.style.textDecoration = 'none'}
+              <div ref={menuRef} style={{ position: 'relative' }}>
+                <button
+                  onClick={() => setMenuOpen(o => !o)}
+                  style={{
+                    display: 'flex', alignItems: 'center', gap: 8,
+                    padding: '5px 10px 5px 5px', borderRadius: 22, cursor: 'pointer',
+                    background: menuOpen ? 'rgba(207,181,59,0.12)' : 'rgba(255,255,255,0.04)',
+                    border: `1px solid ${menuOpen ? 'rgba(207,181,59,0.35)' : 'rgba(255,255,255,0.08)'}`,
+                    transition: 'all 0.15s',
+                  }}
+                  onMouseEnter={e => { if (!menuOpen) e.currentTarget.style.background = 'rgba(255,255,255,0.07)'; }}
+                  onMouseLeave={e => { if (!menuOpen) e.currentTarget.style.background = 'rgba(255,255,255,0.04)'; }}
                 >
-                  {user.name || user.email || user.phone}
-                </Link>
-                <button onClick={logout} style={{
-                  fontSize: '12px',
-                  padding: '5px 12px',
-                  borderRadius: '8px',
-                  fontWeight: 600,
-                  background: 'rgba(255,255,255,0.05)',
-                  border: '1px solid rgba(255,255,255,0.1)',
-                  color: 'rgba(255,255,255,0.45)',
-                  cursor: 'pointer',
-                  transition: 'all 0.15s',
-                }}>
-                  Logout
+                  {/* Avatar circle with initials */}
+                  <span style={{
+                    width: 26, height: 26, borderRadius: '50%',
+                    background: 'linear-gradient(135deg, #CFB53B, #A89028)',
+                    color: '#000', fontSize: 11, fontWeight: 800,
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    fontFamily: 'monospace',
+                  }}>
+                    {initials}
+                  </span>
+                  <span className="hidden sm:block" style={{
+                    fontSize: 12, fontWeight: 600, color: '#fff', maxWidth: 140,
+                    whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
+                  }}>
+                    {displayLabel}
+                  </span>
+                  <ChevronDown size={14} style={{
+                    color: 'rgba(255,255,255,0.4)',
+                    transform: menuOpen ? 'rotate(180deg)' : 'rotate(0)',
+                    transition: 'transform 0.15s',
+                  }} />
                 </button>
-              </>
+
+                {/* Dropdown panel */}
+                {menuOpen && (
+                  <div style={{
+                    position: 'absolute', top: 'calc(100% + 8px)', right: 0,
+                    minWidth: 240, borderRadius: 12, overflow: 'hidden',
+                    background: 'rgba(13,20,32,0.98)',
+                    border: '1px solid rgba(255,255,255,0.08)',
+                    boxShadow: '0 12px 32px rgba(0,0,0,0.45)',
+                    backdropFilter: 'blur(20px)',
+                    zIndex: 100,
+                  }}>
+                    {/* Header — name + email */}
+                    <div style={{ padding: '14px 16px', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
+                      <p style={{ margin: 0, fontSize: 13, fontWeight: 700, color: '#fff', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                        {user.name || 'Trader'}
+                      </p>
+                      <p style={{ margin: '2px 0 0', fontSize: 11, color: 'rgba(255,255,255,0.45)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                        {user.email || user.phone}
+                      </p>
+                      {user.kycVerified && (
+                        <p style={{ margin: '6px 0 0', fontSize: 10, color: '#34d399', display: 'flex', alignItems: 'center', gap: 4, fontWeight: 600 }}>
+                          <ShieldCheck size={11} /> Verified Trader
+                        </p>
+                      )}
+                    </div>
+
+                    {/* Menu items */}
+                    {[
+                      { icon: UserIcon, label: 'Profile & Settings', onClick: () => navigate('/profile') },
+                      { icon: Key,      label: 'Change Password',    onClick: () => navigate('/forgot-password') },
+                    ].map(({ icon: Icon, label, onClick }) => (
+                      <button
+                        key={label}
+                        onClick={() => { setMenuOpen(false); onClick(); }}
+                        style={{
+                          width: '100%', textAlign: 'left',
+                          display: 'flex', alignItems: 'center', gap: 12,
+                          padding: '11px 16px', fontSize: 13, fontWeight: 500,
+                          background: 'transparent', border: 'none', cursor: 'pointer',
+                          color: 'rgba(255,255,255,0.85)',
+                          transition: 'background 0.1s',
+                        }}
+                        onMouseEnter={e => e.currentTarget.style.background = 'rgba(207,181,59,0.06)'}
+                        onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
+                      >
+                        <Icon size={15} style={{ color: '#CFB53B', flexShrink: 0 }} />
+                        {label}
+                      </button>
+                    ))}
+
+                    {/* Divider + logout */}
+                    <div style={{ height: 1, background: 'rgba(255,255,255,0.06)' }} />
+                    <button
+                      onClick={() => { setMenuOpen(false); logout(); }}
+                      style={{
+                        width: '100%', textAlign: 'left',
+                        display: 'flex', alignItems: 'center', gap: 12,
+                        padding: '11px 16px', fontSize: 13, fontWeight: 500,
+                        background: 'transparent', border: 'none', cursor: 'pointer',
+                        color: '#f87171',
+                        transition: 'background 0.1s',
+                      }}
+                      onMouseEnter={e => e.currentTarget.style.background = 'rgba(248,113,113,0.08)'}
+                      onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
+                    >
+                      <LogOut size={15} style={{ flexShrink: 0 }} />
+                      Sign Out
+                    </button>
+                  </div>
+                )}
+              </div>
             ) : (
               <div className="flex items-center gap-2">
                 <Link to="/login" style={{

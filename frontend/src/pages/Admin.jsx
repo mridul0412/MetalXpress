@@ -369,6 +369,8 @@ function KycAdmin() {
   const [loading, setLoading] = useState(true);
   const [actionId, setActionId] = useState('');
   const [loadError, setLoadError] = useState('');
+  const [rejectingId, setRejectingId] = useState(null); // user ID currently being rejected (shows inline form)
+  const [rejectReason, setRejectReason] = useState('');
 
   const load = async () => {
     setLoading(true);
@@ -397,12 +399,21 @@ function KycAdmin() {
     }
   };
 
-  const handleReject = async (userId) => {
-    const reason = prompt('Rejection reason (visible to user, min 5 chars):');
-    if (!reason || reason.trim().length < 5) return;
+  const startReject = (userId) => {
+    setRejectingId(userId);
+    setRejectReason('');
+  };
+  const cancelReject = () => {
+    setRejectingId(null);
+    setRejectReason('');
+  };
+  const submitReject = async (userId) => {
+    if (rejectReason.trim().length < 5) return;
     setActionId(userId);
     try {
-      await rejectKyc(userId, reason.trim());
+      await rejectKyc(userId, rejectReason.trim());
+      setRejectingId(null);
+      setRejectReason('');
       await load();
     } catch (err) {
       alert(err.response?.data?.error || 'Rejection failed');
@@ -423,10 +434,16 @@ function KycAdmin() {
         <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.4)', margin: '0 0 8px' }}>
           Verify each PAN against the public NSDL database, then approve or reject.
         </p>
-        <a href="https://www.tin-nsdl.com/services/pan/pan-verification-online.html" target="_blank" rel="noopener noreferrer"
-          style={{ fontSize: 12, color: '#CFB53B', textDecoration: 'underline' }}>
-          🔗 Open NSDL PAN verification (new tab)
-        </a>
+        <div style={{ fontSize: 12, display: 'flex', flexWrap: 'wrap', gap: 14 }}>
+          <a href="https://eportal.incometax.gov.in/iec/foservices/#/pre-login/knowYourPAN" target="_blank" rel="noopener noreferrer"
+            style={{ color: '#CFB53B', textDecoration: 'underline' }}>
+            🔗 Income Tax PAN Verification (Know Your PAN)
+          </a>
+          <a href="https://www.protean-tinpan.com/services/pan/pan-index.html" target="_blank" rel="noopener noreferrer"
+            style={{ color: '#CFB53B', textDecoration: 'underline' }}>
+            🔗 Protean (NSDL) PAN Services
+          </a>
+        </div>
       </div>
 
       {loading ? <p style={{ color: 'rgba(255,255,255,0.3)' }}>Loading…</p>
@@ -442,22 +459,28 @@ function KycAdmin() {
         : <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
             {users.map(u => (
               <div key={u.id} style={{ background: cardBg, borderRadius: 14, padding: 20, border: '1px solid rgba(255,255,255,0.07)' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 12 }}>
-                  <div>
-                    <p style={{ fontSize: 16, fontWeight: 700, color: '#fff', margin: '0 0 4px' }}>{u.legalName || u.name || '(no name)'}</p>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 12, gap: 12 }}>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <p style={{ fontSize: 16, fontWeight: 700, color: '#fff', margin: '0 0 4px' }}>
+                      {u.name || '(no display name)'}
+                      {u.name && u.legalName && u.name !== u.legalName && (
+                        <span style={{ fontWeight: 400, color: 'rgba(255,255,255,0.4)', fontSize: 13 }}> · {u.legalName}</span>
+                      )}
+                    </p>
                     <p style={{ fontSize: 12, color: 'rgba(255,255,255,0.4)', margin: 0 }}>
                       {u.email} · {u.phone} · {u.city || '(no city)'}
                     </p>
                   </div>
-                  <span style={{ fontSize: 10, padding: '4px 8px', borderRadius: 99, background: 'rgba(99,102,241,0.15)', color: '#818cf8', fontWeight: 700, letterSpacing: '0.05em', textTransform: 'uppercase' }}>
-                    Submitted {u.kycSubmittedAt ? new Date(u.kycSubmittedAt).toLocaleString('en-IN', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }) : ''}
+                  <span style={{ fontSize: 10, padding: '4px 8px', borderRadius: 99, background: 'rgba(99,102,241,0.15)', color: '#818cf8', fontWeight: 700, letterSpacing: '0.05em', textTransform: 'uppercase', whiteSpace: 'nowrap' }}>
+                    {u.kycSubmittedAt ? new Date(u.kycSubmittedAt).toLocaleString('en-IN', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }) : ''}
                   </span>
                 </div>
 
                 <div style={{ background: 'rgba(255,255,255,0.03)', borderRadius: 10, padding: 14, marginBottom: 14 }}>
                   <div style={kvStyle}><span style={kvLabel}>PAN Number</span>
                     <span style={{ ...kvValue, color: '#CFB53B', letterSpacing: '0.1em' }}>{u.panNumber}</span></div>
-                  <div style={kvStyle}><span style={kvLabel}>Legal Name (as on PAN)</span><span style={kvValue}>{u.legalName}</span></div>
+                  <div style={kvStyle}><span style={kvLabel}>Display Name (signup)</span><span style={kvValue}>{u.name || '—'}</span></div>
+                  <div style={kvStyle}><span style={kvLabel}>Legal Name (PAN claim)</span><span style={{ ...kvValue, color: '#34d399' }}>{u.legalName}</span></div>
                   <div style={kvStyle}><span style={kvLabel}>Trade Category</span><span style={kvValue}>{u.tradeCategory}</span></div>
                   {u.businessName && <div style={kvStyle}><span style={kvLabel}>Business Name</span><span style={kvValue}>{u.businessName}</span></div>}
                   {u.gstNumber && <div style={kvStyle}><span style={kvLabel}>GSTIN</span><span style={kvValue}>{u.gstNumber}</span></div>}
@@ -470,18 +493,56 @@ function KycAdmin() {
                   ✓ Open NSDL link above → enter PAN <strong style={{ color: '#CFB53B' }}>{u.panNumber}</strong> → check if "{u.legalName}" matches the registered name.
                 </p>
 
-                <div style={{ display: 'flex', gap: 10 }}>
-                  <button onClick={() => handleApprove(u.id)} disabled={actionId === u.id}
-                    style={{ flex: 1, padding: '11px', borderRadius: 10, fontSize: 13, fontWeight: 700,
-                      background: '#34d399', color: '#000', border: 'none', cursor: 'pointer' }}>
-                    {actionId === u.id ? 'Working…' : '✓ Approve'}
-                  </button>
-                  <button onClick={() => handleReject(u.id)} disabled={actionId === u.id}
-                    style={{ flex: 1, padding: '11px', borderRadius: 10, fontSize: 13, fontWeight: 700,
-                      background: 'rgba(248,113,113,0.15)', color: '#f87171', border: '1px solid rgba(248,113,113,0.3)', cursor: 'pointer' }}>
-                    ✗ Reject
-                  </button>
-                </div>
+                {rejectingId === u.id ? (
+                  <div style={{ background: 'rgba(248,113,113,0.06)', border: '1px solid rgba(248,113,113,0.2)',
+                    borderRadius: 10, padding: 14 }}>
+                    <p style={{ fontSize: 12, fontWeight: 700, color: '#f87171', margin: '0 0 8px' }}>
+                      Reject reason — visible to user, min 5 chars
+                    </p>
+                    <textarea
+                      value={rejectReason}
+                      onChange={e => setRejectReason(e.target.value)}
+                      placeholder="e.g. PAN does not match the registered name on NSDL"
+                      style={{ width: '100%', minHeight: 70, padding: 10, borderRadius: 8,
+                        background: '#0a0f1a', border: '1px solid rgba(255,255,255,0.1)',
+                        color: '#fff', fontSize: 13, fontFamily: 'monospace', resize: 'vertical' }}
+                      autoFocus />
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 10 }}>
+                      <span style={{ fontSize: 11, color: rejectReason.trim().length >= 5 ? '#34d399' : 'rgba(255,255,255,0.4)' }}>
+                        {rejectReason.trim().length}/5 chars min
+                      </span>
+                      <div style={{ display: 'flex', gap: 8 }}>
+                        <button onClick={cancelReject} disabled={actionId === u.id}
+                          style={{ padding: '8px 14px', borderRadius: 8, fontSize: 12, fontWeight: 600,
+                            background: 'rgba(255,255,255,0.05)', color: 'rgba(255,255,255,0.6)',
+                            border: '1px solid rgba(255,255,255,0.1)', cursor: 'pointer' }}>
+                          Cancel
+                        </button>
+                        <button onClick={() => submitReject(u.id)}
+                          disabled={actionId === u.id || rejectReason.trim().length < 5}
+                          style={{ padding: '8px 14px', borderRadius: 8, fontSize: 12, fontWeight: 700,
+                            background: '#f87171', color: '#000', border: 'none',
+                            cursor: rejectReason.trim().length >= 5 ? 'pointer' : 'not-allowed',
+                            opacity: rejectReason.trim().length >= 5 ? 1 : 0.5 }}>
+                          {actionId === u.id ? 'Rejecting…' : 'Submit Rejection'}
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                  <div style={{ display: 'flex', gap: 10 }}>
+                    <button onClick={() => handleApprove(u.id)} disabled={actionId === u.id}
+                      style={{ flex: 1, padding: '11px', borderRadius: 10, fontSize: 13, fontWeight: 700,
+                        background: '#34d399', color: '#000', border: 'none', cursor: 'pointer' }}>
+                      {actionId === u.id ? 'Working…' : '✓ Approve'}
+                    </button>
+                    <button onClick={() => startReject(u.id)} disabled={actionId === u.id}
+                      style={{ flex: 1, padding: '11px', borderRadius: 10, fontSize: 13, fontWeight: 700,
+                        background: 'rgba(248,113,113,0.15)', color: '#f87171', border: '1px solid rgba(248,113,113,0.3)', cursor: 'pointer' }}>
+                      ✗ Reject
+                    </button>
+                  </div>
+                )}
               </div>
             ))}
           </div>
