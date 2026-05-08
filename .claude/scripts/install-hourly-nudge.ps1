@@ -19,12 +19,13 @@ $action = New-ScheduledTaskAction `
     -Argument "`"$scriptPath`" --notify-only" `
     -WorkingDirectory $workingDir
 
-# Trigger: every hour, between 9 AM and 10 PM (no buzzing at night)
-$trigger = New-ScheduledTaskTrigger `
-    -Once `
-    -At (Get-Date "09:00") `
+# Trigger: every day at 9 AM, then repeat hourly until 10 PM (no buzzing at night).
+# Note: -Daily fires daily forever; the embedded Repetition copies the once-trigger settings
+#       so each day's 9 AM fire spawns the 13-hour hourly chain. Without Daily, -Once dies after 1 day.
+$trigger = New-ScheduledTaskTrigger -Daily -At "09:00"
+$trigger.Repetition = (New-ScheduledTaskTrigger -Once -At "09:00" `
     -RepetitionInterval (New-TimeSpan -Hours 1) `
-    -RepetitionDuration (New-TimeSpan -Hours 13)
+    -RepetitionDuration (New-TimeSpan -Hours 13)).Repetition
 
 # Settings: don't run if on battery saver, allow on AC + battery, run hidden
 $settings = New-ScheduledTaskSettingsSet `

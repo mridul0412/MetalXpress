@@ -40,50 +40,51 @@
 - [x] **Run seed on prod DB** ✅ (2026-04-29)
 
 #### Pre-Beta Hardening (BLOCKERS for trader onboarding — must finish this week)
-- [ ] **Day 1 — Full E2E smoke test on bhavx.com** (Mridul does this manually, ~90 min):
-  - [ ] Signup flow with new email → email verification → click → verified
-  - [ ] Phone OTP via Firebase → real SMS arrives → OTP verified
-  - [ ] KYC submission with PAN format
-  - [ ] Post listing with 4+ photos (Cloudinary upload + render)
-  - [ ] Make offer → counter-offer → accept → commission calc
-  - [ ] Pay flow (dev-mode) → contact reveal → mark complete
-  - [ ] Raise dispute → admin sees in panel
-  - [ ] Forgot password → reset email → reset works
-  - [ ] Test on Chrome desktop + mobile Safari + mobile Chrome
-- [ ] **Day 2 — PWA setup** — `manifest.json` + service worker (`vite-plugin-pwa`) + install prompt. Traders "Add to Home Screen" → looks like a native Android app. Same bhavx.com URL.
-- [ ] **Day 2 — Razorpay-free "Subscribe" UX** — `PaywallModal` "Subscribe ₹299/mo" button → just sets user as Pro for free, shows "Welcome to Pro 🎉". Real Razorpay wired in Month 2.
-- [ ] **Day 3-4 — WhatsApp scraper** (REPLACES manual admin paste):
+- [x] **Day 1 — Full E2E smoke test on bhavx.com** ✅ (done 2026-05-08):
+  - [x] Signup flow with new email → email verification (laptop + iPhone Safari) → verified
+  - [x] Phone OTP via Firebase → real SMS arrives → OTP verified
+  - [x] Pre-check email + phone before sending OTP (saves Firebase quota)
+  - [x] KYC submission with PAN format + admin manual approval flow
+  - [x] Post listing with 4+ photos (Cloudinary upload working)
+  - [x] Make offer → counter → accept → pay (dev-mode) → contact reveal
+  - [x] Mark complete + raise dispute → admin sees in panel
+  - [x] Forgot password reset flow works (Resend email + dropdown "Change Password")
+  - [x] Tested on Chrome desktop + iPhone Safari
+- [ ] **Day 2 — PWA setup** — STILL PENDING. `manifest.json` + service worker + install prompt. 1 day work.
+- [x] **Day 2 — Razorpay-free "Subscribe" UX** ✅ (done 2026-05-06) — `POST /grant-pro` endpoint sets user.isPro=true; `PaywallModal` shows "Activate Free Pro" → "✓ You're Pro!" → auto-close. Strikethrough ₹299 + green FREE + "Founding Traders" badge throughout. 0% deal commission too (was 0.1%).
+- [ ] **Day 3-4 — WhatsApp scraper** STILL PENDING:
   - Library: `whatsapp-web.js` (Node.js, 14K stars, mature)
   - Dedicated phone number (₹150 SIM, NOT your personal WhatsApp)
   - Long-running service on Railway: listens to specific groups Mridul is in
   - Auto-parses incoming rate broadcasts via existing `rateParser.js`
   - POSTs to `/api/rates/save-parsed` → DB updated → frontend refreshes
-  - Risk: WhatsApp ban (low, mitigated by dedicated number — personal WhatsApp untouched)
-  - **Strategy alignment**: BhavX still positions as "WhatsApp chaos → clean app". Scraper is internal plumbing, traders never see it.
-- [ ] **Day 5 — Firebase Cloud Messaging (FCM) for in-app alerts**:
-  - Frontend: request notification permission on login → save FCM token to `User.fcmToken`
-  - Backend: cron checks alerts every 5 min → fires push via Firebase Admin SDK
-  - Cost: **₹0** (FCM is in Firebase always-free tier, no usage limits, no credit card)
-  - Replaces: SMS via MSG91 (which would require DLT + paid)
-  - Test: alerts page must work end-to-end (set threshold → cross threshold → push received)
-- [ ] **Day 6 — NSDL/Surepass PAN verification** (real KYC, not just regex):
-  - Wire Surepass API (₹3-5/check, dev-friendly wrapper around NSDL)
-  - On KYC submit: call API with PAN + Legal Name → if matched, set `kycVerified: true`
-  - 100 users = ₹300-500 lifetime cost. Negligible.
-  - Verified badge actually means something now.
-- [ ] **Day 7 — "Verified Trader" badge UI throughout**:
-  - Green ✓ badge on listing cards in Browse tab
-  - "Verified Filter" toggle in Browse
-  - Profile page: prominent "Verified ✓" with hover tooltip ("PAN-verified by NSDL")
-  - "Founding Trader" gold badge for the 20 alpha users (separate from KYC)
-- [ ] **Founding 20 free Pro setup** — add 20 trader emails to `PRO_EMAILS` env var as they sign up
-- [ ] **PostHog analytics** — free tier, track signup → first listing → first offer funnel
+- [ ] **Day 5 — Firebase Cloud Messaging (FCM) for in-app alerts** — STILL PENDING. Cost: ₹0. Alerts page hidden from nav until this lands.
+- [~] **Day 6 — Surepass PAN verification** — Surepass form submitted 2026-05-07, awaiting their email with API token. Manual admin KYC approval flow ✅ live as interim (Admin panel "KYC Review" tab; admin approves with NSDL sanity check; 4-state user banner: verified/pending/rejected/not-submitted).
+- [x] **Day 7 — "Verified Trader" badge UI throughout** ✅ (done 2026-05-08):
+  - Bold green pill with ShieldCheck icon on listing cards (replaces tiny gray text)
+  - Profile page 4-state KYC banner
+  - Verified Trader badge in Navbar profile dropdown
+  - Trust banner on Landing ("Why BhavX vs WhatsApp", 5 cards)
+  - Subtle ✓ checkmark strip below Marketplace header
+  - Image-first listing card overhaul + hover lift + clickable
+  - Owner preview-as-buyer modal on My Listings
+- [ ] **Founding 20 free Pro setup** — to do as traders sign up Week 2
+- [ ] **PostHog analytics** — STILL PENDING
 
 #### Marketing prep (Camera-free)
-- [ ] **LinkedIn profile polish** — text-only updates, no photos/videos required. Cover image with bhavx.com link.
-- [ ] **First LinkedIn post** — "Built bhavx.com to fix WhatsApp metal rate chaos. Here's why." 200-400 words, text only.
+- [ ] **LinkedIn profile polish** — STILL PENDING
+- [ ] **First LinkedIn post** — "Built bhavx.com to fix WhatsApp metal rate chaos." 200-400 words, text only.
 - [ ] **One-pager PDF for physical visits** — bhavx.com QR code + 5 bullet points + Mridul's WhatsApp number
 - [ ] **NO** Instagram, NO YouTube, NO mass SMS this month
+
+#### EXTRAS shipped during Week 1 (not originally scheduled but valuable)
+- [x] **api.bhavx.com custom domain** ✅ (done 2026-05-03) — kills Railway DNS resolution issues forever
+- [x] **Frontend resilience** ✅ (done 2026-05-03) — LMEStrip retry, Home loadLme retry, never-overwrite-good-data guards
+- [x] **5 marketplace bug fixes** ✅ (done 2026-05-08) — double scroll, sibling deals auto-cancel when sold, 48h dispute window, listing card UI overhaul, owner preview
+- [x] **Profile dropdown menu** ✅ (done 2026-05-07) — proper avatar+name+menu replacing bare hyperlink
+- [x] **Admin DB-wipe endpoint** ✅ (done 2026-05-07)
+- [x] **Backend KYC validation hardening** ✅ (done 2026-05-08) — legal name format check
+- [x] **Removed Marketplace Activity vanity chart** ✅ (done 2026-05-06) — was making platform look small
 
 ### Week 2: Beta Recruitment (Camera-free outreach — Founding 20)
 **Goal**: 20 traders signed up, posting real listings, having real conversations.

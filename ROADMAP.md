@@ -30,11 +30,11 @@
 **Sequence**: Smoke test (Day 1) → PWA + Razorpay-free UX (Day 2) → WhatsApp scraper (Day 3-4) → FCM (Day 5) → PAN verification (Day 6) → Verified badge UI (Day 7)
 
 ### Day 1 — Smoke Test (Mridul, manual, ~90 min)
-- [ ] **Full E2E smoke test on bhavx.com** — signup, email verify, phone OTP, KYC, listing post (Cloudinary), offer/counter/accept, pay flow, dispute, forgot password. Test on Chrome desktop + mobile Safari + mobile Chrome.
+- [x] **Full E2E smoke test on bhavx.com** ✅ (done 2026-05-08) — Validated signup with pre-check (email + phone), email verification (laptop + iPhone Safari), phone OTP via Firebase, KYC submit + admin approval, listing post with Cloudinary upload, make offer + counter + accept + pay (dev-mode) → contact reveal, mark complete + dispute. Forgot password validated end-to-end via dropdown "Change Password" link. Tested on Chrome desktop + iPhone Safari.
 
 ### Day 2 — PWA + Free Pro UX
 - [ ] **PWA setup** — `vite-plugin-pwa` + `manifest.json` + service worker + install prompt component. Files: `frontend/public/manifest.json`, `frontend/public/icon-192.png`, `frontend/public/icon-512.png`, `frontend/vite.config.js` plugin entry, `frontend/src/components/PWAInstallPrompt.jsx`. Result: bhavx.com installable on Android home screen, looks identical to native app.
-- [ ] **Razorpay-free "Subscribe" UX** — `frontend/src/components/PaywallModal.jsx` "Subscribe ₹299/mo" button → calls new `POST /api/auth/grant-pro` endpoint that sets user.plan = 'pro' for free → toast "Welcome to Pro 🎉". Backend: `backend/src/routes/auth.js` adds `/grant-pro` endpoint (later replaced by Razorpay webhook in Month 2).
+- [x] **Razorpay-free "Subscribe" UX** ✅ (done 2026-05-06) — `PaywallModal` "Activate Free Pro" button calls `POST /api/auth/grant-pro` → sets `user.isPro=true` in DB → modal shows "✓ You're Pro!" then auto-closes. Schema: User got `isPro` + `proGrantedAt` fields. `/subscription` checks DB flag first, then PRO_EMAILS env var. Strikethrough ₹299/month + green "FREE" + "Founding Traders" badge throughout PaywallModal, Landing pricing card, Marketplace ProGate, Analytics ProGate. 0% deal commission everywhere too — strikethrough 0.1% with "Free for Founding Traders".
 
 ### Day 3-4 — WhatsApp Scraper (REPLACES manual admin paste)
 - [ ] **WhatsApp scraper service** using `whatsapp-web.js`:
@@ -58,26 +58,44 @@
   - `backend/src/services/alertService.js` — cron every 5 min, query alerts, compare to current rates, fire push for matches
 - [ ] **Cost**: ₹0. FCM is in Firebase always-free tier. No credit card, no usage caps for normal scale.
 - [ ] **Test**: alerts page → set threshold → cross threshold → notification arrives on phone.
+- [x] **Alerts page hidden from Navbar** ✅ (done 2026-05-06) — interim until FCM wired so users don't see broken feature; route still works at /alerts via direct URL.
 
 ### Day 6 — Real KYC via Surepass PAN Verification
-- [ ] **Surepass account** at surepass.io (₹3-5 per PAN check, dev-friendly NSDL wrapper)
+- [~] **Surepass account** — form submitted at surepass.io 2026-05-07, awaiting their sales team to email API token (B2B onboarding, not self-serve as expected). Workaround in place: manual admin KYC approval flow (below).
 - [ ] **Backend wiring** in `backend/src/routes/auth.js` PATCH `/profile`:
   - Before setting `kycVerified: true`, call Surepass `/pan/verify` with `panNumber + legalName`
   - On match: set `kycVerified: true`
   - On mismatch: return 422 with helpful error
-- [ ] **Cost**: 100 users × ₹3 = ₹300 lifetime. Negligible.
-- [ ] **Result**: "Verified Trader" badge actually means something.
+- [x] **Manual admin KYC approval flow** ✅ (done 2026-05-07) — interim while Surepass token arrives:
+  - Schema: User got `kycSubmittedAt`, `kycApprovedAt`, `kycApprovedBy`, `kycRejectionReason`
+  - User submits PAN+Name+Trade Category → status: kycSubmittedAt set, kycVerified still false
+  - Admin panel "KYC Review" tab lists pending submissions with display name vs legal name diff highlighting
+  - Admin approves → kycVerified=true, OR rejects with inline reason form (no popup)
+  - User profile shows 4-state banner (verified / pending review / rejected / not submitted)
+  - Removed misleading "verify on NSDL" link — no free public PAN+name API exists. Honest workflow with manual sanity checks (name plausibility, category fit, account age) until Surepass arrives.
+- [x] **Backend KYC validation hardening** ✅ (done 2026-05-08) — Legal name validation (length 2-100, letters/spaces/dots/hyphens only, no digits). Frontend mirror with red hint. Prevents garbage like "1" or "A" from saving.
 
 ### Day 7 — Verified Badge UI Throughout
-- [ ] **Listing cards in Browse tab** — green ✓ badge next to seller name when `seller.kycVerified`
-- [ ] **"Verified Only" filter toggle** in Browse tab
-- [ ] **Profile page** — prominent "Verified ✓" with hover tooltip "PAN-verified via NSDL"
+- [x] **Listing cards in Browse tab** ✅ (done 2026-05-08) — Bold green pill badge with ShieldCheck icon next to seller name when `seller.kycVerified`. Plus prior-deal count + ★ rating displayed prominently when present.
+- [x] **Listing card UI overhaul** ✅ (done 2026-05-08) — Image-first redesign: hero image (168px) at top with overlays for metal badge, verified badge, image count, and price (bottom-left). Card clickable as a whole → opens Make Offer modal. Hover lift + gold border tint.
+- [x] **Profile page** ✅ (done 2026-05-07) — Prominent "Identity Verified ✓" green banner with 4-state handling. Plus "Verified Trader" badge in Navbar profile dropdown.
+- [x] **Trust banner — moved to Landing page** ✅ (done 2026-05-08) — "Why BhavX vs WhatsApp" 5-card section with ✓ PAN-verified · 0% commission · Dispute resolution · Deal history+ratings · Best deals from all over India. Marketplace gets a subtle one-line checkmark strip below header.
+- [x] **Owner preview-as-buyer** ✅ (done 2026-05-08) — `ListingPreviewModal` shows full buyer-facing view (image carousel + price + badges + description) when owner clicks "👁 Preview" on My Listings.
 - [ ] **"Founding Trader" gold badge** — separate from KYC, shown for 20 alpha users (gold color, crown emoji 👑)
 - [ ] **Schema**: add `User.isFoundingTrader Boolean @default(false)` — set manually in DB for the 20
 
 ### Founding 20 Setup
 - [ ] Add 20 trader emails to `PRO_EMAILS` env var as they sign up (instant Pro access)
 - [ ] PostHog analytics — frontend snippet, track signup → first listing → first offer funnel
+
+### EXTRAS shipped during Week 1 sprint (not originally scheduled)
+- [x] **Pre-check email + phone before sending OTP** ✅ (done 2026-05-06) — `/check-email` + `/check-phone` endpoints; signup runs both in parallel before Firebase OTP; instant "try logging in" message; saves Firebase SMS quota.
+- [x] **api.bhavx.com custom domain** ✅ (done 2026-05-03) — kills DNS resolution issues with the Railway-generated subdomain. CNAME via Hostinger → `hpte7zx4.up.railway.app`. Vercel `VITE_API_URL` switched.
+- [x] **Frontend resilience** ✅ (done 2026-05-03) — LMEStrip retry with exponential backoff + 5-min refresh; Home.loadLme retries on initial fail; strict empty-content guard; never overwrite good data with empty response.
+- [x] **5 marketplace bug fixes** ✅ (done 2026-05-08): double scroll on deal panel, sibling deals stuck negotiating after listing sold (auto-cancel with reason), 48h dispute window post-completion, listing card UI overhaul, owner preview-as-buyer.
+- [x] **Profile dropdown menu** ✅ (done 2026-05-07) — Avatar circle + name + chevron → menu with Profile / Change Password / Sign Out. Replaced bare username link.
+- [x] **Admin DB-wipe endpoint** ✅ (done 2026-05-07) — `POST /admin-wipe-test-users` with FK-safe cascade order, NULL-email orphan handling. Replaces fragile temp-start-script trick.
+- [x] **Removed Marketplace Activity vanity chart from Analytics** ✅ (done 2026-05-06) — was making platform look small with 5-10 listings. Reinstate later as Liquidity Index when 100+ listings exist.
 
 ---
 
