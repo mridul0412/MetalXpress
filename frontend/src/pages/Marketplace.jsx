@@ -447,8 +447,8 @@ function Lightbox({ items, startIndex, onClose }) {
   );
 }
 
-/* ── Listing Card ─────────────────────────────────────────────────── */
-function ListingCard({ listing: l, onAction, actionLabel, showStatus, onDelete }) {
+/* ── Listing Card (image-first, clickable) ────────────────────────── */
+function ListingCard({ listing: l, onAction, actionLabel, showStatus, onDelete, onPreview }) {
   const metalName = l.metal?.name || 'Metal';
   const gradeName = l.grade?.name || metalName;
   const priceStr = l.price ? `₹${fmt(l.price)}` : 'Negotiate';
@@ -458,39 +458,85 @@ function ListingCard({ listing: l, onAction, actionLabel, showStatus, onDelete }
 
   const toSrc = (url) => url.startsWith('/uploads/') ? `${BACKEND}${url}` : url;
   const isVideo = (url) => /\.(mp4|mov|webm)$/i.test(url);
+  const heroImage = l.imageUrls?.find(u => !isVideo(u));
+  const extraCount = (l.imageUrls?.length || 0) - 1;
+
+  const handleCardClick = (e) => {
+    if (e.target.closest('button, a')) return; // ignore clicks on nested buttons
+    if (onAction) onAction();
+    else if (onPreview) onPreview();
+  };
 
   const [cardHovered, setCardHovered] = useState(false);
   return (
     <>
     <div
+      onClick={handleCardClick}
       onMouseEnter={() => setCardHovered(true)}
       onMouseLeave={() => setCardHovered(false)}
       style={{
-        background: '#0D1420', borderRadius: 14, padding: 18, display: 'flex', flexDirection: 'column',
-        border: `1px solid ${cardHovered ? 'rgba(255,255,255,0.13)' : 'rgba(255,255,255,0.07)'}`,
-        boxShadow: cardHovered ? '0 8px 32px rgba(0,0,0,0.4), 0 2px 8px rgba(0,0,0,0.3)' : '0 2px 12px rgba(0,0,0,0.25)',
-        transform: cardHovered ? 'translateY(-2px)' : 'none',
-        transition: 'all 0.18s ease',
+        background: '#0D1420', borderRadius: 14, display: 'flex', flexDirection: 'column',
+        border: `1px solid ${cardHovered ? 'rgba(207,181,59,0.3)' : 'rgba(255,255,255,0.07)'}`,
+        boxShadow: cardHovered ? '0 12px 40px rgba(0,0,0,0.5), 0 0 0 1px rgba(207,181,59,0.15)' : '0 2px 12px rgba(0,0,0,0.25)',
+        transform: cardHovered ? 'translateY(-3px)' : 'none',
+        transition: 'all 0.2s ease',
+        cursor: (onAction || onPreview) ? 'pointer' : 'default',
+        overflow: 'hidden',
       }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 8 }}>
-        <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', alignItems: 'center' }}>
-          <span style={{ fontSize: 10, fontWeight: 700, padding: '2px 8px', borderRadius: 6,
-            background: 'rgba(207,181,59,0.15)', color: '#CFB53B', textTransform: 'uppercase' }}>{metalName}</span>
-          {l.status === 'verified' && <span style={{ fontSize: 10, fontWeight: 700, padding: '2px 8px',
-            borderRadius: 6, background: 'rgba(52,211,153,0.15)', color: '#34d399',
-            display: 'flex', alignItems: 'center', gap: 3 }}><ShieldCheck size={10} /> VERIFIED</span>}
-          {showStatus && l.status === 'pending' && <span style={{ fontSize: 10, fontWeight: 700, padding: '2px 8px',
-            borderRadius: 6, background: 'rgba(207,181,59,0.15)', color: '#CFB53B' }}>Pending Review</span>}
-          {showStatus && l.status === 'rejected' && <span style={{ fontSize: 10, fontWeight: 700, padding: '2px 8px',
-            borderRadius: 6, background: 'rgba(248,113,113,0.15)', color: '#f87171' }}>Rejected</span>}
+      {/* Hero image / placeholder */}
+      <div onClick={(e) => { if (heroImage) { e.stopPropagation(); setLightboxIdx(0); } }}
+        style={{ position: 'relative', height: 168, background: heroImage ? '#000' : '#0a0f1a',
+          borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
+        {heroImage ? (
+          <img src={toSrc(heroImage)} alt={gradeName}
+            style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block', cursor: 'zoom-in' }} />
+        ) : (
+          <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'rgba(255,255,255,0.15)' }}>
+            <Package size={48} />
+          </div>
+        )}
+        {/* Top-left badges overlay */}
+        <div style={{ position: 'absolute', top: 12, left: 12, display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+          <span style={{ fontSize: 10, fontWeight: 800, padding: '4px 10px', borderRadius: 6,
+            background: 'rgba(207,181,59,0.95)', color: '#000', textTransform: 'uppercase', letterSpacing: '0.05em',
+            boxShadow: '0 2px 8px rgba(0,0,0,0.4)' }}>{metalName}</span>
+          {l.status === 'verified' && (
+            <span style={{ fontSize: 10, fontWeight: 700, padding: '4px 10px', borderRadius: 6,
+              background: 'rgba(52,211,153,0.95)', color: '#000',
+              display: 'flex', alignItems: 'center', gap: 3, boxShadow: '0 2px 8px rgba(0,0,0,0.4)' }}>
+              <ShieldCheck size={11} /> VERIFIED
+            </span>
+          )}
+          {showStatus && l.status === 'pending' && (
+            <span style={{ fontSize: 10, fontWeight: 700, padding: '4px 10px', borderRadius: 6,
+              background: 'rgba(251,191,36,0.95)', color: '#000', boxShadow: '0 2px 8px rgba(0,0,0,0.4)' }}>
+              Pending Review
+            </span>
+          )}
+          {showStatus && l.status === 'rejected' && (
+            <span style={{ fontSize: 10, fontWeight: 700, padding: '4px 10px', borderRadius: 6,
+              background: 'rgba(248,113,113,0.95)', color: '#fff', boxShadow: '0 2px 8px rgba(0,0,0,0.4)' }}>
+              Rejected
+            </span>
+          )}
         </div>
-        <div style={{ textAlign: 'right' }}>
-          <span style={{ fontSize: 20, fontWeight: 700, color: '#fff' }}>{priceStr}</span>
-          {l.price && <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.3)', marginLeft: 4 }}>per kg</span>}
+        {extraCount > 0 && (
+          <span style={{ position: 'absolute', bottom: 12, right: 12, fontSize: 11, fontWeight: 700,
+            padding: '4px 10px', borderRadius: 6, background: 'rgba(0,0,0,0.7)', color: '#fff',
+            display: 'flex', alignItems: 'center', gap: 4, backdropFilter: 'blur(6px)' }}>
+            <ImageIcon size={11} /> +{extraCount}
+          </span>
+        )}
+        <div style={{ position: 'absolute', bottom: 12, left: 12, padding: '6px 12px', borderRadius: 8,
+          background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(6px)' }}>
+          <span style={{ fontSize: 18, fontWeight: 800, color: '#fff', fontFamily: 'monospace' }}>{priceStr}</span>
+          {l.price && <span style={{ fontSize: 10, color: 'rgba(255,255,255,0.6)', marginLeft: 4 }}>/kg</span>}
         </div>
       </div>
 
-      <h3 style={{ fontSize: 17, fontWeight: 700, color: '#fff', margin: '0 0 4px' }}>{gradeName}</h3>
+      {/* Body — padded container */}
+      <div style={{ padding: 16, display: 'flex', flexDirection: 'column', flex: 1 }}>
+        <h3 style={{ fontSize: 17, fontWeight: 700, color: '#fff', margin: '0 0 4px' }}>{gradeName}</h3>
       {l.sellerName && (
         <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 6, margin: '0 0 8px' }}>
           <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.45)' }}>
@@ -509,45 +555,12 @@ function ListingCard({ listing: l, onAction, actionLabel, showStatus, onDelete }
             </span>
           )}
           {l.sellerAvgRating > 0 && (
-            <span style={{ fontSize: 9, color: '#fbbf24' }}>\u2605 {l.sellerAvgRating.toFixed(1)}</span>
+            <span style={{ fontSize: 9, color: '#fbbf24' }}>★ {l.sellerAvgRating.toFixed(1)}</span>
           )}
         </div>
       )}
 
-      {/* Image thumbnails — click to open lightbox */}
-      {l.imageUrls?.length > 0 && (
-        <div style={{ display: 'flex', gap: 6, marginBottom: 10, overflowX: 'auto' }}>
-          {l.imageUrls.slice(0, 4).map((url, i) => {
-            const src = toSrc(url);
-            const isLast = i === 3 && l.imageUrls.length > 4;
-            return (
-              <div key={i} onClick={() => setLightboxIdx(i)}
-                style={{ position: 'relative', width: 72, height: 72, flexShrink: 0, cursor: 'pointer', borderRadius: 8, overflow: 'hidden',
-                  border: '1px solid rgba(255,255,255,0.1)' }}>
-                {isVideo(url)
-                  ? <div style={{ width: '100%', height: '100%', background: '#111', display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column', gap: 2 }}>
-                      <Play size={20} color="#CFB53B" />
-                      <span style={{ fontSize: 9, color: 'rgba(255,255,255,0.4)' }}>VIDEO</span>
-                    </div>
-                  : <img src={src} alt={`${gradeName} ${i + 1}`}
-                      style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
-                }
-                {/* Zoom icon on hover overlay */}
-                <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0)', display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  transition: 'background 0.15s' }}
-                  onMouseEnter={e => e.currentTarget.style.background = 'rgba(0,0,0,0.35)'}
-                  onMouseLeave={e => e.currentTarget.style.background = 'rgba(0,0,0,0)'}>
-                  {isLast
-                    ? <span style={{ fontSize: 13, fontWeight: 700, color: '#fff' }}>+{l.imageUrls.length - 4}</span>
-                    : <ZoomIn size={16} color="rgba(255,255,255,0.8)" style={{ opacity: 0 }}
-                        className="zoom-icon" />
-                  }
-                </div>
-              </div>
-            );
-          })}
-        </div>
-      )}
+      {/* Image thumbnail strip removed — hero image at top now handles primary preview */}
 
       {l.description && <p style={{ fontSize: 12, color: 'rgba(255,255,255,0.5)', margin: '0 0 10px', lineHeight: 1.5 }}>
         {l.description.length > 100 ? l.description.slice(0, 100) + '…' : l.description}</p>}
@@ -579,6 +592,7 @@ function ListingCard({ listing: l, onAction, actionLabel, showStatus, onDelete }
             }}>{actionLabel || 'View'} <ArrowRight size={14} /></button>}
         </div>
       </div>
+      </div>{/* close padded body */}
     </div>
     {lightboxIdx !== null && (
       <Lightbox items={l.imageUrls} startIndex={lightboxIdx} onClose={() => setLightboxIdx(null)} />
@@ -1228,7 +1242,7 @@ function RatingModal({ dealId, counterpartyName, onClose, onSubmit }) {
             <span key={s} onClick={() => setScore(s)} style={{
               fontSize: 32, cursor: 'pointer', color: s <= score ? '#CFB53B' : 'rgba(255,255,255,0.15)',
               transition: 'color 0.2s'
-            }}>{'\u2605'}</span>
+            }}>{'★'}</span>
           ))}
         </div>
         <p style={{ textAlign: 'center', fontSize: 12, color: 'rgba(255,255,255,0.4)', marginBottom: 16 }}>
@@ -1317,6 +1331,7 @@ function MyDealsTab({ deals, user, onRefresh, onViewDeal }) {
 /* ── My Listings Tab ──────────────────────────────────────────────── */
 function MyListingsTab({ listings, onRefresh, onBrowseRefresh, deals = [] }) {
   const [deleting, setDeleting] = useState(null);
+  const [previewListing, setPreviewListing] = useState(null); // listing being previewed-as-buyer
 
   // Build map of listing → most-relevant deal status.
   // Priority: completed/connected/paid (sold) > agreed > negotiating.
@@ -1398,14 +1413,137 @@ function MyListingsTab({ listings, onRefresh, onBrowseRefresh, deals = [] }) {
                 {fmt(l.qty)} kg · {l.location} {l.price ? `· ₹${fmt(l.price)}/kg` : '· Negotiable'}
               </p>
             </div>
-            <button onClick={() => handleDelete(l.id)} disabled={deleting === l.id}
-              style={{ padding: '8px', borderRadius: 8, background: 'transparent',
-                border: '1px solid rgba(248,113,113,0.2)', color: '#f87171', cursor: 'pointer' }}>
-              <Trash2 size={14} />
-            </button>
+            <div style={{ display: 'flex', gap: 8 }}>
+              <button onClick={() => setPreviewListing(l)}
+                title="Preview how buyers see your listing"
+                style={{ padding: '8px 12px', borderRadius: 8, background: 'transparent',
+                  border: '1px solid rgba(207,181,59,0.3)', color: '#CFB53B', cursor: 'pointer',
+                  fontSize: 11, fontWeight: 600, display: 'flex', alignItems: 'center', gap: 4 }}>
+                👁 Preview
+              </button>
+              <button onClick={() => handleDelete(l.id)} disabled={deleting === l.id}
+                title="Remove listing"
+                style={{ padding: '8px', borderRadius: 8, background: 'transparent',
+                  border: '1px solid rgba(248,113,113,0.2)', color: '#f87171', cursor: 'pointer' }}>
+                <Trash2 size={14} />
+              </button>
+            </div>
           </div>
         </div>
       ))}
+      {previewListing && (
+        <ListingPreviewModal listing={previewListing} onClose={() => setPreviewListing(null)} />
+      )}
+    </div>
+  );
+}
+
+/* ── Listing Preview Modal (owner sees what buyers see) ───────────── */
+function ListingPreviewModal({ listing: l, onClose }) {
+  const metalName = l.metal?.name || 'Metal';
+  const gradeName = l.grade?.name || metalName;
+  const priceStr = l.price ? `₹${fmt(l.price)}` : 'Negotiable';
+  const totalVal = l.price && l.qty ? l.price * l.qty : null;
+  const BACKEND = import.meta.env.VITE_API_URL?.replace('/api', '') || '';
+  const toSrc = (url) => url?.startsWith('/uploads/') ? `${BACKEND}${url}` : url;
+  const isVideo = (url) => /\.(mp4|mov|webm)$/i.test(url || '');
+  const images = l.imageUrls || (l.images ? (typeof l.images === 'string' ? JSON.parse(l.images) : l.images) : []);
+  const heroImage = images.find(u => !isVideo(u));
+  const [activeIdx, setActiveIdx] = useState(0);
+
+  return (
+    <div onClick={onClose} style={{ position: 'fixed', inset: 0, zIndex: 1000,
+      background: 'rgba(0,0,0,0.75)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }}>
+      <div onClick={e => e.stopPropagation()} style={{ width: '100%', maxWidth: 520, maxHeight: '92vh',
+        borderRadius: 16, background: '#0D1420', border: '1px solid rgba(207,181,59,0.2)',
+        overflowY: 'auto', overflowX: 'hidden' }}>
+        {/* Preview banner */}
+        <div style={{ background: 'rgba(207,181,59,0.12)', borderBottom: '1px solid rgba(207,181,59,0.25)',
+          padding: '10px 16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <p style={{ fontSize: 11, fontWeight: 700, color: '#CFB53B', margin: 0, letterSpacing: '0.05em', textTransform: 'uppercase' }}>
+            👁 Preview as Buyer
+          </p>
+          <button onClick={onClose} style={{ background: 'none', border: 'none', color: '#CFB53B', cursor: 'pointer' }}>
+            <X size={18} />
+          </button>
+        </div>
+
+        {/* Hero image carousel */}
+        <div style={{ position: 'relative', height: 240, background: '#000' }}>
+          {images.length > 0 ? (
+            isVideo(images[activeIdx]) ? (
+              <video src={toSrc(images[activeIdx])} controls
+                style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
+            ) : (
+              <img src={toSrc(images[activeIdx] || heroImage)} alt={gradeName}
+                style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+            )
+          ) : (
+            <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'rgba(255,255,255,0.15)' }}>
+              <Package size={64} />
+            </div>
+          )}
+          {images.length > 1 && (
+            <div style={{ position: 'absolute', bottom: 12, left: '50%', transform: 'translateX(-50%)',
+              display: 'flex', gap: 6 }}>
+              {images.map((_, i) => (
+                <button key={i} onClick={() => setActiveIdx(i)}
+                  style={{ width: 8, height: 8, borderRadius: '50%', border: 'none', cursor: 'pointer',
+                    background: activeIdx === i ? '#CFB53B' : 'rgba(255,255,255,0.4)' }} />
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* Body */}
+        <div style={{ padding: 20 }}>
+          <div style={{ display: 'flex', gap: 8, marginBottom: 12, flexWrap: 'wrap' }}>
+            <span style={{ fontSize: 11, fontWeight: 700, padding: '4px 10px', borderRadius: 6,
+              background: 'rgba(207,181,59,0.15)', color: '#CFB53B', textTransform: 'uppercase' }}>{metalName}</span>
+            {l.status === 'verified' && (
+              <span style={{ fontSize: 11, fontWeight: 700, padding: '4px 10px', borderRadius: 6,
+                background: 'rgba(52,211,153,0.15)', color: '#34d399',
+                display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+                <ShieldCheck size={11} /> VERIFIED
+              </span>
+            )}
+          </div>
+          <h2 style={{ fontSize: 22, fontWeight: 700, color: '#fff', margin: '0 0 8px' }}>{gradeName}</h2>
+          <div style={{ display: 'flex', alignItems: 'baseline', gap: 8, marginBottom: 16 }}>
+            <span style={{ fontSize: 28, fontWeight: 800, color: '#CFB53B', fontFamily: 'monospace' }}>{priceStr}</span>
+            {l.price && <span style={{ fontSize: 13, color: 'rgba(255,255,255,0.4)' }}>per kg</span>}
+          </div>
+          <div style={{ display: 'flex', gap: 16, fontSize: 13, color: 'rgba(255,255,255,0.55)', marginBottom: 16, flexWrap: 'wrap' }}>
+            <span style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+              <Weight size={14} /> {fmt(l.qty)} {l.unit || 'kg'}
+            </span>
+            <span style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+              <MapPin size={14} /> {l.location}
+            </span>
+          </div>
+          {totalVal && (
+            <p style={{ fontSize: 12, color: 'rgba(255,255,255,0.45)', margin: '0 0 16px' }}>
+              Total deal value: <strong style={{ color: '#fff' }}>₹{fmt(totalVal)}</strong>
+            </p>
+          )}
+          {l.description && (
+            <div style={{ background: 'rgba(255,255,255,0.03)', borderRadius: 8, padding: 12, marginBottom: 16 }}>
+              <p style={{ fontSize: 11, fontWeight: 700, color: 'rgba(255,255,255,0.4)', margin: '0 0 6px',
+                letterSpacing: '0.05em', textTransform: 'uppercase' }}>Description</p>
+              <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.7)', margin: 0, lineHeight: 1.6, whiteSpace: 'pre-wrap' }}>
+                {l.description}
+              </p>
+            </div>
+          )}
+          <div style={{ background: 'rgba(207,181,59,0.06)', border: '1px solid rgba(207,181,59,0.2)',
+            borderRadius: 8, padding: 12 }}>
+            <p style={{ fontSize: 11, color: 'rgba(255,255,255,0.55)', margin: 0, lineHeight: 1.5 }}>
+              ℹ️ This is how buyers see your listing. They'd see a "Make Offer" button here. As the owner,
+              you can edit by deleting + reposting.
+            </p>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }
