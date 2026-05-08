@@ -431,18 +431,24 @@ function KycAdmin() {
     <div>
       <div style={{ marginBottom: 20 }}>
         <h1 style={{ fontSize: 26, fontWeight: 700, color: '#fff', margin: '0 0 4px' }}>KYC Review</h1>
-        <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.4)', margin: '0 0 8px' }}>
-          Verify each PAN against the public NSDL database, then approve or reject.
+        <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.4)', margin: '0 0 12px' }}>
+          Manual review for Founding Traders. Auto-PAN-verify lands when Surepass token arrives.
         </p>
-        <div style={{ fontSize: 12, display: 'flex', flexWrap: 'wrap', gap: 14 }}>
-          <a href="https://eportal.incometax.gov.in/iec/foservices/#/pre-login/knowYourPAN" target="_blank" rel="noopener noreferrer"
-            style={{ color: '#CFB53B', textDecoration: 'underline' }}>
-            🔗 Income Tax PAN Verification (Know Your PAN)
-          </a>
-          <a href="https://www.protean-tinpan.com/services/pan/pan-index.html" target="_blank" rel="noopener noreferrer"
-            style={{ color: '#CFB53B', textDecoration: 'underline' }}>
-            🔗 Protean (NSDL) PAN Services
-          </a>
+
+        <div style={{ background: 'rgba(207,181,59,0.06)', border: '1px solid rgba(207,181,59,0.2)',
+          borderRadius: 10, padding: 14 }}>
+          <p style={{ fontSize: 12, fontWeight: 700, color: '#CFB53B', margin: '0 0 6px' }}>
+            ⚠️ No free public PAN-to-name verification API exists in India
+          </p>
+          <p style={{ fontSize: 11, color: 'rgba(255,255,255,0.55)', margin: 0, lineHeight: 1.6 }}>
+            Until Surepass is wired (paid PAN+name match via approved Protean reseller), use these
+            manual sanity checks: <strong style={{ color: '#fff' }}>(1)</strong> Does the legal name
+            look like a real Indian name? <strong style={{ color: '#fff' }}>(2)</strong> Does it
+            roughly match the display name they signed up with?{' '}
+            <strong style={{ color: '#fff' }}>(3)</strong> Does the trade category fit the
+            business name? <strong style={{ color: '#fff' }}>(4)</strong> Account age — newer
+            accounts deserve more scrutiny.
+          </p>
         </div>
       </div>
 
@@ -490,7 +496,11 @@ function KycAdmin() {
                 </div>
 
                 <p style={{ fontSize: 11, color: 'rgba(255,255,255,0.4)', margin: '0 0 12px', lineHeight: 1.6 }}>
-                  ✓ Open NSDL link above → enter PAN <strong style={{ color: '#CFB53B' }}>{u.panNumber}</strong> → check if "{u.legalName}" matches the registered name.
+                  Manual sanity check: does <strong style={{ color: '#CFB53B' }}>{u.legalName}</strong> read like
+                  a real name in <strong style={{ color: '#CFB53B' }}>{u.tradeCategory}</strong>?
+                  {u.name && u.legalName && u.name.toLowerCase() !== u.legalName.toLowerCase() && (
+                    <span style={{ color: '#fbbf24' }}> Note: signup name "{u.name}" differs from claimed legal name.</span>
+                  )}
                 </p>
 
                 {rejectingId === u.id ? (
