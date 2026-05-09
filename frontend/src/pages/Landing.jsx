@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { BRAND } from '../config/brand';
+import BhavXLogo from '../components/BhavXLogo';
+import BhavXWordmark from '../components/BhavXWordmark';
 import {
   TrendingUp, MapPin, BarChart3, Bell, ChevronRight,
   CheckCircle, ArrowRight, Users, Briefcase, Shield, ChevronDown,
@@ -128,10 +130,16 @@ export default function Landing() {
         }}>{'\u0950'}</div>
 
         <div style={{ position: 'relative', zIndex: 2, maxWidth: 660, margin: '0 auto' }}>
+          {/* BhavX brand lockup — logo + wordmark + tagline */}
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 24, marginBottom: 32 }}>
+            <BhavXLogo size={120} glow />
+            <BhavXWordmark size="hero" tagline />
+          </div>
+
           {/* Live badge */}
           <div style={{
             display: 'inline-flex', alignItems: 'center', gap: 7,
-            padding: '5px 14px', borderRadius: 99, marginBottom: 28,
+            padding: '5px 14px', borderRadius: 99, marginBottom: 24,
             background: 'rgba(207,181,59,0.07)', border: '1px solid rgba(207,181,59,0.18)',
             fontSize: 10, fontWeight: 700, color: '#CFB53B', letterSpacing: '0.1em',
             textTransform: 'uppercase',
@@ -140,14 +148,14 @@ export default function Landing() {
             Live · LME · MCX · Local Rates
           </div>
 
-          {/* Headline */}
+          {/* Sub-headline */}
           <h1 style={{
-            fontSize: 'clamp(30px, 5.5vw, 54px)', fontWeight: 800, lineHeight: 1.12,
-            margin: '0 0 18px', letterSpacing: '-0.025em',
+            fontSize: 'clamp(22px, 4vw, 36px)', fontWeight: 700, lineHeight: 1.2,
+            margin: '0 0 18px', letterSpacing: '-0.02em',
             background: 'linear-gradient(145deg, #fff 0%, #E8CC5A 55%, #A89028 100%)',
             WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent',
           }}>
-            India's Biggest<br />Metal Trading Platform
+            Real-time metal trading,<br />blessed for the bold.
           </h1>
 
           {/* City emphasis line */}
