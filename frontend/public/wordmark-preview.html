@@ -3,10 +3,10 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>BhavX — L2 Variations + Matching Wordmarks</title>
+<title>BhavX — Bhav · X Separation</title>
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700;900&family=Cormorant+Garamond:wght@600;700;800&family=Cormorant+SC:wght@600;700&family=Marcellus&family=Marcellus+SC&family=Cardo:wght@700&family=Playfair+Display:wght@700;800;900&family=Inter:wght@800&display=swap" rel="stylesheet" />
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700;900&family=Marcellus&family=Marcellus+SC&family=Inter:wght@500;700;800&family=Cormorant+SC:wght@600;700&display=swap" rel="stylesheet" />
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body { background: #050912; color: #fff; font-family: Inter, -apple-system, sans-serif; padding: 40px 24px; min-height: 100vh; }
@@ -32,48 +32,76 @@
   .item-desc { font-size: 12px; color: rgba(255,255,255,0.55); line-height: 1.6; margin-bottom: 18px; }
   .item-desc strong { color: #fff; }
   .item-desc em { color: #CFB53B; font-style: normal; }
-  .display-row { display: flex; align-items: center; gap: 26px; padding: 24px; background: radial-gradient(ellipse at 50% 50%, rgba(207,181,59,0.04), rgba(8,14,26,0.7)); border: 1px solid rgba(255,255,255,0.04); border-radius: 10px; flex-wrap: wrap; min-height: 120px; }
+  .display-row { display: flex; align-items: center; gap: 26px; padding: 32px 24px; background: radial-gradient(ellipse at 50% 50%, rgba(207,181,59,0.04), rgba(8,14,26,0.7)); border: 1px solid rgba(255,255,255,0.04); border-radius: 10px; flex-wrap: wrap; min-height: 140px; }
 
   .gold-text {
     background: linear-gradient(180deg, #FFE9A8 0%, #FFC942 28%, #CFB53B 60%, #8C6818 100%);
     -webkit-background-clip: text; background-clip: text; color: transparent;
     filter: drop-shadow(0 1px 2px rgba(0,0,0,0.5));
   }
-
-  /* Sun-warm gradient — borrows bindu's warmth into wordmarks */
-  .gold-warm {
-    background: linear-gradient(180deg, #FFE9A8 0%, #FFC942 22%, #FFB347 50%, #CFB53B 75%, #8C6818 100%);
+  .gold-bar {
+    background: linear-gradient(180deg, transparent, #FFC942 25%, #CFB53B 75%, transparent);
+  }
+  .gold-deep {
+    background: linear-gradient(180deg, #CFB53B 0%, #8C6818 100%);
     -webkit-background-clip: text; background-clip: text; color: transparent;
-    filter: drop-shadow(0 1px 2px rgba(0,0,0,0.5));
   }
 
-  .logo { width: 96px; height: 96px; }
-  .logo-sm { width: 44px; height: 44px; }
-  .logo-xs { width: 28px; height: 28px; }
+  /* L2.1 logo (sun core, anchor) */
+  .logo-anchor { width: 80px; height: 80px; flex-shrink: 0; }
+  .logo-sm { width: 44px; height: 44px; flex-shrink: 0; }
+  .logo-xs { width: 28px; height: 28px; flex-shrink: 0; }
 
-  /* Pulsing animation for L2.4 */
-  @keyframes bindu-pulse {
-    0%, 100% { transform: scale(1); opacity: 1; }
-    50% { transform: scale(1.15); opacity: 0.85; }
-  }
-  .bindu-pulse { transform-origin: 32px 32px; animation: bindu-pulse 2.4s ease-in-out infinite; }
-  @keyframes bindu-glow {
-    0%, 100% { filter: drop-shadow(0 0 3px rgba(255,107,26,0.7)) drop-shadow(0 0 8px rgba(255,107,26,0.4)); }
-    50% { filter: drop-shadow(0 0 6px rgba(255,140,40,0.95)) drop-shadow(0 0 16px rgba(255,140,40,0.6)); }
-  }
-  .bindu-glow { animation: bindu-glow 2.4s ease-in-out infinite; }
+  /* ════════════════════════════════════════════════════════
+     BHAV · X SEPARATION VARIANTS (all Marcellus, L2.1)
+     ════════════════════════════════════════════════════════ */
 
-  /* WORDMARK STYLES — designed for L2 intensity */
-  .wm1 { font-family: 'Cinzel', serif; font-weight: 900; font-size: 64px; line-height: 1; letter-spacing: 0.04em; }
-  .wm2 { font-family: 'Marcellus', serif; font-size: 64px; line-height: 1; letter-spacing: 0.05em; display: inline-flex; align-items: baseline; }
-  .wm2 .x-wrap { position: relative; display: inline-block; }
-  .wm2 .x { display: inline-block; }
-  .wm2 .bindu-mark { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 8px; height: 8px; border-radius: 50%; background: radial-gradient(circle at 30% 30%, #FFC942, #FF6B1A 60%, #C73E0A); box-shadow: 0 0 6px rgba(255,107,26,0.6); pointer-events: none; }
-  .wm3 { font-family: 'Cormorant SC', serif; font-weight: 700; font-size: 64px; line-height: 1; letter-spacing: 0.06em; }
-  .wm4 { font-family: 'Cardo', serif; font-weight: 700; font-size: 64px; line-height: 1; letter-spacing: 0.06em; }
-  .wm5 { font-family: 'Cinzel', serif; font-weight: 700; font-size: 56px; line-height: 1; letter-spacing: 0.18em; text-transform: uppercase; }
+  /* V1 — Vertical bar separator + EXCHANGE micro-caption under X */
+  .v1 { font-family: 'Marcellus', serif; font-size: 56px; line-height: 1; display: inline-flex; align-items: stretch; gap: 18px; }
+  .v1 .bhav { line-height: 1; letter-spacing: 0.02em; align-self: center; }
+  .v1 .bar { width: 2px; align-self: stretch; background: linear-gradient(180deg, transparent, #FFC942 20%, #CFB53B 80%, transparent); border-radius: 1px; }
+  .v1 .x-block { display: inline-flex; flex-direction: column; align-items: center; gap: 4px; align-self: center; }
+  .v1 .x { font-size: 1.15em; line-height: 1; letter-spacing: 0; }
+  .v1 .x-tag { font-family: 'Inter', sans-serif; font-weight: 700; font-size: 9px; letter-spacing: 0.32em; color: rgba(207,181,59,0.7); text-transform: uppercase; }
 
-  .lockup { display: inline-flex; align-items: center; gap: 16px; }
+  /* V2 — Em-dash separator + tagline below */
+  .v2 { font-family: 'Marcellus', serif; font-size: 60px; line-height: 1; display: inline-flex; flex-direction: column; align-items: center; gap: 6px; }
+  .v2 .top { display: inline-flex; align-items: baseline; gap: 14px; }
+  .v2 .dash { width: 28px; height: 3px; background: linear-gradient(90deg, #CFB53B, #FFC942, #CFB53B); border-radius: 2px; align-self: center; }
+  .v2 .tagline { font-family: 'Inter', sans-serif; font-weight: 600; font-size: 10px; letter-spacing: 0.4em; color: rgba(207,181,59,0.65); text-transform: uppercase; }
+  .v2 .x-bigger { font-size: 1.18em; }
+
+  /* V3 — X in thin gold frame (stock chip) */
+  .v3 { font-family: 'Marcellus', serif; font-size: 58px; line-height: 1; display: inline-flex; align-items: center; gap: 14px; }
+  .v3 .x-frame { display: inline-flex; align-items: center; justify-content: center; padding: 6px 18px;
+    border: 2px solid; border-image: linear-gradient(180deg, #FFE9A8, #CFB53B 50%, #8C6818) 1;
+    background: rgba(207,181,59,0.05); border-radius: 4px; }
+  .v3 .x { font-size: 0.95em; line-height: 1; letter-spacing: 0; }
+
+  /* V4 — Spaced + descriptor "INDIA'S METAL EXCHANGE" under */
+  .v4 { display: inline-flex; flex-direction: column; align-items: center; gap: 8px; }
+  .v4 .top { font-family: 'Marcellus', serif; font-size: 64px; letter-spacing: 0.18em; line-height: 1; }
+  .v4 .top .x { font-size: 1.2em; }
+  .v4 .descriptor { font-family: 'Cormorant SC', serif; font-weight: 700; font-size: 11px; letter-spacing: 0.32em; color: rgba(207,181,59,0.65); text-transform: uppercase;
+    display: flex; align-items: center; gap: 10px; }
+  .v4 .descriptor::before, .v4 .descriptor::after { content: ''; width: 26px; height: 1px; background: linear-gradient(90deg, transparent, rgba(207,181,59,0.5)); }
+
+  /* V5 — Bhav (heavy serif) + X (smaller, monospace, in frame) — like ticker symbol */
+  .v5 { font-family: 'Marcellus', serif; font-size: 60px; line-height: 1; display: inline-flex; align-items: center; gap: 12px; }
+  .v5 .bhav { letter-spacing: 0.02em; }
+  .v5 .x-ticker { font-family: 'Inter', sans-serif; font-weight: 800; font-size: 26px; letter-spacing: 0.1em;
+    padding: 6px 12px; border-radius: 3px;
+    background: linear-gradient(180deg, #FFE9A8 0%, #FFC942 25%, #CFB53B 60%, #8C6818 100%);
+    color: #0a0f1a;
+    box-shadow: 0 1px 0 rgba(255,233,168,0.3) inset, 0 -2px 0 rgba(140,104,24,0.5) inset, 0 4px 12px rgba(207,181,59,0.2); }
+
+  /* V6 — Bhav with X.E (X-Exchange) — minimalist abbreviation */
+  .v6 { font-family: 'Marcellus', serif; font-size: 60px; line-height: 1; display: inline-flex; align-items: baseline; gap: 4px; }
+  .v6 .bhav { letter-spacing: 0.02em; }
+  .v6 .x { font-size: 1.18em; }
+  .v6 .e { font-family: 'Inter', sans-serif; font-weight: 700; font-size: 0.4em; letter-spacing: 0.1em; align-self: flex-start; margin-top: 0.2em; color: rgba(207,181,59,0.75); }
+
+  .lockup { display: inline-flex; align-items: center; gap: 18px; }
   .footer { margin-top: 60px; padding: 28px; background: radial-gradient(ellipse at 50% 0%, rgba(207,181,59,0.08), rgba(13,20,32,0.5)); border: 1px solid rgba(207,181,59,0.25); border-radius: 14px; text-align: center; font-size: 13px; color: rgba(255,255,255,0.6); line-height: 1.7; }
   .footer strong { color: #CFB53B; }
 
@@ -94,284 +122,173 @@
       <stop offset="80%" stop-color="#FF6B1A" />
       <stop offset="100%" stop-color="#C73E0A" />
     </radialGradient>
-    <radialGradient id="binduDeepRed" cx="50%" cy="50%" r="50%">
-      <stop offset="0%" stop-color="#FF8C4A" />
-      <stop offset="40%" stop-color="#FF3A1A" />
-      <stop offset="100%" stop-color="#8B0000" />
-    </radialGradient>
-    <radialGradient id="binduPureGold" cx="50%" cy="50%" r="50%">
-      <stop offset="0%" stop-color="#FFFEF0" />
-      <stop offset="50%" stop-color="#FFD700" />
-      <stop offset="100%" stop-color="#CFB53B" />
-    </radialGradient>
-    <!-- Drop-shadow filter for the rays in 2.3 -->
-    <filter id="rayGlow" x="-50%" y="-50%" width="200%" height="200%">
-      <feGaussianBlur stdDeviation="0.4" />
-    </filter>
   </defs>
 </svg>
 
+<!-- Reusable L2.1 logo template (sun core) at different sizes — referenced inline below -->
+
 <div class="container">
-  <h1>L2 <span class="accent">— The Sun &amp; The Chakra</span></h1>
+  <h1>BhavX <span class="accent">— Bhav · X Separation</span></h1>
   <p class="subtitle">
-    You felt it: the iris's blades + a glowing bindu at the center reads as <em>both Surya and Chakra</em> — light radiating from the point of origin. Below: 5 variations on that essence + 5 wordmarks designed to match its intensity.
+    Locked: <em>L2.1 logo (sun core) + Marcellus serif</em>. Now exploring how to separate "Bhav" (the brand) from "X" (the exchange) so each has its own definition. <em>X = the exchange marker</em>. Bindu removed from X — clean again.
   </p>
 
-  <!-- ════════════════════════════════════════════════════════
-       L2 VARIATIONS (keeping the sun + chakra essence)
-       ════════════════════════════════════════════════════════ -->
-  <div class="section-divider"><span>✦ L2 Variations</span></div>
-
-  <!-- L2.1 — Original -->
-  <div class="item">
-    <p class="item-name">L2 · Original (current)</p>
-    <p class="item-desc">Small bindu, two-layer (gold halo + red-orange core). Subtle, refined.</p>
+  <!-- Reference: WM2 cleaned (no bindu) -->
+  <div class="item" style="background: rgba(255,255,255,0.03); border: 1px dashed rgba(255,255,255,0.1);">
+    <p class="item-name">Reference · WM2 with bindu removed (clean Marcellus)</p>
+    <p class="item-desc">Where we are now — Marcellus, all-gold, no bindu on X. Bhav and X feel <em>too unified</em> — they read as one word. Below: separation variants.</p>
     <div class="display-row">
-      <svg class="logo" viewBox="0 0 64 64" fill="none">
-        <g fill="url(#goldGrad)"><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(0 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(45 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(90 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(135 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(180 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(225 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(270 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(315 32 32)" /></g>
-        <circle cx="32" cy="32" r="2.5" fill="#FFC942" /><circle cx="32" cy="32" r="1.5" fill="#FF6B1A" />
-      </svg>
-      <svg class="logo-sm" viewBox="0 0 64 64" fill="none">
-        <g fill="url(#goldGrad)"><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(0 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(45 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(90 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(135 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(180 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(225 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(270 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(315 32 32)" /></g>
-        <circle cx="32" cy="32" r="2.5" fill="#FFC942" /><circle cx="32" cy="32" r="1.5" fill="#FF6B1A" />
-      </svg>
-      <svg class="logo-xs" viewBox="0 0 64 64" fill="none">
-        <g fill="url(#goldGrad)"><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(0 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(45 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(90 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(135 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(180 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(225 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(270 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(315 32 32)" /></g>
-        <circle cx="32" cy="32" r="2.2" fill="#FF6B1A" />
-      </svg>
+      <span style="font-family: 'Marcellus', serif; font-size: 56px; line-height: 1; letter-spacing: 0.05em;" class="gold-text">BhavX</span>
     </div>
   </div>
 
-  <!-- L2.1b — BIGGER GLOWING SUN CORE -->
+  <!-- ════════════════════════════════════════════════════════
+       SEPARATION VARIANTS
+       ════════════════════════════════════════════════════════ -->
+
+  <!-- V1 -->
   <div class="item">
-    <p class="item-name">L2.1 · Sun Core (bigger, glowing radial)</p>
-    <p class="item-desc">Bindu becomes a <strong>full radial sun core</strong> — pale center → gold mid → orange outer → deep red rim. Dramatic glow. <em>Pure Surya energy</em>. The light at the center is brighter and more present.</p>
+    <p class="item-name">V1 · Bhav | X · EXCHANGE (ticker bar + caption)</p>
+    <p class="item-desc"><strong>Vertical gold bar</strong> separates Bhav and X. Tiny "EXCHANGE" caption under X explicitly defines what X stands for. <em>NSE/BSE ticker-tape DNA</em>. Bhav is the brand, X is the exchange — each owns its space.</p>
     <div class="display-row">
-      <svg class="logo" viewBox="0 0 64 64" fill="none" style="filter: drop-shadow(0 0 12px rgba(255,140,40,0.35));">
-        <g fill="url(#goldGrad)"><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(0 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(45 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(90 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(135 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(180 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(225 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(270 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(315 32 32)" /></g>
-        <circle cx="32" cy="32" r="4.5" fill="url(#binduSun)" style="filter: drop-shadow(0 0 4px rgba(255,140,40,0.8));" />
-      </svg>
-      <svg class="logo-sm" viewBox="0 0 64 64" fill="none">
+      <svg class="logo-anchor" viewBox="0 0 64 64" fill="none" style="filter: drop-shadow(0 0 8px rgba(255,140,40,0.25));">
         <g fill="url(#goldGrad)"><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(0 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(45 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(90 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(135 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(180 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(225 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(270 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(315 32 32)" /></g>
         <circle cx="32" cy="32" r="4.5" fill="url(#binduSun)" />
       </svg>
-      <svg class="logo-xs" viewBox="0 0 64 64" fill="none">
-        <g fill="url(#goldGrad)"><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(0 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(45 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(90 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(135 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(180 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(225 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(270 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(315 32 32)" /></g>
-        <circle cx="32" cy="32" r="4" fill="url(#binduSun)" />
-      </svg>
+      <span class="v1 gold-text"><span class="bhav">Bhav</span><span class="bar"></span><span class="x-block"><span class="x">X</span><span class="x-tag">Exchange</span></span></span>
     </div>
   </div>
 
-  <!-- L2.2 — INNER RAYS BURSTING -->
+  <!-- V2 -->
   <div class="item">
-    <p class="item-name">L2.2 · Sun Core + Inner Rays (light escaping between blades)</p>
-    <p class="item-desc">Same sun core, but with <strong>8 thin gold rays bursting from center toward the gaps between blades</strong>. The light isn't contained — it leaks through the spaces. Says: "the divine cannot be held back." More dynamic, more radiant.</p>
+    <p class="item-name">V2 · Bhav — X with tagline "INDIA'S METAL EXCHANGE"</p>
+    <p class="item-desc"><strong>Em-dash separator</strong> between Bhav and X (more elegant than vertical bar). Below the wordmark: small caps tagline that defines the entire identity. The two parts are visually separate but unified by the line beneath. <em>Most editorial, most premium</em>.</p>
     <div class="display-row">
-      <svg class="logo" viewBox="0 0 64 64" fill="none" style="filter: drop-shadow(0 0 14px rgba(255,140,40,0.4));">
-        <!-- Inner rays at 22.5° offsets (between blade gaps) -->
-        <g stroke="url(#binduSun)" stroke-width="1.5" stroke-linecap="round" opacity="0.85">
-          <line x1="32" y1="32" x2="32" y2="14" transform="rotate(22.5 32 32)" />
-          <line x1="32" y1="32" x2="32" y2="14" transform="rotate(67.5 32 32)" />
-          <line x1="32" y1="32" x2="32" y2="14" transform="rotate(112.5 32 32)" />
-          <line x1="32" y1="32" x2="32" y2="14" transform="rotate(157.5 32 32)" />
-          <line x1="32" y1="32" x2="32" y2="14" transform="rotate(202.5 32 32)" />
-          <line x1="32" y1="32" x2="32" y2="14" transform="rotate(247.5 32 32)" />
-          <line x1="32" y1="32" x2="32" y2="14" transform="rotate(292.5 32 32)" />
-          <line x1="32" y1="32" x2="32" y2="14" transform="rotate(337.5 32 32)" />
-        </g>
+      <svg class="logo-anchor" viewBox="0 0 64 64" fill="none" style="filter: drop-shadow(0 0 8px rgba(255,140,40,0.25));">
         <g fill="url(#goldGrad)"><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(0 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(45 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(90 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(135 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(180 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(225 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(270 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(315 32 32)" /></g>
-        <circle cx="32" cy="32" r="3.5" fill="url(#binduSun)" />
+        <circle cx="32" cy="32" r="4.5" fill="url(#binduSun)" />
       </svg>
-      <svg class="logo-sm" viewBox="0 0 64 64" fill="none">
-        <g stroke="url(#binduSun)" stroke-width="1.5" stroke-linecap="round" opacity="0.85">
-          <line x1="32" y1="32" x2="32" y2="14" transform="rotate(22.5 32 32)" /><line x1="32" y1="32" x2="32" y2="14" transform="rotate(67.5 32 32)" /><line x1="32" y1="32" x2="32" y2="14" transform="rotate(112.5 32 32)" /><line x1="32" y1="32" x2="32" y2="14" transform="rotate(157.5 32 32)" /><line x1="32" y1="32" x2="32" y2="14" transform="rotate(202.5 32 32)" /><line x1="32" y1="32" x2="32" y2="14" transform="rotate(247.5 32 32)" /><line x1="32" y1="32" x2="32" y2="14" transform="rotate(292.5 32 32)" /><line x1="32" y1="32" x2="32" y2="14" transform="rotate(337.5 32 32)" />
-        </g>
-        <g fill="url(#goldGrad)"><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(0 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(45 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(90 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(135 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(180 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(225 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(270 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(315 32 32)" /></g>
-        <circle cx="32" cy="32" r="3.5" fill="url(#binduSun)" />
-      </svg>
-      <svg class="logo-xs" viewBox="0 0 64 64" fill="none">
-        <g fill="url(#goldGrad)"><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(0 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(45 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(90 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(135 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(180 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(225 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(270 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(315 32 32)" /></g>
-        <circle cx="32" cy="32" r="3" fill="url(#binduSun)" />
-      </svg>
-    </div>
-  </div>
-
-  <!-- L2.3 — MULTI-LAYER CHAKRA BINDU -->
-  <div class="item">
-    <p class="item-name">L2.3 · Multi-Layer Chakra Bindu</p>
-    <p class="item-desc"><strong>Three concentric layers</strong>: outer gold ring + middle dark void + bright sun core. Pure chakra-yantra geometry. Most "sacred geometry" feel — like a Sri Yantra eye.</p>
-    <div class="display-row">
-      <svg class="logo" viewBox="0 0 64 64" fill="none">
-        <g fill="url(#goldGrad)"><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(0 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(45 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(90 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(135 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(180 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(225 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(270 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(315 32 32)" /></g>
-        <!-- Multi-layer bindu -->
-        <circle cx="32" cy="32" r="4" fill="url(#goldGrad)" />
-        <circle cx="32" cy="32" r="3" fill="#0a0f1a" />
-        <circle cx="32" cy="32" r="1.6" fill="url(#binduSun)" />
-      </svg>
-      <svg class="logo-sm" viewBox="0 0 64 64" fill="none">
-        <g fill="url(#goldGrad)"><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(0 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(45 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(90 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(135 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(180 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(225 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(270 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(315 32 32)" /></g>
-        <circle cx="32" cy="32" r="4" fill="url(#goldGrad)" /><circle cx="32" cy="32" r="3" fill="#0a0f1a" /><circle cx="32" cy="32" r="1.6" fill="url(#binduSun)" />
-      </svg>
-      <svg class="logo-xs" viewBox="0 0 64 64" fill="none">
-        <g fill="url(#goldGrad)"><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(0 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(45 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(90 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(135 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(180 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(225 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(270 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(315 32 32)" /></g>
-        <circle cx="32" cy="32" r="3" fill="url(#goldGrad)" /><circle cx="32" cy="32" r="2" fill="#0a0f1a" /><circle cx="32" cy="32" r="1" fill="url(#binduSun)" />
-      </svg>
-    </div>
-  </div>
-
-  <!-- L2.4 — ANIMATED PULSING (LIVE MARKETS) -->
-  <div class="item">
-    <p class="item-name">L2.4 · Living Pulse (animated bindu — markets are alive)</p>
-    <p class="item-desc"><strong>The bindu pulses gently</strong> — 2.4-second rhythm, glow expanding and contracting. Says: "the market is alive, BhavX is breathing with it." Functional brand cue. <em>Bloomberg-grade live indicator embedded in the logo</em>.</p>
-    <div class="display-row">
-      <svg class="logo" viewBox="0 0 64 64" fill="none">
-        <g fill="url(#goldGrad)"><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(0 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(45 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(90 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(135 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(180 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(225 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(270 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(315 32 32)" /></g>
-        <g class="bindu-pulse"><circle cx="32" cy="32" r="3.5" fill="url(#binduSun)" class="bindu-glow" /></g>
-      </svg>
-      <svg class="logo-sm" viewBox="0 0 64 64" fill="none">
-        <g fill="url(#goldGrad)"><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(0 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(45 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(90 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(135 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(180 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(225 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(270 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(315 32 32)" /></g>
-        <g class="bindu-pulse"><circle cx="32" cy="32" r="3.5" fill="url(#binduSun)" class="bindu-glow" /></g>
-      </svg>
-      <svg class="logo-xs" viewBox="0 0 64 64" fill="none">
-        <g fill="url(#goldGrad)"><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(0 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(45 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(90 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(135 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(180 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(225 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(270 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(315 32 32)" /></g>
-        <g class="bindu-pulse"><circle cx="32" cy="32" r="3" fill="url(#binduSun)" /></g>
-      </svg>
-    </div>
-  </div>
-
-  <!-- L2.5 — DEEP RED TILAK -->
-  <div class="item">
-    <p class="item-name">L2.5 · Sindoor Bindu (pure deep red, sacred mark)</p>
-    <p class="item-desc"><strong>Deeper red, less golden</strong>. Pure sindoor/tilak energy — the auspicious mark of devotion. More restrained than L2.1, more sacred than animated. Most refined option for a luxury/Bloomberg positioning.</p>
-    <div class="display-row">
-      <svg class="logo" viewBox="0 0 64 64" fill="none">
-        <g fill="url(#goldGrad)"><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(0 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(45 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(90 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(135 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(180 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(225 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(270 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(315 32 32)" /></g>
-        <circle cx="32" cy="32" r="3" fill="url(#binduDeepRed)" style="filter: drop-shadow(0 0 6px rgba(255,30,10,0.4));" />
-      </svg>
-      <svg class="logo-sm" viewBox="0 0 64 64" fill="none">
-        <g fill="url(#goldGrad)"><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(0 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(45 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(90 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(135 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(180 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(225 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(270 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(315 32 32)" /></g>
-        <circle cx="32" cy="32" r="3" fill="url(#binduDeepRed)" />
-      </svg>
-      <svg class="logo-xs" viewBox="0 0 64 64" fill="none">
-        <g fill="url(#goldGrad)"><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(0 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(45 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(90 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(135 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(180 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(225 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(270 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(315 32 32)" /></g>
-        <circle cx="32" cy="32" r="2.4" fill="url(#binduDeepRed)" />
-      </svg>
-    </div>
-  </div>
-
-  <!-- ════════════════════════════════════════════════════════
-       WORDMARKS DESIGNED FOR L2 INTENSITY
-       ════════════════════════════════════════════════════════ -->
-  <div class="section-divider"><span>✦ Wordmarks That Match L2's Intensity</span></div>
-
-  <!-- WM1 — Cinzel Black -->
-  <div class="item">
-    <p class="item-name">WM1 · Cinzel Black — Carved Stone</p>
-    <p class="item-desc"><strong>Cinzel</strong> is the typography of <em>Roman temple inscriptions</em> — same family of stone-carved monuments that the chakra/yantra geometry comes from. Heavy weight, generous letter-spacing, all-gold gradient. <em>Best match for the sacred geometry of L2</em>.</p>
-    <div class="display-row">
-      <span class="wm1 gold-text">BhavX</span>
-    </div>
-  </div>
-
-  <!-- WM2 — Marcellus + tiny bindu echo -->
-  <div class="item">
-    <p class="item-name">WM2 · Marcellus + Bindu Echo on X</p>
-    <p class="item-desc">Marcellus serif + a <strong>tiny matching red-orange bindu inside the X</strong>. The wordmark visually echoes the logo's center bindu. Subtle but powerful — your eye connects them automatically. <em>Wordmark and logo become one identity</em>.</p>
-    <div class="display-row">
-      <span class="wm2 gold-text">Bhav<span class="x-wrap"><span class="x">X</span><span class="bindu-mark"></span></span></span>
-    </div>
-  </div>
-
-  <!-- WM3 — Cormorant SC -->
-  <div class="item">
-    <p class="item-name">WM3 · Cormorant Small-Caps — Manuscript Authority</p>
-    <p class="item-desc"><strong>Cormorant SC</strong> small-caps serif. The typography of premium publishing + heritage. Slightly less weight than Cinzel but more refined detail. Best for "old money meets new platform" positioning.</p>
-    <div class="display-row">
-      <span class="wm3 gold-text">BhavX</span>
-    </div>
-  </div>
-
-  <!-- WM4 — Cardo (heavy serif, scholarly) -->
-  <div class="item">
-    <p class="item-name">WM4 · Cardo Bold — Scholarly Weight</p>
-    <p class="item-desc"><strong>Cardo</strong> is the typeface of academic/Sanskrit scholarship. Heavy bold variant. Has the gravitas of treatises and shastras — <em>"this is the scripture on Indian metal trading."</em></p>
-    <div class="display-row">
-      <span class="wm4 gold-text">BhavX</span>
-    </div>
-  </div>
-
-  <!-- WM5 — Cinzel Wide-Spaced Proclamation -->
-  <div class="item">
-    <p class="item-name">WM5 · Cinzel Wide-Spaced — Royal Proclamation</p>
-    <p class="item-desc"><strong>BhavX uppercase, generously letter-spaced</strong>. Reads like a stone-carved royal edict, a temple lintel inscription. Maximum gravitas. The wordmark earns its real estate on the page.</p>
-    <div class="display-row">
-      <span class="wm5 gold-text">BHAVX</span>
-    </div>
-  </div>
-
-  <!-- ════════════════════════════════════════════════════════
-       LOCKUPS — best L2 + best wordmark combinations
-       ════════════════════════════════════════════════════════ -->
-  <div class="section-divider"><span>✦ Best Lockup Combinations</span></div>
-
-  <!-- Lockup A: L2.2 (sun + inner rays) + WM1 (Cinzel) -->
-  <div class="item">
-    <p class="item-name">Lockup ⓐ · L2.2 (Sun + Inner Rays) + WM1 (Cinzel Black)</p>
-    <p class="item-desc"><strong>My pick.</strong> Most "earth-shattering" — the inner rays + Cinzel stone-carved letters together feel like the wordmark was struck from the same divine source as the logo. Sun + Temple inscription.</p>
-    <div class="display-row">
-      <span class="lockup">
-        <svg class="logo-sm" viewBox="0 0 64 64" fill="none">
-          <g stroke="url(#binduSun)" stroke-width="1.5" stroke-linecap="round" opacity="0.85">
-            <line x1="32" y1="32" x2="32" y2="14" transform="rotate(22.5 32 32)" /><line x1="32" y1="32" x2="32" y2="14" transform="rotate(67.5 32 32)" /><line x1="32" y1="32" x2="32" y2="14" transform="rotate(112.5 32 32)" /><line x1="32" y1="32" x2="32" y2="14" transform="rotate(157.5 32 32)" /><line x1="32" y1="32" x2="32" y2="14" transform="rotate(202.5 32 32)" /><line x1="32" y1="32" x2="32" y2="14" transform="rotate(247.5 32 32)" /><line x1="32" y1="32" x2="32" y2="14" transform="rotate(292.5 32 32)" /><line x1="32" y1="32" x2="32" y2="14" transform="rotate(337.5 32 32)" />
-          </g>
-          <g fill="url(#goldGrad)"><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(0 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(45 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(90 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(135 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(180 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(225 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(270 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(315 32 32)" /></g>
-          <circle cx="32" cy="32" r="3.5" fill="url(#binduSun)" />
-        </svg>
-        <span style="font-family: 'Cinzel', serif; font-weight: 900; font-size: 36px; letter-spacing: 0.04em;" class="gold-text">BhavX</span>
+      <span class="v2">
+        <span class="top gold-text"><span>Bhav</span><span class="dash"></span><span class="x-bigger">X</span></span>
+        <span class="tagline">India's Metal Exchange</span>
       </span>
     </div>
   </div>
 
-  <!-- Lockup B: L2.4 (live pulse) + WM1 (Cinzel) — Bloomberg -->
+  <!-- V3 -->
   <div class="item">
-    <p class="item-name">Lockup ⓑ · L2.4 (Living Pulse) + WM1 (Cinzel Black)</p>
-    <p class="item-desc">Same Cinzel, but with the <strong>live pulsing core</strong>. Says: "this is a Bloomberg-grade live financial product, and it has divine roots." Functional + sacred.</p>
+    <p class="item-name">V3 · Bhav · ⟨X⟩ (X in thin gold frame)</p>
+    <p class="item-desc"><strong>X gets its own gold-bordered frame</strong> — a thin metallic outline around the letter. Looks like a stock chip / ticker badge. Bhav stays naked serif. The frame visually <em>elevates X to its own identity</em> — "this is the exchange marker, not just a letter."</p>
     <div class="display-row">
-      <span class="lockup">
-        <svg class="logo-sm" viewBox="0 0 64 64" fill="none">
-          <g fill="url(#goldGrad)"><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(0 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(45 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(90 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(135 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(180 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(225 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(270 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(315 32 32)" /></g>
-          <g class="bindu-pulse"><circle cx="32" cy="32" r="3.5" fill="url(#binduSun)" /></g>
-        </svg>
-        <span style="font-family: 'Cinzel', serif; font-weight: 900; font-size: 36px; letter-spacing: 0.04em;" class="gold-text">BhavX</span>
+      <svg class="logo-anchor" viewBox="0 0 64 64" fill="none" style="filter: drop-shadow(0 0 8px rgba(255,140,40,0.25));">
+        <g fill="url(#goldGrad)"><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(0 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(45 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(90 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(135 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(180 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(225 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(270 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(315 32 32)" /></g>
+        <circle cx="32" cy="32" r="4.5" fill="url(#binduSun)" />
+      </svg>
+      <span class="v3 gold-text"><span class="bhav">Bhav</span><span class="x-frame"><span class="x">X</span></span></span>
+    </div>
+  </div>
+
+  <!-- V4 -->
+  <div class="item">
+    <p class="item-name">V4 · Bhav  X  with descriptor underline</p>
+    <p class="item-desc"><strong>Wide letter-spacing</strong> between Bhav and X — pure spatial separation. Below: a thin descriptor flanked by gold lines. Cleanest, most timeless. The space between Bhav and X is itself meaningful — like a gap on a temple inscription.</p>
+    <div class="display-row">
+      <svg class="logo-anchor" viewBox="0 0 64 64" fill="none" style="filter: drop-shadow(0 0 8px rgba(255,140,40,0.25));">
+        <g fill="url(#goldGrad)"><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(0 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(45 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(90 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(135 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(180 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(225 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(270 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(315 32 32)" /></g>
+        <circle cx="32" cy="32" r="4.5" fill="url(#binduSun)" />
+      </svg>
+      <span class="v4">
+        <span class="top gold-text">Bhav<span class="x">X</span></span>
+        <span class="descriptor gold-deep">Bharat's Metal Exchange</span>
       </span>
     </div>
   </div>
 
-  <!-- Lockup C: L2.1 (sun core) + WM2 (Marcellus + bindu echo) -->
+  <!-- V5 -->
   <div class="item">
-    <p class="item-name">Lockup ⓒ · L2.1 (Sun Core) + WM2 (Marcellus + Bindu Echo on X)</p>
-    <p class="item-desc">Bigger sun core in the logo + the bindu echoes inside the X letter itself. <strong>Logo and wordmark mirror each other</strong> — same sacred dot at both centers. Most integrated identity.</p>
+    <p class="item-name">V5 · Bhav + [X] solid-gold ticker chip</p>
+    <p class="item-desc"><strong>X becomes a solid gold chip</strong> — like a stock symbol badge or premium watch hour-marker. Sans-serif Inter inside the chip (contrasts with Marcellus serif of "Bhav"). Bhav is the brand identity, X is the <em>tradeable instrument</em>. Maximum separation, maximum exchange feel.</p>
     <div class="display-row">
-      <span class="lockup">
+      <svg class="logo-anchor" viewBox="0 0 64 64" fill="none" style="filter: drop-shadow(0 0 8px rgba(255,140,40,0.25));">
+        <g fill="url(#goldGrad)"><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(0 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(45 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(90 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(135 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(180 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(225 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(270 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(315 32 32)" /></g>
+        <circle cx="32" cy="32" r="4.5" fill="url(#binduSun)" />
+      </svg>
+      <span class="v5"><span class="bhav gold-text">Bhav</span><span class="x-ticker">X</span></span>
+    </div>
+  </div>
+
+  <!-- V6 -->
+  <div class="item">
+    <p class="item-name">V6 · Bhav X<sup>E</sup> (X with tiny exchange superscript)</p>
+    <p class="item-desc"><strong>Minimalist abbreviation</strong>. X has a tiny "E" superscript — like ™ position but for "Exchange". Most compact. Reads as <em>"Bhav X-Exchange"</em>. Subtle but defines the X without overloading the wordmark.</p>
+    <div class="display-row">
+      <svg class="logo-anchor" viewBox="0 0 64 64" fill="none" style="filter: drop-shadow(0 0 8px rgba(255,140,40,0.25));">
+        <g fill="url(#goldGrad)"><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(0 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(45 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(90 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(135 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(180 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(225 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(270 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(315 32 32)" /></g>
+        <circle cx="32" cy="32" r="4.5" fill="url(#binduSun)" />
+      </svg>
+      <span class="v6"><span class="bhav gold-text">Bhav</span> <span class="gold-text"><span class="x">X</span><span class="e">EXCHG</span></span></span>
+    </div>
+  </div>
+
+  <!-- ════════════════════════════════════════════════════════
+       SIZE TEST — V1 (most likely winner) at multiple scales
+       ════════════════════════════════════════════════════════ -->
+  <div class="section-divider"><span>✦ V1 at All Sizes (Hero / Navbar / Footer)</span></div>
+
+  <div class="item">
+    <p class="item-name">V1 · Bhav | X · EXCHANGE — Multi-size test</p>
+    <div class="display-row" style="flex-direction: column; align-items: flex-start; gap: 24px;">
+      <!-- Hero -->
+      <div style="display: flex; align-items: center; gap: 20px;">
+        <span style="font-size: 11px; color: rgba(255,255,255,0.35); text-transform: uppercase; letter-spacing: 0.1em; min-width: 80px;">Hero</span>
+        <svg class="logo-anchor" viewBox="0 0 64 64" fill="none">
+          <g fill="url(#goldGrad)"><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(0 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(45 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(90 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(135 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(180 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(225 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(270 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(315 32 32)" /></g>
+          <circle cx="32" cy="32" r="4.5" fill="url(#binduSun)" />
+        </svg>
+        <span class="v1 gold-text"><span class="bhav">Bhav</span><span class="bar"></span><span class="x-block"><span class="x">X</span><span class="x-tag">Exchange</span></span></span>
+      </div>
+      <!-- Navbar -->
+      <div style="display: flex; align-items: center; gap: 14px;">
+        <span style="font-size: 11px; color: rgba(255,255,255,0.35); text-transform: uppercase; letter-spacing: 0.1em; min-width: 80px;">Navbar</span>
         <svg class="logo-sm" viewBox="0 0 64 64" fill="none">
           <g fill="url(#goldGrad)"><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(0 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(45 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(90 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(135 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(180 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(225 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(270 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(315 32 32)" /></g>
           <circle cx="32" cy="32" r="4.5" fill="url(#binduSun)" />
         </svg>
-        <span style="font-family: 'Marcellus', serif; font-size: 38px; letter-spacing: 0.05em; display: inline-flex; align-items: baseline;" class="gold-text">Bhav<span style="position: relative; display: inline-block;">X<span style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 6px; height: 6px; border-radius: 50%; background: radial-gradient(circle at 30% 30%, #FFC942, #FF6B1A 60%, #C73E0A); box-shadow: 0 0 4px rgba(255,107,26,0.6);"></span></span></span>
-      </span>
+        <span style="font-family: 'Marcellus', serif; font-size: 24px; line-height: 1; display: inline-flex; align-items: stretch; gap: 10px;" class="gold-text">
+          <span style="align-self: center;">Bhav</span>
+          <span style="width: 1.5px; align-self: stretch; background: linear-gradient(180deg, transparent, #CFB53B 30%, #CFB53B 70%, transparent);"></span>
+          <span style="display: inline-flex; flex-direction: column; align-items: center; gap: 1px; align-self: center;">
+            <span style="font-size: 1.15em; line-height: 1;">X</span>
+            <span style="font-family: 'Inter', sans-serif; font-weight: 700; font-size: 7px; letter-spacing: 0.3em; color: rgba(207,181,59,0.7); text-transform: uppercase; -webkit-text-fill-color: rgba(207,181,59,0.7);">Exchange</span>
+          </span>
+        </span>
+      </div>
+      <!-- Footer -->
+      <div style="display: flex; align-items: center; gap: 10px;">
+        <span style="font-size: 11px; color: rgba(255,255,255,0.35); text-transform: uppercase; letter-spacing: 0.1em; min-width: 80px;">Footer</span>
+        <svg class="logo-xs" viewBox="0 0 64 64" fill="none">
+          <g fill="url(#goldGrad)"><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(0 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(45 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(90 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(135 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(180 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(225 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(270 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(315 32 32)" /></g>
+          <circle cx="32" cy="32" r="4" fill="url(#binduSun)" />
+        </svg>
+        <span style="font-family: 'Marcellus', serif; font-size: 16px; line-height: 1; display: inline-flex; align-items: stretch; gap: 7px;" class="gold-text">
+          <span style="align-self: center;">Bhav</span>
+          <span style="width: 1px; align-self: stretch; background: rgba(207,181,59,0.6);"></span>
+          <span style="display: inline-flex; flex-direction: column; align-items: center; align-self: center;">
+            <span style="font-size: 1.15em; line-height: 1;">X</span>
+            <span style="font-family: 'Inter', sans-serif; font-weight: 700; font-size: 5px; letter-spacing: 0.25em; color: rgba(207,181,59,0.65); text-transform: uppercase; -webkit-text-fill-color: rgba(207,181,59,0.65);">Exchange</span>
+          </span>
+        </span>
+      </div>
     </div>
   </div>
 
   <div class="footer">
-    <p><strong>Pick your L2 variant + wordmark:</strong></p>
+    <p><strong>6 ways to separate Bhav and X.</strong></p>
     <p style="margin-top: 8px;">
-      Logo: <strong>L2 (orig)</strong> · <strong>L2.1 (sun core)</strong> · <strong>L2.2 (sun + rays)</strong> · <strong>L2.3 (multi-layer chakra)</strong> · <strong>L2.4 (pulsing live)</strong> · <strong>L2.5 (sindoor red)</strong>
+      Reply with: <strong>V1</strong> · <strong>V2</strong> · <strong>V3</strong> · <strong>V4</strong> · <strong>V5</strong> · <strong>V6</strong>
     </p>
-    <p>
-      Wordmark: <strong>WM1 (Cinzel)</strong> · <strong>WM2 (Marcellus + bindu echo)</strong> · <strong>WM3 (Cormorant SC)</strong> · <strong>WM4 (Cardo)</strong> · <strong>WM5 (Cinzel wide-spaced)</strong>
-    </p>
-    <p style="margin-top: 14px;">
-      Reply: <strong>"L2.X + WMY"</strong> — or pick lockup <strong>ⓐ / ⓑ / ⓒ</strong>. Or describe what's still off.
+    <p style="margin-top: 14px; font-size: 12px;">
+      Want a different word for the descriptor? <em>"India's Metal Exchange"</em> · <em>"Bharat Metal Exchange"</em> · <em>"Metal Trading Exchange"</em> · <em>"Real-Time Metal Bourse"</em> · suggest your own.
     </p>
   </div>
 </div>
