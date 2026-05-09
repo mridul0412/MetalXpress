@@ -3,10 +3,10 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>BhavX — Final Lockup + Chakra Loader</title>
+<title>BhavX — X Treatment + Slower Loader</title>
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700;900&family=Marcellus&family=Cormorant+SC:wght@600;700&family=Inter:wght@500;600;700&display=swap" rel="stylesheet" />
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700;900&family=Marcellus&family=Cormorant+SC:wght@600;700&family=Cormorant+Garamond:wght@600;700;800&family=EB+Garamond:wght@600;700;800&family=Inter:wght@500;600;700&display=swap" rel="stylesheet" />
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body { background: #050912; color: #fff; font-family: Inter, -apple-system, sans-serif; padding: 40px 24px; min-height: 100vh; }
@@ -45,39 +45,45 @@
   .logo-sm { width: 44px; height: 44px; flex-shrink: 0; }
   .logo-xs { width: 28px; height: 28px; flex-shrink: 0; }
 
-  /* ════════════════════════════════════════════════════════
-     FINAL LOCKUP — Blend C with Cinzel Black X
-     ════════════════════════════════════════════════════════ */
-
-  /* Frame style — even gold border for X */
+  /* Frame style */
   .x-frame {
     display: inline-flex; align-items: center; justify-content: center;
     border: 2px solid;
     border-image: linear-gradient(180deg, #FFE9A8, #CFB53B 50%, #8C6818) 1;
     background: rgba(207,181,59,0.05);
     border-radius: 4px;
+    padding: 6px 18px;
   }
 
-  .final { display: inline-flex; flex-direction: column; align-items: center; gap: 10px; }
-  .final .top { display: inline-flex; align-items: center; gap: 16px; line-height: 1; }
-  .final .bhav { font-family: 'Marcellus', serif; font-size: 56px; line-height: 1; letter-spacing: 0.02em; }
-  .final .bar { width: 2px; height: 0.7em; background: linear-gradient(180deg, transparent, #FFC942 25%, #CFB53B 75%, transparent); border-radius: 1px; align-self: center; }
-  .final .x-frame { padding: 6px 18px; }
-  .final .x { font-family: 'Cinzel', serif; font-weight: 900; font-size: 42px; line-height: 1; letter-spacing: 0; }
-  .final .tagline { font-family: 'Cormorant SC', serif; font-weight: 700; font-size: 11px; letter-spacing: 0.36em; color: rgba(207,181,59,0.7); text-transform: uppercase;
+  /* Shared lockup wrapper */
+  .lockup { display: inline-flex; flex-direction: column; align-items: center; gap: 10px; }
+  .lockup .top { display: inline-flex; align-items: center; gap: 16px; line-height: 1; }
+  .lockup .bhav { font-family: 'Marcellus', serif; font-size: 56px; line-height: 1; letter-spacing: 0.02em; }
+  .lockup .bar { width: 2px; height: 0.7em; background: linear-gradient(180deg, transparent, #FFC942 25%, #CFB53B 75%, transparent); border-radius: 1px; align-self: center; }
+  .lockup .tagline { font-family: 'Cormorant SC', serif; font-weight: 700; font-size: 11px; letter-spacing: 0.36em; color: rgba(207,181,59,0.7); text-transform: uppercase;
     display: flex; align-items: center; gap: 12px; }
-  .final .tagline::before, .final .tagline::after { content: ''; width: 28px; height: 1px; background: linear-gradient(90deg, transparent, rgba(207,181,59,0.5)); }
-  .final .tagline::after { background: linear-gradient(90deg, rgba(207,181,59,0.5), transparent); }
+  .lockup .tagline::before, .lockup .tagline::after { content: ''; width: 28px; height: 1px; background: linear-gradient(90deg, transparent, rgba(207,181,59,0.5)); }
+  .lockup .tagline::after { background: linear-gradient(90deg, rgba(207,181,59,0.5), transparent); }
 
-  /* Side-by-side X comparison */
-  .compare { display: flex; gap: 32px; align-items: center; padding: 24px; background: rgba(8,14,26,0.7); border-radius: 10px; border: 1px solid rgba(255,255,255,0.04); flex-wrap: wrap; }
-  .compare-block { flex: 1; min-width: 200px; text-align: center; }
-  .compare-label { font-size: 10px; color: rgba(255,255,255,0.4); text-transform: uppercase; letter-spacing: 0.15em; margin-bottom: 14px; }
-  .x-old { font-family: 'Marcellus', serif; font-size: 60px; line-height: 1; }
-  .x-new { font-family: 'Cinzel', serif; font-weight: 900; font-size: 60px; line-height: 1; }
+  /* X Treatment options */
+  .x-marcellus { font-family: 'Marcellus', serif; font-size: 42px; line-height: 1; letter-spacing: 0; }
+  .x-cinzel-700 { font-family: 'Cinzel', serif; font-weight: 700; font-size: 38px; line-height: 1; letter-spacing: 0; }
+  .x-cormorant { font-family: 'Cormorant Garamond', serif; font-weight: 800; font-size: 44px; line-height: 1; letter-spacing: 0; font-style: italic; }
+  .x-eb-garamond { font-family: 'EB Garamond', serif; font-weight: 800; font-size: 44px; line-height: 1; letter-spacing: 0; }
+
+  /* Custom SVG X — perfectly even diagonals */
+  .x-svg { width: 38px; height: 42px; flex-shrink: 0; }
+
+  /* Side-by-side comparison */
+  .compare { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 16px; padding: 20px; background: rgba(8,14,26,0.7); border-radius: 10px; border: 1px solid rgba(255,255,255,0.04); }
+  .compare-block { text-align: center; padding: 18px 12px; background: rgba(13,20,32,0.5); border: 1px solid rgba(255,255,255,0.04); border-radius: 8px; }
+  .compare-label { font-size: 10px; color: rgba(255,255,255,0.4); text-transform: uppercase; letter-spacing: 0.15em; margin-bottom: 14px; min-height: 28px; }
+  .compare-x-frame { display: inline-flex; align-items: center; justify-content: center; padding: 8px 18px;
+    border: 2px solid; border-image: linear-gradient(180deg, #FFE9A8, #CFB53B 50%, #8C6818) 1;
+    background: rgba(207,181,59,0.05); border-radius: 4px; }
 
   /* ════════════════════════════════════════════════════════
-     CHAKRA LOADER (spinning logo)
+     CHAKRA LOADER — slower spin (3.5s)
      ════════════════════════════════════════════════════════ */
   @keyframes chakra-spin {
     from { transform: rotate(0deg); }
@@ -85,10 +91,10 @@
   }
   @keyframes core-pulse {
     0%, 100% { transform: scale(1); opacity: 1; }
-    50% { transform: scale(1.18); opacity: 0.85; }
+    50% { transform: scale(1.15); opacity: 0.88; }
   }
-  .loader-blades { animation: chakra-spin 1.8s linear infinite; transform-origin: 32px 32px; }
-  .loader-core { transform-origin: 32px 32px; animation: core-pulse 1.8s ease-in-out infinite; }
+  .loader-blades { animation: chakra-spin 3.5s linear infinite; transform-origin: 32px 32px; }
+  .loader-core { transform-origin: 32px 32px; animation: core-pulse 3.5s ease-in-out infinite; }
 
   .loader-large { width: 96px; height: 96px; }
   .loader-medium { width: 56px; height: 56px; }
@@ -99,13 +105,13 @@
   .loader-block { display: flex; flex-direction: column; align-items: center; gap: 12px; min-width: 140px; }
   .loader-caption { font-size: 11px; color: rgba(255,255,255,0.5); letter-spacing: 0.05em; }
   .loader-context { font-size: 11px; color: rgba(207,181,59,0.7); margin-top: 4px; font-style: italic; }
-
-  /* In-button loader example */
-  .demo-button { display: inline-flex; align-items: center; gap: 10px; padding: 12px 24px; border-radius: 10px; background: #CFB53B; color: #000; border: none; font-weight: 700; font-size: 14px; cursor: default; }
   .demo-button-loading { display: inline-flex; align-items: center; gap: 10px; padding: 12px 24px; border-radius: 10px; background: rgba(207,181,59,0.2); color: rgba(255,255,255,0.6); border: 1px solid rgba(207,181,59,0.3); font-weight: 600; font-size: 14px; cursor: default; }
 
-  /* Full-page loader demo (small contained version) */
-  .fullpage-demo { background: #050912; border-radius: 12px; padding: 60px 24px; text-align: center; border: 1px solid rgba(255,255,255,0.05); }
+  /* Speed comparison */
+  .speed-loader-fast { animation: chakra-spin 1.8s linear infinite; transform-origin: 32px 32px; }
+  .speed-loader-medium { animation: chakra-spin 2.6s linear infinite; transform-origin: 32px 32px; }
+  .speed-loader-slow { animation: chakra-spin 3.5s linear infinite; transform-origin: 32px 32px; }
+  .speed-loader-very-slow { animation: chakra-spin 5s linear infinite; transform-origin: 32px 32px; }
 
   .footer { margin-top: 60px; padding: 28px; background: radial-gradient(ellipse at 50% 0%, rgba(207,181,59,0.08), rgba(13,20,32,0.5)); border: 1px solid rgba(207,181,59,0.25); border-radius: 14px; text-align: center; font-size: 13px; color: rgba(255,255,255,0.6); line-height: 1.7; }
   .footer strong { color: #CFB53B; }
@@ -131,49 +137,137 @@
 </svg>
 
 <div class="container">
-  <h1>BhavX <span class="accent">— Final Lockup + Chakra Loader</span></h1>
+  <h1>BhavX <span class="accent">— X Treatment + Slower Loader</span></h1>
   <p class="subtitle">
-    Locked: <em>Blend C</em> (vertical bar separator). X font swapped to <em>Cinzel Black</em> for even, geometric strokes (Marcellus had uneven X). Plus a spinning chakra loader using the L2.1 logo — the loader IS the brand.
+    Cinzel Black X was too blocky. Below: <em>4 alternative X treatments</em> in the frame, plus the chakra loader at <em>4 speeds</em> to find the right rhythm.
   </p>
 
   <!-- ═══════════════════════════════════════════════════════
-       X FONT FIX — before / after
+       X TREATMENT OPTIONS
        ═══════════════════════════════════════════════════════ -->
-  <div class="section-divider"><span>✦ X Stroke Fix (Marcellus → Cinzel Black)</span></div>
+  <div class="section-divider"><span>✦ X Treatment Options</span></div>
 
   <div class="item">
-    <p class="item-name">Before / After — X stroke comparison</p>
-    <p class="item-desc">Marcellus has natural serif stroke variation — its X has one thin diagonal and one thick. <strong>Cinzel Black</strong> is a Roman-temple-inscription typeface with deliberate even stroke weights — perfect for the framed exchange ticker. Bonus: the font contrast (Marcellus serif "Bhav" vs Cinzel Black "X") visually reinforces that X is its own entity.</p>
+    <p class="item-name">Compare 4 X Treatments (in the frame)</p>
+    <p class="item-desc">Each X has a different feel. <em>Custom SVG X</em> guarantees perfectly even strokes. <em>Marcellus</em> matches the wordmark's font. <em>Cormorant Italic</em> adds elegance. <em>EB Garamond</em> is heavier classical.</p>
     <div class="compare">
+
+      <!-- X1 — Custom SVG (perfectly even) -->
       <div class="compare-block">
-        <div class="compare-label">Before · Marcellus X (uneven)</div>
-        <span class="x-old gold-text">X</span>
+        <div class="compare-label">X1 · Custom SVG<br>(perfectly even)</div>
+        <span class="compare-x-frame">
+          <svg class="x-svg" viewBox="0 0 38 42" fill="none" stroke="url(#goldGrad)" stroke-width="6" stroke-linecap="round">
+            <line x1="5" y1="5" x2="33" y2="37" />
+            <line x1="33" y1="5" x2="5" y2="37" />
+          </svg>
+        </span>
       </div>
+
+      <!-- X2 — Marcellus (same as Bhav, accept unevenness) -->
       <div class="compare-block">
-        <div class="compare-label">After · Cinzel Black X (even, balanced)</div>
-        <span class="x-new gold-text">X</span>
+        <div class="compare-label">X2 · Marcellus<br>(matches wordmark)</div>
+        <span class="compare-x-frame"><span class="x-marcellus gold-text">X</span></span>
       </div>
+
+      <!-- X3 — Cormorant Italic (elegant) -->
+      <div class="compare-block">
+        <div class="compare-label">X3 · Cormorant Italic<br>(elegant heritage)</div>
+        <span class="compare-x-frame"><span class="x-cormorant gold-text">X</span></span>
+      </div>
+
+      <!-- X4 — EB Garamond Bold (heavier classical) -->
+      <div class="compare-block">
+        <div class="compare-label">X4 · EB Garamond<br>(classical weight)</div>
+        <span class="compare-x-frame"><span class="x-eb-garamond gold-text">X</span></span>
+      </div>
+
     </div>
   </div>
 
   <!-- ═══════════════════════════════════════════════════════
-       FINAL LOCKUP — Blend C, Cinzel X
+       FULL LOCKUP with each X option
        ═══════════════════════════════════════════════════════ -->
-  <div class="section-divider"><span>✦ Final Lockup (Blend C, fixed)</span></div>
+  <div class="section-divider"><span>✦ Full Lockup — Each X in Context</span></div>
 
+  <!-- Lockup with X1 (Custom SVG) -->
   <div class="item highlight">
-    <p class="item-name">★ Final · Bhav | ⟨X⟩ — India's Metal Exchange</p>
-    <p class="item-desc"><strong>This is the one.</strong> L2.1 sun-core logo + Marcellus "Bhav" + thin gold ticker bar + Cinzel Black "X" inside thin gold frame + small-caps tagline. Both X strokes now perfectly even. Maximum bold + sacred + financial.</p>
+    <p class="item-name">★ Lockup X1 · Custom SVG X (recommended)</p>
+    <p class="item-desc">Hand-drawn SVG X with <strong>two perfectly equal-thickness gold-gradient diagonals</strong>. Matches the geometric precision of the iris logo + the gold frame. Looks pure & precise — no font hacks. <em>Cleanest fix</em>.</p>
     <div class="display-row">
       <svg class="logo-anchor" viewBox="0 0 64 64" fill="none">
         <g fill="url(#goldGrad)"><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(0 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(45 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(90 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(135 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(180 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(225 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(270 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(315 32 32)" /></g>
         <circle cx="32" cy="32" r="4.5" fill="url(#binduSun)" />
       </svg>
-      <span class="final">
+      <span class="lockup">
         <span class="top gold-text">
           <span class="bhav">Bhav</span>
           <span class="bar"></span>
-          <span class="x-frame"><span class="x">X</span></span>
+          <span class="x-frame">
+            <svg style="width: 32px; height: 36px;" viewBox="0 0 38 42" fill="none" stroke="url(#goldGrad)" stroke-width="6" stroke-linecap="round">
+              <line x1="5" y1="5" x2="33" y2="37" />
+              <line x1="33" y1="5" x2="5" y2="37" />
+            </svg>
+          </span>
+        </span>
+        <span class="tagline">India's Metal Exchange</span>
+      </span>
+    </div>
+  </div>
+
+  <!-- Lockup with X2 (Marcellus, original) -->
+  <div class="item">
+    <p class="item-name">Lockup X2 · Marcellus X (matches wordmark font)</p>
+    <p class="item-desc">Keeps Marcellus everywhere — the X has the same font as Bhav. Slight stroke unevenness is the typeface's natural design. Most typographically consistent.</p>
+    <div class="display-row">
+      <svg class="logo-anchor" viewBox="0 0 64 64" fill="none">
+        <g fill="url(#goldGrad)"><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(0 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(45 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(90 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(135 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(180 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(225 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(270 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(315 32 32)" /></g>
+        <circle cx="32" cy="32" r="4.5" fill="url(#binduSun)" />
+      </svg>
+      <span class="lockup">
+        <span class="top gold-text">
+          <span class="bhav">Bhav</span>
+          <span class="bar"></span>
+          <span class="x-frame"><span class="x-marcellus">X</span></span>
+        </span>
+        <span class="tagline">India's Metal Exchange</span>
+      </span>
+    </div>
+  </div>
+
+  <!-- Lockup with X3 (Cormorant Italic) -->
+  <div class="item">
+    <p class="item-name">Lockup X3 · Cormorant Italic X (elegant flourish)</p>
+    <p class="item-desc">Cormorant Garamond italic. Adds a subtle flourish — the slight slant gives the X forward motion, like a market in motion. More feminine/refined than Marcellus's upright X.</p>
+    <div class="display-row">
+      <svg class="logo-anchor" viewBox="0 0 64 64" fill="none">
+        <g fill="url(#goldGrad)"><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(0 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(45 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(90 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(135 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(180 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(225 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(270 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(315 32 32)" /></g>
+        <circle cx="32" cy="32" r="4.5" fill="url(#binduSun)" />
+      </svg>
+      <span class="lockup">
+        <span class="top gold-text">
+          <span class="bhav">Bhav</span>
+          <span class="bar"></span>
+          <span class="x-frame"><span class="x-cormorant">X</span></span>
+        </span>
+        <span class="tagline">India's Metal Exchange</span>
+      </span>
+    </div>
+  </div>
+
+  <!-- Lockup with X4 (EB Garamond) -->
+  <div class="item">
+    <p class="item-name">Lockup X4 · EB Garamond X (classical weight)</p>
+    <p class="item-desc">EB Garamond bold. Classical Garamond shape with deeper weight. More even strokes than Marcellus's X. Vintage typographic feel — old gold standard.</p>
+    <div class="display-row">
+      <svg class="logo-anchor" viewBox="0 0 64 64" fill="none">
+        <g fill="url(#goldGrad)"><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(0 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(45 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(90 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(135 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(180 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(225 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(270 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(315 32 32)" /></g>
+        <circle cx="32" cy="32" r="4.5" fill="url(#binduSun)" />
+      </svg>
+      <span class="lockup">
+        <span class="top gold-text">
+          <span class="bhav">Bhav</span>
+          <span class="bar"></span>
+          <span class="x-frame"><span class="x-eb-garamond">X</span></span>
         </span>
         <span class="tagline">India's Metal Exchange</span>
       </span>
@@ -181,187 +275,113 @@
   </div>
 
   <!-- ═══════════════════════════════════════════════════════
-       SCALE TEST — Final at all sizes
+       LOADER SPEED COMPARISON
        ═══════════════════════════════════════════════════════ -->
-  <div class="section-divider"><span>✦ Final Lockup at All Sizes</span></div>
+  <div class="section-divider"><span>✦ Loader Speed — Pick Your Rhythm</span></div>
 
   <div class="item">
-    <p class="item-name">Hero / Navbar / Footer scaling</p>
-    <div class="display-row" style="flex-direction: column; align-items: flex-start; gap: 28px;">
+    <p class="item-name">4 Speeds Side-by-Side</p>
+    <p class="item-desc">Watch them spin together. Pick which feels right for the BhavX brand — fast feels urgent/tech, slow feels meditative/sacred. <em>My recommendation: 3.5s — slow enough to feel premium, fast enough to feel alive.</em></p>
+    <div class="loader-row">
 
-      <!-- Hero -->
-      <div style="display: flex; align-items: center; gap: 20px;">
-        <span style="font-size: 11px; color: rgba(255,255,255,0.35); text-transform: uppercase; letter-spacing: 0.1em; min-width: 80px;">Hero</span>
-        <svg class="logo-anchor" viewBox="0 0 64 64" fill="none">
-          <g fill="url(#goldGrad)"><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(0 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(45 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(90 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(135 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(180 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(225 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(270 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(315 32 32)" /></g>
-          <circle cx="32" cy="32" r="4.5" fill="url(#binduSun)" />
-        </svg>
-        <span class="final">
-          <span class="top gold-text">
-            <span class="bhav">Bhav</span>
-            <span class="bar"></span>
-            <span class="x-frame"><span class="x">X</span></span>
-          </span>
-          <span class="tagline">India's Metal Exchange</span>
-        </span>
-      </div>
-
-      <!-- Navbar (no tagline) -->
-      <div style="display: flex; align-items: center; gap: 14px;">
-        <span style="font-size: 11px; color: rgba(255,255,255,0.35); text-transform: uppercase; letter-spacing: 0.1em; min-width: 80px;">Navbar</span>
-        <svg class="logo-sm" viewBox="0 0 64 64" fill="none">
-          <g fill="url(#goldGrad)"><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(0 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(45 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(90 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(135 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(180 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(225 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(270 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(315 32 32)" /></g>
+      <div class="loader-block">
+        <svg class="loader-medium" viewBox="0 0 64 64" fill="none">
+          <g class="speed-loader-fast" fill="url(#goldGrad)"><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(0 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(45 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(90 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(135 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(180 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(225 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(270 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(315 32 32)" /></g>
           <circle cx="32" cy="32" r="4" fill="url(#binduSun)" />
         </svg>
-        <span style="display: inline-flex; align-items: center; gap: 10px; line-height: 1;" class="gold-text">
-          <span style="font-family: 'Marcellus', serif; font-size: 22px; letter-spacing: 0.02em;">Bhav</span>
-          <span style="width: 1.5px; height: 16px; background: linear-gradient(180deg, transparent, #CFB53B, transparent); border-radius: 1px;"></span>
-          <span style="display: inline-flex; align-items: center; justify-content: center; padding: 3px 9px; border: 1.5px solid; border-image: linear-gradient(180deg, #FFE9A8, #8C6818) 1; background: rgba(207,181,59,0.05); border-radius: 3px;">
-            <span style="font-family: 'Cinzel', serif; font-weight: 900; font-size: 16px; line-height: 1;">X</span>
-          </span>
-        </span>
+        <div class="loader-caption"><strong>Speed 1</strong> — 1.8s</div>
+        <div class="loader-context">Original (too fast)</div>
       </div>
 
-      <!-- Footer (smallest) -->
-      <div style="display: flex; align-items: center; gap: 10px;">
-        <span style="font-size: 11px; color: rgba(255,255,255,0.35); text-transform: uppercase; letter-spacing: 0.1em; min-width: 80px;">Footer</span>
-        <svg class="logo-xs" viewBox="0 0 64 64" fill="none">
-          <g fill="url(#goldGrad)"><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(0 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(45 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(90 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(135 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(180 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(225 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(270 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(315 32 32)" /></g>
-          <circle cx="32" cy="32" r="3.5" fill="url(#binduSun)" />
+      <div class="loader-block">
+        <svg class="loader-medium" viewBox="0 0 64 64" fill="none">
+          <g class="speed-loader-medium" fill="url(#goldGrad)"><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(0 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(45 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(90 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(135 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(180 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(225 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(270 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(315 32 32)" /></g>
+          <circle cx="32" cy="32" r="4" fill="url(#binduSun)" />
         </svg>
-        <span style="display: inline-flex; align-items: center; gap: 7px; line-height: 1;" class="gold-text">
-          <span style="font-family: 'Marcellus', serif; font-size: 15px;">Bhav</span>
-          <span style="width: 1px; height: 11px; background: #CFB53B;"></span>
-          <span style="display: inline-flex; align-items: center; justify-content: center; padding: 2px 6px; border: 1px solid #CFB53B; background: rgba(207,181,59,0.05); border-radius: 2px;">
-            <span style="font-family: 'Cinzel', serif; font-weight: 900; font-size: 11px; line-height: 1;">X</span>
-          </span>
-        </span>
+        <div class="loader-caption"><strong>Speed 2</strong> — 2.6s</div>
+        <div class="loader-context">Brisk + alive</div>
       </div>
+
+      <div class="loader-block">
+        <svg class="loader-medium" viewBox="0 0 64 64" fill="none">
+          <g class="speed-loader-slow" fill="url(#goldGrad)"><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(0 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(45 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(90 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(135 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(180 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(225 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(270 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(315 32 32)" /></g>
+          <circle cx="32" cy="32" r="4" fill="url(#binduSun)" />
+        </svg>
+        <div class="loader-caption"><strong>Speed 3</strong> — 3.5s ★</div>
+        <div class="loader-context">Recommended (premium)</div>
+      </div>
+
+      <div class="loader-block">
+        <svg class="loader-medium" viewBox="0 0 64 64" fill="none">
+          <g class="speed-loader-very-slow" fill="url(#goldGrad)"><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(0 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(45 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(90 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(135 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(180 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(225 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(270 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(315 32 32)" /></g>
+          <circle cx="32" cy="32" r="4" fill="url(#binduSun)" />
+        </svg>
+        <div class="loader-caption"><strong>Speed 4</strong> — 5s</div>
+        <div class="loader-context">Meditative (might feel slow)</div>
+      </div>
+
     </div>
   </div>
 
-  <!-- ═══════════════════════════════════════════════════════
-       SPINNING CHAKRA LOADER
-       ═══════════════════════════════════════════════════════ -->
-  <div class="section-divider"><span>✦ Spinning Chakra Loader</span></div>
-
-  <div class="item highlight">
-    <p class="item-name">⚙ Chakra Loader · Spinning blades + pulsing sun core</p>
-    <p class="item-desc"><strong>Genius idea.</strong> The blades rotate, the sun core pulses gently. The loader IS the brand — every wait moment reinforces BhavX's identity. Sacred geometry + functional UI. <em>Replaces every generic spinner across the app — login, page loads, button states, Analytics page</em>.</p>
-
+  <!-- Final loader at recommended 3.5s, all sizes -->
+  <div class="item">
+    <p class="item-name">★ Recommended · 3.5s at All Sizes</p>
+    <p class="item-desc">Slow enough to feel premium and meditative, fast enough that users don't feel stuck. The blades complete one full revolution every 3.5 seconds — same rhythm as a deep breath.</p>
     <div class="loader-row">
 
-      <!-- Large (full-page loader) -->
       <div class="loader-block">
         <svg class="loader-large" viewBox="0 0 64 64" fill="none">
           <g class="loader-blades" fill="url(#goldGrad)">
-            <path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(0 32 32)" />
-            <path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(45 32 32)" />
-            <path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(90 32 32)" />
-            <path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(135 32 32)" />
-            <path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(180 32 32)" />
-            <path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(225 32 32)" />
-            <path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(270 32 32)" />
-            <path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(315 32 32)" />
+            <path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(0 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(45 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(90 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(135 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(180 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(225 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(270 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(315 32 32)" />
           </g>
           <g class="loader-core"><circle cx="32" cy="32" r="4.5" fill="url(#binduSun)" /></g>
         </svg>
         <div class="loader-caption">96px · Full-page</div>
-        <div class="loader-context">Login, signup, app boot</div>
       </div>
 
-      <!-- Medium (page section loading) -->
       <div class="loader-block">
         <svg class="loader-medium" viewBox="0 0 64 64" fill="none">
           <g class="loader-blades" fill="url(#goldGrad)">
-            <path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(0 32 32)" />
-            <path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(45 32 32)" />
-            <path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(90 32 32)" />
-            <path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(135 32 32)" />
-            <path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(180 32 32)" />
-            <path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(225 32 32)" />
-            <path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(270 32 32)" />
-            <path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(315 32 32)" />
+            <path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(0 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(45 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(90 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(135 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(180 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(225 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(270 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(315 32 32)" />
           </g>
           <g class="loader-core"><circle cx="32" cy="32" r="4" fill="url(#binduSun)" /></g>
         </svg>
         <div class="loader-caption">56px · Section</div>
-        <div class="loader-context">Analytics charts, marketplace</div>
       </div>
 
-      <!-- Small (in-page loading) -->
       <div class="loader-block">
         <svg class="loader-small" viewBox="0 0 64 64" fill="none">
           <g class="loader-blades" fill="url(#goldGrad)">
-            <path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(0 32 32)" />
-            <path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(45 32 32)" />
-            <path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(90 32 32)" />
-            <path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(135 32 32)" />
-            <path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(180 32 32)" />
-            <path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(225 32 32)" />
-            <path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(270 32 32)" />
-            <path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(315 32 32)" />
+            <path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(0 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(45 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(90 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(135 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(180 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(225 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(270 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(315 32 32)" />
           </g>
           <g class="loader-core"><circle cx="32" cy="32" r="3.5" fill="url(#binduSun)" /></g>
         </svg>
         <div class="loader-caption">28px · Inline</div>
-        <div class="loader-context">Card refresh, deal panel</div>
       </div>
 
-      <!-- Inline button -->
       <div class="loader-block">
         <span class="demo-button-loading">
           <svg class="loader-inline" viewBox="0 0 64 64" fill="none">
             <g class="loader-blades" fill="url(#goldGrad)">
-              <path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(0 32 32)" />
-              <path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(45 32 32)" />
-              <path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(90 32 32)" />
-              <path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(135 32 32)" />
-              <path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(180 32 32)" />
-              <path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(225 32 32)" />
-              <path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(270 32 32)" />
-              <path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(315 32 32)" />
+              <path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(0 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(45 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(90 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(135 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(180 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(225 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(270 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(315 32 32)" />
             </g>
           </svg>
           Saving listing…
         </span>
         <div class="loader-caption">16px · Button</div>
-        <div class="loader-context">Submit, save, post</div>
       </div>
 
     </div>
   </div>
 
-  <!-- Full page loader demo -->
-  <div class="item">
-    <p class="item-name">Full-Page Boot Demo</p>
-    <p class="item-desc">What users see for the 1-2s when bhavx.com first loads. Big chakra spinning + tagline below. Premium first-impression.</p>
-    <div class="fullpage-demo">
-      <svg style="width: 84px; height: 84px;" viewBox="0 0 64 64" fill="none">
-        <g class="loader-blades" fill="url(#goldGrad)">
-          <path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(0 32 32)" />
-          <path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(45 32 32)" />
-          <path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(90 32 32)" />
-          <path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(135 32 32)" />
-          <path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(180 32 32)" />
-          <path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(225 32 32)" />
-          <path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(270 32 32)" />
-          <path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(315 32 32)" />
-        </g>
-        <g class="loader-core"><circle cx="32" cy="32" r="4.5" fill="url(#binduSun)" /></g>
-      </svg>
-      <p style="font-family: 'Cormorant SC', serif; font-weight: 700; font-size: 12px; letter-spacing: 0.36em; color: rgba(207,181,59,0.7); text-transform: uppercase; margin-top: 18px;">Loading Markets</p>
-    </div>
-  </div>
-
   <div class="footer">
-    <p><strong>Final lockup locked. Chakra loader ready to roll out everywhere.</strong></p>
-    <p style="margin-top: 12px;">
-      Once you confirm <strong>"ship it"</strong>, I'll roll out across:<br/>
-      Navbar · Footer · Email templates (Resend verification + reset) · Landing hero · favicon · loading states (Marketplace, Analytics, Profile, Login, Signup, etc.)
+    <p><strong>Two decisions:</strong></p>
+    <p style="margin-top: 8px;">
+      <strong>1. X treatment:</strong> X1 (custom SVG) · X2 (Marcellus) · X3 (Cormorant Italic) · X4 (EB Garamond)<br>
+      <strong>2. Loader speed:</strong> 1 (1.8s) · 2 (2.6s) · 3 (3.5s) · 4 (5s)
     </p>
-    <p style="margin-top: 12px; font-size: 12px;">
-      Anything else to tweak? <em>Frame thickness · X size · separator height · loader speed · core pulse intensity</em>.
+    <p style="margin-top: 14px;">
+      Reply: <strong>"X1 + speed 3"</strong> or whichever combo. My pick: <strong>X1 (custom SVG) + Speed 3 (3.5s)</strong>.
     </p>
   </div>
 </div>
