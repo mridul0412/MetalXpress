@@ -6,6 +6,7 @@ import {
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { updateProfile, checkSubscription, requestOTP } from '../utils/api';
+import ChakraLoader from '../components/ChakraLoader';
 
 const inputStyle = {
   width: '100%', padding: '12px 14px', borderRadius: 10, fontSize: 13,
@@ -152,7 +153,7 @@ export default function Profile() {
   const handleLogout = () => { logout(); navigate('/'); };
 
   if (authLoading) return (
-    <div style={{ padding: 40, textAlign: 'center', color: 'rgba(255,255,255,0.3)' }}>Loading…</div>
+    <div style={{ padding: 40, textAlign: 'center' }}><ChakraLoader size={48} layout="block" label="Loading profile" /></div>
   );
 
   const isKycDone = user?.kycVerified;

@@ -48,35 +48,64 @@ async function sendEmail({ to, subject, html }) {
 // ── Email templates ───────────────────────────────────────────────────────────
 
 function baseTemplate(content) {
+  // Inline SVG iris with sun-core bindu — renders in most modern email clients
+  const heroLogoSvg = `<svg width="56" height="56" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg" style="display:inline-block;vertical-align:middle;">
+    <defs>
+      <linearGradient id="emailBlade" x1="8" y1="8" x2="56" y2="56" gradientUnits="userSpaceOnUse">
+        <stop offset="0%" stop-color="#FFE9A8"/><stop offset="40%" stop-color="#CFB53B"/><stop offset="100%" stop-color="#7A5A18"/>
+      </linearGradient>
+      <radialGradient id="emailBindu" cx="50%" cy="50%" r="50%">
+        <stop offset="0%" stop-color="#FFFEF0"/><stop offset="20%" stop-color="#FFE9A8"/><stop offset="50%" stop-color="#FFC942"/><stop offset="80%" stop-color="#FF6B1A"/><stop offset="100%" stop-color="#C73E0A"/>
+      </radialGradient>
+    </defs>
+    <path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" fill="url(#emailBlade)"/>
+    <path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" fill="url(#emailBlade)" transform="rotate(45 32 32)"/>
+    <path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" fill="url(#emailBlade)" transform="rotate(90 32 32)"/>
+    <path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" fill="url(#emailBlade)" transform="rotate(135 32 32)"/>
+    <path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" fill="url(#emailBlade)" transform="rotate(180 32 32)"/>
+    <path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" fill="url(#emailBlade)" transform="rotate(225 32 32)"/>
+    <path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" fill="url(#emailBlade)" transform="rotate(270 32 32)"/>
+    <path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" fill="url(#emailBlade)" transform="rotate(315 32 32)"/>
+    <circle cx="32" cy="32" r="3.5" fill="url(#emailBindu)"/>
+  </svg>`;
+
+  // Wordmark: Marcellus serif + ticker bar + framed X
+  // (Email clients widely support Google Fonts via web-font import in <head>)
   return `
   <!DOCTYPE html>
   <html>
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>BhavX</title>
+    <title>BhavX — India's Metal Exchange</title>
+    <link href="https://fonts.googleapis.com/css2?family=Marcellus&family=Cormorant+SC:wght@700&display=swap" rel="stylesheet" />
   </head>
-  <body style="margin:0;padding:0;background:#080E1A;font-family:monospace,Courier New;">
-    <table width="100%" cellpadding="0" cellspacing="0" style="background:#080E1A;padding:40px 16px;">
+  <body style="margin:0;padding:0;background:#050912;font-family:'Helvetica Neue',Arial,sans-serif;">
+    <table width="100%" cellpadding="0" cellspacing="0" style="background:#050912;padding:40px 16px;">
       <tr>
         <td align="center">
-          <table width="100%" style="max-width:520px;background:#0D1420;border:1px solid rgba(255,255,255,0.07);border-radius:12px;overflow:hidden;">
+          <table width="100%" style="max-width:520px;background:#0D1420;border:1px solid rgba(207,181,59,0.18);border-radius:14px;overflow:hidden;">
 
             <!-- Header -->
             <tr>
-              <td style="background:linear-gradient(135deg,#0D1420,#1a2235);padding:28px 32px;text-align:center;border-bottom:1px solid rgba(207,181,59,0.2);">
-                <div style="font-size:24px;font-weight:700;letter-spacing:0.3px;font-family:monospace;">
-                  <span style="color:#FFFFFF;">☀ Bhav</span><span style="color:#CFB53B;">X</span>
+              <td style="background:linear-gradient(135deg,#0D1420,rgba(207,181,59,0.06));padding:32px 32px 26px;text-align:center;border-bottom:1px solid rgba(207,181,59,0.2);">
+                <div style="margin-bottom:14px;">${heroLogoSvg}</div>
+                <div style="font-family:'Marcellus',Georgia,serif;font-size:30px;letter-spacing:0.02em;line-height:1;">
+                  <span style="background:linear-gradient(180deg,#FFE9A8 0%,#FFC942 28%,#CFB53B 60%,#8C6818 100%);-webkit-background-clip:text;background-clip:text;color:#CFB53B;-webkit-text-fill-color:transparent;">Bhav</span>
+                  <span style="display:inline-block;width:1.5px;height:18px;background:linear-gradient(180deg,#FFE9A8,#CFB53B 50%,#8C6818);vertical-align:middle;margin:0 9px;"></span>
+                  <span style="display:inline-block;padding:3px 11px;border:1.5px solid #CFB53B;background:rgba(207,181,59,0.05);border-radius:3px;vertical-align:middle;">
+                    <span style="font-family:'Marcellus',Georgia,serif;font-size:24px;color:#CFB53B;line-height:1;">X</span>
+                  </span>
                 </div>
-                <div style="font-size:11px;color:rgba(207,181,59,0.5);margin-top:4px;letter-spacing:1px;">
-                  INDIA'S REAL-TIME METAL RATE PLATFORM
+                <div style="font-family:'Cormorant SC',Georgia,serif;font-weight:700;font-size:11px;color:rgba(207,181,59,0.7);margin-top:14px;letter-spacing:0.36em;text-transform:uppercase;">
+                  India's Metal Exchange
                 </div>
               </td>
             </tr>
 
             <!-- Body -->
             <tr>
-              <td style="padding:32px;">
+              <td style="padding:32px;font-family:'Helvetica Neue',Arial,sans-serif;">
                 ${content}
               </td>
             </tr>
@@ -84,8 +113,8 @@ function baseTemplate(content) {
             <!-- Footer -->
             <tr>
               <td style="padding:20px 32px;border-top:1px solid rgba(255,255,255,0.06);text-align:center;">
-                <p style="margin:0;font-size:11px;color:rgba(255,255,255,0.2);font-family:monospace;">
-                  BhavX · India's Real-Time Metal Rate Platform<br/>
+                <p style="margin:0;font-size:11px;color:rgba(255,255,255,0.32);font-family:'Helvetica Neue',Arial,sans-serif;line-height:1.6;">
+                  <strong style="color:rgba(207,181,59,0.7);">BhavX</strong> · India's Metal Exchange<br/>
                   If you didn't request this, you can safely ignore this email.
                 </p>
               </td>

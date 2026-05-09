@@ -8,10 +8,38 @@
     <title>BhavX ⚡ Real-Time Metal Intelligence for India</title>
     <meta name="description" content="BhavX — India's metal trading platform. Live LME, MCX & local spot rates updated throughout the day. Verified marketplace for ferrous, non-ferrous & scrap. Join free." />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Marcellus&family=Cormorant+SC:wght@600;700&display=swap" rel="stylesheet" />
   </head>
-  <body>
-    <div id="root"></div>
+  <body style="margin:0;background:#080E1A;">
+    <div id="root">
+      <!-- Pre-React boot screen — disappears as soon as React mounts -->
+      <div style="position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;background:#080E1A;gap:14px;">
+        <svg width="84" height="84" viewBox="0 0 64 64" style="animation:bxSpin 3s linear infinite;transform-origin:32px 32px;">
+          <defs>
+            <linearGradient id="bxBoot" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stop-color="#FFE9A8"/><stop offset="40%" stop-color="#CFB53B"/><stop offset="100%" stop-color="#7A5A18"/>
+            </linearGradient>
+            <radialGradient id="bxBootCore" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stop-color="#FFFEF0"/><stop offset="50%" stop-color="#FFC942"/><stop offset="100%" stop-color="#C73E0A"/>
+            </radialGradient>
+          </defs>
+          <g fill="url(#bxBoot)">
+            <path d="M 21,7 L 43,7 L 29,22 L 26,23 Z"/>
+            <path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(45 32 32)"/>
+            <path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(90 32 32)"/>
+            <path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(135 32 32)"/>
+            <path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(180 32 32)"/>
+            <path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(225 32 32)"/>
+            <path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(270 32 32)"/>
+            <path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(315 32 32)"/>
+          </g>
+          <circle cx="32" cy="32" r="4" fill="url(#bxBootCore)"/>
+        </svg>
+        <div style="font-family:'Cormorant SC',Georgia,serif;font-weight:700;font-size:11px;letter-spacing:0.36em;color:rgba(207,181,59,0.7);text-transform:uppercase;">Loading Markets</div>
+        <style>@keyframes bxSpin { to { transform: rotate(360deg); } }</style>
+      </div>
+    </div>
     <script type="module" src="/src/main.jsx"></script>
   </body>
 </html>

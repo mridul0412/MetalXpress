@@ -3,6 +3,8 @@ import { Activity, Briefcase, Settings, BarChart3, User as UserIcon, Key, LogOut
 import { useAuth } from '../context/AuthContext';
 import LMEStrip from './LMEStrip';
 import { BRAND } from '../config/brand';
+import BhavXLogo from './BhavXLogo';
+import BhavXWordmark from './BhavXWordmark';
 import { useState, useRef, useEffect } from 'react';
 
 // Alerts hidden from nav until FCM push notifications wired (Day 5 of sprint).
@@ -49,21 +51,9 @@ export default function Navbar() {
         {/* Top bar */}
         <div className="max-w-5xl mx-auto px-4 h-14 flex items-center justify-between">
           {/* Brand */}
-          <Link to="/" className="flex items-center gap-2" style={{ textDecoration: 'none' }}>
-            <svg width="44" height="44" viewBox="0 0 64 64" style={{ flexShrink: 0, filter: 'drop-shadow(0 0 6px rgba(207,181,59,0.45))' }} aria-label="BhavX">
-              <defs>
-                <linearGradient id="navBlade" x1="8" y1="8" x2="56" y2="56" gradientUnits="userSpaceOnUse">
-                  <stop offset="0%"   stopColor="#FFE9A8"/>
-                  <stop offset="35%"  stopColor="#E8CC5A"/>
-                  <stop offset="65%"  stopColor="#CFB53B"/>
-                  <stop offset="100%" stopColor="#7A5A18"/>
-                </linearGradient>
-              </defs>
-              {[0,45,90,135,180,225,270,315].map(a => (
-                <path key={a} d="M 21,7 L 43,7 L 29,22 L 26,23 Z" fill="url(#navBlade)" transform={`rotate(${a} 32 32)`} />
-              ))}
-            </svg>
-            <span className="font-bold metallic-text" style={{ fontSize: 16, letterSpacing: '0.08em' }}>BhavX</span>
+          <Link to="/" className="flex items-center gap-2" style={{ textDecoration: 'none', gap: 10 }} aria-label="BhavX — India's Metal Exchange">
+            <BhavXLogo size={40} glow />
+            <BhavXWordmark size="navbar" />
           </Link>
 
           {/* Desktop nav — app nav for logged-in, marketing links for visitors */}

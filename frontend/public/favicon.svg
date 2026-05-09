@@ -6,6 +6,13 @@
       <stop offset="65%"  stop-color="#CFB53B"/>
       <stop offset="100%" stop-color="#7A5A18"/>
     </linearGradient>
+    <radialGradient id="bindu" cx="50%" cy="50%" r="50%">
+      <stop offset="0%"   stop-color="#FFFEF0"/>
+      <stop offset="20%"  stop-color="#FFE9A8"/>
+      <stop offset="50%"  stop-color="#FFC942"/>
+      <stop offset="80%"  stop-color="#FF6B1A"/>
+      <stop offset="100%" stop-color="#C73E0A"/>
+    </radialGradient>
   </defs>
   <path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" fill="url(#blade)"/>
   <path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" fill="url(#blade)" transform="rotate(45 32 32)"/>
@@ -15,4 +22,5 @@
   <path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" fill="url(#blade)" transform="rotate(225 32 32)"/>
   <path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" fill="url(#blade)" transform="rotate(270 32 32)"/>
   <path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" fill="url(#blade)" transform="rotate(315 32 32)"/>
+  <circle cx="32" cy="32" r="3" fill="url(#bindu)"/>
 </svg>

@@ -14,6 +14,7 @@ import {
 import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import PaywallModal from '../components/PaywallModal';
+import ChakraLoader from '../components/ChakraLoader';
 
 /* ── shared styles ─────────────────────────────────────────────────── */
 const inputStyle = {
@@ -316,7 +317,7 @@ function BrowseTab({ listings, loading, filterMetal, setFilterMetal, filterCity,
             }}>Login</button>
           </div>
         </div>
-      ) : loading ? <p style={{ color: 'rgba(255,255,255,0.3)', textAlign: 'center', padding: 40 }}>Loading…</p>
+      ) : loading ? <div style={{ textAlign: 'center', padding: 40 }}><ChakraLoader size={48} layout="block" label="Loading listings" /></div>
       : visibleListings.length === 0
         ? <p style={{ color: 'rgba(255,255,255,0.3)', textAlign: 'center', padding: 40 }}>No listings found. Be the first to post!</p>
         : <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(min(100%, 320px), 1fr))', gap: 16 }}>

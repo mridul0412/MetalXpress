@@ -5,6 +5,7 @@ import {
   CheckCircle, AlertCircle, MapPin, Zap,
 } from 'lucide-react';
 import { adminParsePreview, saveParsedRates, fetchPendingListings, verifyListing, fetchDisputes, resolveDispute, fetchPendingKyc, approveKyc, rejectKyc } from '../utils/api';
+import ChakraLoader from '../components/ChakraLoader';
 
 const ADMIN_PASS_KEY = 'mx_admin_pass';
 
@@ -218,7 +219,7 @@ function MarketplaceAdmin() {
         </p>
       </div>
 
-      {loading ? <p style={{ color: 'rgba(255,255,255,0.3)' }}>Loading…</p>
+      {loading ? <div style={{ padding: 24 }}><ChakraLoader size={40} layout="block" label="Loading" /></div>
       : loadError
         ? <div style={{ background: 'rgba(248,113,113,0.08)', borderRadius: 14, padding: 24,
             border: '1px solid rgba(248,113,113,0.3)' }}>
@@ -452,7 +453,7 @@ function KycAdmin() {
         </div>
       </div>
 
-      {loading ? <p style={{ color: 'rgba(255,255,255,0.3)' }}>Loading…</p>
+      {loading ? <div style={{ padding: 24 }}><ChakraLoader size={40} layout="block" label="Loading" /></div>
       : loadError
         ? <div style={{ background: 'rgba(248,113,113,0.08)', border: '1px solid rgba(248,113,113,0.3)', borderRadius: 14, padding: 24 }}>
             <p style={{ color: '#f87171', fontSize: 14, fontWeight: 700, margin: 0 }}>⚠ {loadError}</p>
@@ -594,7 +595,7 @@ function DisputesAdmin() {
         </p>
       </div>
 
-      {loading ? <p style={{ color: 'rgba(255,255,255,0.3)' }}>Loading…</p>
+      {loading ? <div style={{ padding: 24 }}><ChakraLoader size={40} layout="block" label="Loading" /></div>
       : disputes.length === 0
         ? <div style={{ background: 'rgba(255,255,255,0.03)', borderRadius: 14, padding: 40,
             textAlign: 'center', border: '1px solid rgba(255,255,255,0.06)' }}>
