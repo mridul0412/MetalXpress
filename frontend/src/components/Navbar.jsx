@@ -49,11 +49,21 @@ export default function Navbar() {
         boxShadow: '0 4px 24px rgba(0,0,0,0.4)',
       }}>
         {/* Top bar */}
-        <div className="max-w-5xl mx-auto px-4 h-14 flex items-center justify-between">
-          {/* Brand */}
-          <Link to="/" className="flex items-center gap-2" style={{ textDecoration: 'none', gap: 10 }} aria-label="BhavX — India's Metal Exchange">
-            <BhavXLogo size={40} glow />
-            <BhavXWordmark size="navbar" />
+        <div className="max-w-5xl mx-auto px-4 h-[68px] flex items-center justify-between">
+          {/* Brand — bigger logo + wordmark with tagline below */}
+          <Link to="/" style={{ display: 'flex', alignItems: 'center', gap: 12, textDecoration: 'none' }} aria-label="BhavX — India's Metal Exchange">
+            <BhavXLogo size={52} glow />
+            <span style={{ display: 'flex', flexDirection: 'column', gap: 3, lineHeight: 1 }}>
+              <BhavXWordmark size="navbar" />
+              <span style={{
+                fontFamily: "'Cormorant SC', serif", fontWeight: 700,
+                fontSize: 8.5, letterSpacing: '0.32em',
+                color: 'rgba(207,181,59,0.65)', textTransform: 'uppercase',
+                whiteSpace: 'nowrap',
+              }}>
+                India's Metal Exchange
+              </span>
+            </span>
           </Link>
 
           {/* Desktop nav — app nav for logged-in, marketing links for visitors */}
