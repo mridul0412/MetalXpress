@@ -3,10 +3,10 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>BhavX — Bhav · X Separation</title>
+<title>BhavX — V2 × V3 Blend</title>
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700;900&family=Marcellus&family=Marcellus+SC&family=Inter:wght@500;700;800&family=Cormorant+SC:wght@600;700&display=swap" rel="stylesheet" />
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700;900&family=Marcellus&family=Cormorant+SC:wght@600;700&family=Inter:wght@500;600;700&display=swap" rel="stylesheet" />
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body { background: #050912; color: #fff; font-family: Inter, -apple-system, sans-serif; padding: 40px 24px; min-height: 100vh; }
@@ -32,76 +32,63 @@
   .item-desc { font-size: 12px; color: rgba(255,255,255,0.55); line-height: 1.6; margin-bottom: 18px; }
   .item-desc strong { color: #fff; }
   .item-desc em { color: #CFB53B; font-style: normal; }
-  .display-row { display: flex; align-items: center; gap: 26px; padding: 32px 24px; background: radial-gradient(ellipse at 50% 50%, rgba(207,181,59,0.04), rgba(8,14,26,0.7)); border: 1px solid rgba(255,255,255,0.04); border-radius: 10px; flex-wrap: wrap; min-height: 140px; }
+  .display-row { display: flex; align-items: center; gap: 26px; padding: 36px 26px; background: radial-gradient(ellipse at 50% 50%, rgba(207,181,59,0.04), rgba(8,14,26,0.7)); border: 1px solid rgba(255,255,255,0.04); border-radius: 10px; flex-wrap: wrap; min-height: 160px; }
 
   .gold-text {
     background: linear-gradient(180deg, #FFE9A8 0%, #FFC942 28%, #CFB53B 60%, #8C6818 100%);
     -webkit-background-clip: text; background-clip: text; color: transparent;
     filter: drop-shadow(0 1px 2px rgba(0,0,0,0.5));
   }
-  .gold-bar {
-    background: linear-gradient(180deg, transparent, #FFC942 25%, #CFB53B 75%, transparent);
-  }
-  .gold-deep {
-    background: linear-gradient(180deg, #CFB53B 0%, #8C6818 100%);
-    -webkit-background-clip: text; background-clip: text; color: transparent;
-  }
 
-  /* L2.1 logo (sun core, anchor) */
-  .logo-anchor { width: 80px; height: 80px; flex-shrink: 0; }
+  .logo-anchor { width: 84px; height: 84px; flex-shrink: 0; filter: drop-shadow(0 0 10px rgba(255,140,40,0.25)); }
   .logo-sm { width: 44px; height: 44px; flex-shrink: 0; }
   .logo-xs { width: 28px; height: 28px; flex-shrink: 0; }
 
   /* ════════════════════════════════════════════════════════
-     BHAV · X SEPARATION VARIANTS (all Marcellus, L2.1)
+     BLEND VARIANTS (V2 em-dash + tagline + V3 framed X)
      ════════════════════════════════════════════════════════ */
 
-  /* V1 — Vertical bar separator + EXCHANGE micro-caption under X */
-  .v1 { font-family: 'Marcellus', serif; font-size: 56px; line-height: 1; display: inline-flex; align-items: stretch; gap: 18px; }
-  .v1 .bhav { line-height: 1; letter-spacing: 0.02em; align-self: center; }
-  .v1 .bar { width: 2px; align-self: stretch; background: linear-gradient(180deg, transparent, #FFC942 20%, #CFB53B 80%, transparent); border-radius: 1px; }
-  .v1 .x-block { display: inline-flex; flex-direction: column; align-items: center; gap: 4px; align-self: center; }
-  .v1 .x { font-size: 1.15em; line-height: 1; letter-spacing: 0; }
-  .v1 .x-tag { font-family: 'Inter', sans-serif; font-weight: 700; font-size: 9px; letter-spacing: 0.32em; color: rgba(207,181,59,0.7); text-transform: uppercase; }
+  /* Shared frame style for X */
+  .x-frame {
+    display: inline-flex; align-items: center; justify-content: center;
+    border: 2px solid;
+    border-image: linear-gradient(180deg, #FFE9A8, #CFB53B 50%, #8C6818) 1;
+    background: rgba(207,181,59,0.05);
+    border-radius: 4px;
+  }
 
-  /* V2 — Em-dash separator + tagline below */
-  .v2 { font-family: 'Marcellus', serif; font-size: 60px; line-height: 1; display: inline-flex; flex-direction: column; align-items: center; gap: 6px; }
-  .v2 .top { display: inline-flex; align-items: baseline; gap: 14px; }
-  .v2 .dash { width: 28px; height: 3px; background: linear-gradient(90deg, #CFB53B, #FFC942, #CFB53B); border-radius: 2px; align-self: center; }
-  .v2 .tagline { font-family: 'Inter', sans-serif; font-weight: 600; font-size: 10px; letter-spacing: 0.4em; color: rgba(207,181,59,0.65); text-transform: uppercase; }
-  .v2 .x-bigger { font-size: 1.18em; }
+  /* BLEND A — Em-dash + framed X + tagline below */
+  .blend-a { display: inline-flex; flex-direction: column; align-items: center; gap: 10px; }
+  .blend-a .top { display: inline-flex; align-items: center; gap: 14px; font-family: 'Marcellus', serif; font-size: 56px; line-height: 1; }
+  .blend-a .dash { width: 24px; height: 3px; background: linear-gradient(90deg, transparent, #CFB53B 30%, #FFC942 50%, #CFB53B 70%, transparent); border-radius: 2px; }
+  .blend-a .x-frame { padding: 4px 16px; }
+  .blend-a .x { font-size: 0.92em; line-height: 1; letter-spacing: 0; font-family: 'Marcellus', serif; }
+  .blend-a .tagline { font-family: 'Cormorant SC', serif; font-weight: 700; font-size: 11px; letter-spacing: 0.36em; color: rgba(207,181,59,0.7); text-transform: uppercase;
+    display: flex; align-items: center; gap: 12px; }
+  .blend-a .tagline::before, .blend-a .tagline::after { content: ''; width: 28px; height: 1px; background: linear-gradient(90deg, transparent, rgba(207,181,59,0.5)); }
+  .blend-a .tagline::after { background: linear-gradient(90deg, rgba(207,181,59,0.5), transparent); }
 
-  /* V3 — X in thin gold frame (stock chip) */
-  .v3 { font-family: 'Marcellus', serif; font-size: 58px; line-height: 1; display: inline-flex; align-items: center; gap: 14px; }
-  .v3 .x-frame { display: inline-flex; align-items: center; justify-content: center; padding: 6px 18px;
-    border: 2px solid; border-image: linear-gradient(180deg, #FFE9A8, #CFB53B 50%, #8C6818) 1;
-    background: rgba(207,181,59,0.05); border-radius: 4px; }
-  .v3 .x { font-size: 0.95em; line-height: 1; letter-spacing: 0; }
+  /* BLEND B — No dash, generous space + framed X + tagline */
+  .blend-b { display: inline-flex; flex-direction: column; align-items: center; gap: 10px; }
+  .blend-b .top { display: inline-flex; align-items: center; gap: 22px; font-family: 'Marcellus', serif; font-size: 58px; line-height: 1; }
+  .blend-b .x-frame { padding: 4px 16px; }
+  .blend-b .x { font-size: 0.92em; line-height: 1; letter-spacing: 0; font-family: 'Marcellus', serif; }
+  .blend-b .tagline { font-family: 'Cormorant SC', serif; font-weight: 700; font-size: 11px; letter-spacing: 0.36em; color: rgba(207,181,59,0.7); text-transform: uppercase;
+    display: flex; align-items: center; gap: 12px; }
+  .blend-b .tagline::before, .blend-b .tagline::after { content: ''; width: 28px; height: 1px; background: linear-gradient(90deg, transparent, rgba(207,181,59,0.5)); }
+  .blend-b .tagline::after { background: linear-gradient(90deg, rgba(207,181,59,0.5), transparent); }
 
-  /* V4 — Spaced + descriptor "INDIA'S METAL EXCHANGE" under */
-  .v4 { display: inline-flex; flex-direction: column; align-items: center; gap: 8px; }
-  .v4 .top { font-family: 'Marcellus', serif; font-size: 64px; letter-spacing: 0.18em; line-height: 1; }
-  .v4 .top .x { font-size: 1.2em; }
-  .v4 .descriptor { font-family: 'Cormorant SC', serif; font-weight: 700; font-size: 11px; letter-spacing: 0.32em; color: rgba(207,181,59,0.65); text-transform: uppercase;
-    display: flex; align-items: center; gap: 10px; }
-  .v4 .descriptor::before, .v4 .descriptor::after { content: ''; width: 26px; height: 1px; background: linear-gradient(90deg, transparent, rgba(207,181,59,0.5)); }
+  /* BLEND C — Vertical bar + framed X + tagline (most ticker-like) */
+  .blend-c { display: inline-flex; flex-direction: column; align-items: center; gap: 10px; }
+  .blend-c .top { display: inline-flex; align-items: center; gap: 16px; font-family: 'Marcellus', serif; font-size: 56px; line-height: 1; }
+  .blend-c .bar { width: 2px; height: 0.85em; background: linear-gradient(180deg, transparent, #FFC942 25%, #CFB53B 75%, transparent); border-radius: 1px; align-self: center; }
+  .blend-c .x-frame { padding: 4px 16px; }
+  .blend-c .x { font-size: 0.92em; line-height: 1; letter-spacing: 0; font-family: 'Marcellus', serif; }
+  .blend-c .tagline { font-family: 'Cormorant SC', serif; font-weight: 700; font-size: 11px; letter-spacing: 0.36em; color: rgba(207,181,59,0.7); text-transform: uppercase;
+    display: flex; align-items: center; gap: 12px; }
+  .blend-c .tagline::before, .blend-c .tagline::after { content: ''; width: 28px; height: 1px; background: linear-gradient(90deg, transparent, rgba(207,181,59,0.5)); }
+  .blend-c .tagline::after { background: linear-gradient(90deg, rgba(207,181,59,0.5), transparent); }
 
-  /* V5 — Bhav (heavy serif) + X (smaller, monospace, in frame) — like ticker symbol */
-  .v5 { font-family: 'Marcellus', serif; font-size: 60px; line-height: 1; display: inline-flex; align-items: center; gap: 12px; }
-  .v5 .bhav { letter-spacing: 0.02em; }
-  .v5 .x-ticker { font-family: 'Inter', sans-serif; font-weight: 800; font-size: 26px; letter-spacing: 0.1em;
-    padding: 6px 12px; border-radius: 3px;
-    background: linear-gradient(180deg, #FFE9A8 0%, #FFC942 25%, #CFB53B 60%, #8C6818 100%);
-    color: #0a0f1a;
-    box-shadow: 0 1px 0 rgba(255,233,168,0.3) inset, 0 -2px 0 rgba(140,104,24,0.5) inset, 0 4px 12px rgba(207,181,59,0.2); }
-
-  /* V6 — Bhav with X.E (X-Exchange) — minimalist abbreviation */
-  .v6 { font-family: 'Marcellus', serif; font-size: 60px; line-height: 1; display: inline-flex; align-items: baseline; gap: 4px; }
-  .v6 .bhav { letter-spacing: 0.02em; }
-  .v6 .x { font-size: 1.18em; }
-  .v6 .e { font-family: 'Inter', sans-serif; font-weight: 700; font-size: 0.4em; letter-spacing: 0.1em; align-self: flex-start; margin-top: 0.2em; color: rgba(207,181,59,0.75); }
-
-  .lockup { display: inline-flex; align-items: center; gap: 18px; }
   .footer { margin-top: 60px; padding: 28px; background: radial-gradient(ellipse at 50% 0%, rgba(207,181,59,0.08), rgba(13,20,32,0.5)); border: 1px solid rgba(207,181,59,0.25); border-radius: 14px; text-align: center; font-size: 13px; color: rgba(255,255,255,0.6); line-height: 1.7; }
   .footer strong { color: #CFB53B; }
 
@@ -125,157 +112,131 @@
   </defs>
 </svg>
 
-<!-- Reusable L2.1 logo template (sun core) at different sizes — referenced inline below -->
-
 <div class="container">
-  <h1>BhavX <span class="accent">— Bhav · X Separation</span></h1>
+  <h1>BhavX <span class="accent">— V2 × V3 Blend</span></h1>
   <p class="subtitle">
-    Locked: <em>L2.1 logo (sun core) + Marcellus serif</em>. Now exploring how to separate "Bhav" (the brand) from "X" (the exchange) so each has its own definition. <em>X = the exchange marker</em>. Bindu removed from X — clean again.
+    Em-dash separator (V2) + framed X stock chip (V3) + "India's Metal Exchange" tagline below.
+    Three variants of the blend — different separators, same framed-X+tagline core. Pick which separator feels right.
   </p>
 
-  <!-- Reference: WM2 cleaned (no bindu) -->
-  <div class="item" style="background: rgba(255,255,255,0.03); border: 1px dashed rgba(255,255,255,0.1);">
-    <p class="item-name">Reference · WM2 with bindu removed (clean Marcellus)</p>
-    <p class="item-desc">Where we are now — Marcellus, all-gold, no bindu on X. Bhav and X feel <em>too unified</em> — they read as one word. Below: separation variants.</p>
-    <div class="display-row">
-      <span style="font-family: 'Marcellus', serif; font-size: 56px; line-height: 1; letter-spacing: 0.05em;" class="gold-text">BhavX</span>
-    </div>
-  </div>
+  <div class="section-divider"><span>✦ The Blend (3 separator variants)</span></div>
 
-  <!-- ════════════════════════════════════════════════════════
-       SEPARATION VARIANTS
-       ════════════════════════════════════════════════════════ -->
-
-  <!-- V1 -->
+  <!-- ═══════════════════════════════════════════════════════
+       BLEND A — Em-dash separator (V2's spirit)
+       ═══════════════════════════════════════════════════════ -->
   <div class="item">
-    <p class="item-name">V1 · Bhav | X · EXCHANGE (ticker bar + caption)</p>
-    <p class="item-desc"><strong>Vertical gold bar</strong> separates Bhav and X. Tiny "EXCHANGE" caption under X explicitly defines what X stands for. <em>NSE/BSE ticker-tape DNA</em>. Bhav is the brand, X is the exchange — each owns its space.</p>
+    <p class="item-name">Blend A · Bhav — ⟨X⟩ with tagline (em-dash separator)</p>
+    <p class="item-desc"><strong>Em-dash</strong> between Bhav and framed X. Most editorial, most refined. Reads as a Bloomberg/FT masthead. Bhav and X are clearly separate, the dash visually pauses the eye, the framed X feels like the ticker symbol you'd reference.</p>
     <div class="display-row">
-      <svg class="logo-anchor" viewBox="0 0 64 64" fill="none" style="filter: drop-shadow(0 0 8px rgba(255,140,40,0.25));">
+      <svg class="logo-anchor" viewBox="0 0 64 64" fill="none">
         <g fill="url(#goldGrad)"><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(0 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(45 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(90 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(135 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(180 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(225 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(270 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(315 32 32)" /></g>
         <circle cx="32" cy="32" r="4.5" fill="url(#binduSun)" />
       </svg>
-      <span class="v1 gold-text"><span class="bhav">Bhav</span><span class="bar"></span><span class="x-block"><span class="x">X</span><span class="x-tag">Exchange</span></span></span>
-    </div>
-  </div>
-
-  <!-- V2 -->
-  <div class="item">
-    <p class="item-name">V2 · Bhav — X with tagline "INDIA'S METAL EXCHANGE"</p>
-    <p class="item-desc"><strong>Em-dash separator</strong> between Bhav and X (more elegant than vertical bar). Below the wordmark: small caps tagline that defines the entire identity. The two parts are visually separate but unified by the line beneath. <em>Most editorial, most premium</em>.</p>
-    <div class="display-row">
-      <svg class="logo-anchor" viewBox="0 0 64 64" fill="none" style="filter: drop-shadow(0 0 8px rgba(255,140,40,0.25));">
-        <g fill="url(#goldGrad)"><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(0 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(45 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(90 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(135 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(180 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(225 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(270 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(315 32 32)" /></g>
-        <circle cx="32" cy="32" r="4.5" fill="url(#binduSun)" />
-      </svg>
-      <span class="v2">
-        <span class="top gold-text"><span>Bhav</span><span class="dash"></span><span class="x-bigger">X</span></span>
+      <span class="blend-a">
+        <span class="top gold-text">
+          <span>Bhav</span>
+          <span class="dash"></span>
+          <span class="x-frame"><span class="x">X</span></span>
+        </span>
         <span class="tagline">India's Metal Exchange</span>
       </span>
     </div>
   </div>
 
-  <!-- V3 -->
+  <!-- ═══════════════════════════════════════════════════════
+       BLEND B — Just space (no separator, frame does the work)
+       ═══════════════════════════════════════════════════════ -->
   <div class="item">
-    <p class="item-name">V3 · Bhav · ⟨X⟩ (X in thin gold frame)</p>
-    <p class="item-desc"><strong>X gets its own gold-bordered frame</strong> — a thin metallic outline around the letter. Looks like a stock chip / ticker badge. Bhav stays naked serif. The frame visually <em>elevates X to its own identity</em> — "this is the exchange marker, not just a letter."</p>
+    <p class="item-name">Blend B · Bhav  ⟨X⟩ with tagline (no separator, generous space)</p>
+    <p class="item-desc"><strong>No dash, no bar — just a generous space</strong>. The framed X already creates visual separation; an extra separator might be overkill. Cleanest, most timeless. The space itself becomes meaningful.</p>
     <div class="display-row">
-      <svg class="logo-anchor" viewBox="0 0 64 64" fill="none" style="filter: drop-shadow(0 0 8px rgba(255,140,40,0.25));">
+      <svg class="logo-anchor" viewBox="0 0 64 64" fill="none">
         <g fill="url(#goldGrad)"><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(0 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(45 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(90 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(135 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(180 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(225 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(270 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(315 32 32)" /></g>
         <circle cx="32" cy="32" r="4.5" fill="url(#binduSun)" />
       </svg>
-      <span class="v3 gold-text"><span class="bhav">Bhav</span><span class="x-frame"><span class="x">X</span></span></span>
-    </div>
-  </div>
-
-  <!-- V4 -->
-  <div class="item">
-    <p class="item-name">V4 · Bhav  X  with descriptor underline</p>
-    <p class="item-desc"><strong>Wide letter-spacing</strong> between Bhav and X — pure spatial separation. Below: a thin descriptor flanked by gold lines. Cleanest, most timeless. The space between Bhav and X is itself meaningful — like a gap on a temple inscription.</p>
-    <div class="display-row">
-      <svg class="logo-anchor" viewBox="0 0 64 64" fill="none" style="filter: drop-shadow(0 0 8px rgba(255,140,40,0.25));">
-        <g fill="url(#goldGrad)"><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(0 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(45 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(90 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(135 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(180 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(225 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(270 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(315 32 32)" /></g>
-        <circle cx="32" cy="32" r="4.5" fill="url(#binduSun)" />
-      </svg>
-      <span class="v4">
-        <span class="top gold-text">Bhav<span class="x">X</span></span>
-        <span class="descriptor gold-deep">Bharat's Metal Exchange</span>
+      <span class="blend-b">
+        <span class="top gold-text">
+          <span>Bhav</span>
+          <span class="x-frame"><span class="x">X</span></span>
+        </span>
+        <span class="tagline">India's Metal Exchange</span>
       </span>
     </div>
   </div>
 
-  <!-- V5 -->
+  <!-- ═══════════════════════════════════════════════════════
+       BLEND C — Vertical bar (V1's spirit)
+       ═══════════════════════════════════════════════════════ -->
   <div class="item">
-    <p class="item-name">V5 · Bhav + [X] solid-gold ticker chip</p>
-    <p class="item-desc"><strong>X becomes a solid gold chip</strong> — like a stock symbol badge or premium watch hour-marker. Sans-serif Inter inside the chip (contrasts with Marcellus serif of "Bhav"). Bhav is the brand identity, X is the <em>tradeable instrument</em>. Maximum separation, maximum exchange feel.</p>
+    <p class="item-name">Blend C · Bhav | ⟨X⟩ with tagline (vertical ticker bar)</p>
+    <p class="item-desc"><strong>Thin vertical gold bar</strong> between Bhav and framed X. Most ticker-like — NSE/BSE/Bloomberg DNA. The bar is short and subtle. Most "this is a financial product" reading.</p>
     <div class="display-row">
-      <svg class="logo-anchor" viewBox="0 0 64 64" fill="none" style="filter: drop-shadow(0 0 8px rgba(255,140,40,0.25));">
+      <svg class="logo-anchor" viewBox="0 0 64 64" fill="none">
         <g fill="url(#goldGrad)"><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(0 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(45 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(90 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(135 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(180 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(225 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(270 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(315 32 32)" /></g>
         <circle cx="32" cy="32" r="4.5" fill="url(#binduSun)" />
       </svg>
-      <span class="v5"><span class="bhav gold-text">Bhav</span><span class="x-ticker">X</span></span>
+      <span class="blend-c">
+        <span class="top gold-text">
+          <span>Bhav</span>
+          <span class="bar"></span>
+          <span class="x-frame"><span class="x">X</span></span>
+        </span>
+        <span class="tagline">India's Metal Exchange</span>
+      </span>
     </div>
   </div>
 
-  <!-- V6 -->
-  <div class="item">
-    <p class="item-name">V6 · Bhav X<sup>E</sup> (X with tiny exchange superscript)</p>
-    <p class="item-desc"><strong>Minimalist abbreviation</strong>. X has a tiny "E" superscript — like ™ position but for "Exchange". Most compact. Reads as <em>"Bhav X-Exchange"</em>. Subtle but defines the X without overloading the wordmark.</p>
-    <div class="display-row">
-      <svg class="logo-anchor" viewBox="0 0 64 64" fill="none" style="filter: drop-shadow(0 0 8px rgba(255,140,40,0.25));">
-        <g fill="url(#goldGrad)"><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(0 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(45 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(90 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(135 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(180 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(225 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(270 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(315 32 32)" /></g>
-        <circle cx="32" cy="32" r="4.5" fill="url(#binduSun)" />
-      </svg>
-      <span class="v6"><span class="bhav gold-text">Bhav</span> <span class="gold-text"><span class="x">X</span><span class="e">EXCHG</span></span></span>
-    </div>
-  </div>
-
-  <!-- ════════════════════════════════════════════════════════
-       SIZE TEST — V1 (most likely winner) at multiple scales
-       ════════════════════════════════════════════════════════ -->
-  <div class="section-divider"><span>✦ V1 at All Sizes (Hero / Navbar / Footer)</span></div>
+  <!-- ═══════════════════════════════════════════════════════
+       SIZE TEST — Blend A at all 3 sizes (Hero / Navbar / Footer)
+       ═══════════════════════════════════════════════════════ -->
+  <div class="section-divider"><span>✦ Blend A at All Sizes</span></div>
 
   <div class="item">
-    <p class="item-name">V1 · Bhav | X · EXCHANGE — Multi-size test</p>
-    <div class="display-row" style="flex-direction: column; align-items: flex-start; gap: 24px;">
-      <!-- Hero -->
+    <p class="item-name">Blend A — Hero / Navbar / Footer scale test</p>
+    <p class="item-desc">How it actually appears on bhavx.com. Tagline scales down or disappears at smaller sizes (kept only at Hero size for impact).</p>
+    <div class="display-row" style="flex-direction: column; align-items: flex-start; gap: 28px;">
+
+      <!-- Hero (Landing page) -->
       <div style="display: flex; align-items: center; gap: 20px;">
         <span style="font-size: 11px; color: rgba(255,255,255,0.35); text-transform: uppercase; letter-spacing: 0.1em; min-width: 80px;">Hero</span>
         <svg class="logo-anchor" viewBox="0 0 64 64" fill="none">
           <g fill="url(#goldGrad)"><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(0 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(45 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(90 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(135 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(180 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(225 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(270 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(315 32 32)" /></g>
           <circle cx="32" cy="32" r="4.5" fill="url(#binduSun)" />
         </svg>
-        <span class="v1 gold-text"><span class="bhav">Bhav</span><span class="bar"></span><span class="x-block"><span class="x">X</span><span class="x-tag">Exchange</span></span></span>
+        <span class="blend-a">
+          <span class="top gold-text"><span>Bhav</span><span class="dash"></span><span class="x-frame"><span class="x">X</span></span></span>
+          <span class="tagline">India's Metal Exchange</span>
+        </span>
       </div>
-      <!-- Navbar -->
+
+      <!-- Navbar (no tagline — saves space) -->
       <div style="display: flex; align-items: center; gap: 14px;">
         <span style="font-size: 11px; color: rgba(255,255,255,0.35); text-transform: uppercase; letter-spacing: 0.1em; min-width: 80px;">Navbar</span>
         <svg class="logo-sm" viewBox="0 0 64 64" fill="none">
           <g fill="url(#goldGrad)"><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(0 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(45 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(90 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(135 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(180 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(225 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(270 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(315 32 32)" /></g>
-          <circle cx="32" cy="32" r="4.5" fill="url(#binduSun)" />
+          <circle cx="32" cy="32" r="4" fill="url(#binduSun)" />
         </svg>
-        <span style="font-family: 'Marcellus', serif; font-size: 24px; line-height: 1; display: inline-flex; align-items: stretch; gap: 10px;" class="gold-text">
-          <span style="align-self: center;">Bhav</span>
-          <span style="width: 1.5px; align-self: stretch; background: linear-gradient(180deg, transparent, #CFB53B 30%, #CFB53B 70%, transparent);"></span>
-          <span style="display: inline-flex; flex-direction: column; align-items: center; gap: 1px; align-self: center;">
-            <span style="font-size: 1.15em; line-height: 1;">X</span>
-            <span style="font-family: 'Inter', sans-serif; font-weight: 700; font-size: 7px; letter-spacing: 0.3em; color: rgba(207,181,59,0.7); text-transform: uppercase; -webkit-text-fill-color: rgba(207,181,59,0.7);">Exchange</span>
+        <span style="display: inline-flex; align-items: center; gap: 8px; font-family: 'Marcellus', serif; font-size: 22px; line-height: 1;" class="gold-text">
+          <span>Bhav</span>
+          <span style="width: 12px; height: 2px; background: linear-gradient(90deg, transparent, #CFB53B, transparent); border-radius: 1px;"></span>
+          <span style="display: inline-flex; align-items: center; justify-content: center; padding: 2px 8px; border: 1.5px solid; border-image: linear-gradient(180deg, #FFE9A8, #8C6818) 1; background: rgba(207,181,59,0.05); border-radius: 3px;">
+            <span style="font-size: 0.92em; line-height: 1;">X</span>
           </span>
         </span>
       </div>
-      <!-- Footer -->
+
+      <!-- Footer (no tagline, smaller frame) -->
       <div style="display: flex; align-items: center; gap: 10px;">
         <span style="font-size: 11px; color: rgba(255,255,255,0.35); text-transform: uppercase; letter-spacing: 0.1em; min-width: 80px;">Footer</span>
         <svg class="logo-xs" viewBox="0 0 64 64" fill="none">
           <g fill="url(#goldGrad)"><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(0 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(45 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(90 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(135 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(180 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(225 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(270 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(315 32 32)" /></g>
-          <circle cx="32" cy="32" r="4" fill="url(#binduSun)" />
+          <circle cx="32" cy="32" r="3.5" fill="url(#binduSun)" />
         </svg>
-        <span style="font-family: 'Marcellus', serif; font-size: 16px; line-height: 1; display: inline-flex; align-items: stretch; gap: 7px;" class="gold-text">
-          <span style="align-self: center;">Bhav</span>
-          <span style="width: 1px; align-self: stretch; background: rgba(207,181,59,0.6);"></span>
-          <span style="display: inline-flex; flex-direction: column; align-items: center; align-self: center;">
-            <span style="font-size: 1.15em; line-height: 1;">X</span>
-            <span style="font-family: 'Inter', sans-serif; font-weight: 700; font-size: 5px; letter-spacing: 0.25em; color: rgba(207,181,59,0.65); text-transform: uppercase; -webkit-text-fill-color: rgba(207,181,59,0.65);">Exchange</span>
+        <span style="display: inline-flex; align-items: center; gap: 6px; font-family: 'Marcellus', serif; font-size: 15px; line-height: 1;" class="gold-text">
+          <span>Bhav</span>
+          <span style="width: 8px; height: 1.5px; background: #CFB53B; border-radius: 0.5px;"></span>
+          <span style="display: inline-flex; align-items: center; justify-content: center; padding: 1px 6px; border: 1px solid #CFB53B; background: rgba(207,181,59,0.05); border-radius: 2px;">
+            <span style="font-size: 0.92em; line-height: 1;">X</span>
           </span>
         </span>
       </div>
@@ -283,12 +244,15 @@
   </div>
 
   <div class="footer">
-    <p><strong>6 ways to separate Bhav and X.</strong></p>
-    <p style="margin-top: 8px;">
-      Reply with: <strong>V1</strong> · <strong>V2</strong> · <strong>V3</strong> · <strong>V4</strong> · <strong>V5</strong> · <strong>V6</strong>
+    <p>3 separator options for the V2 × V3 blend.</p>
+    <p style="margin-top: 12px;">
+      Reply: <strong>Blend A</strong> (em-dash) · <strong>Blend B</strong> (no separator) · <strong>Blend C</strong> (vertical bar)
     </p>
     <p style="margin-top: 14px; font-size: 12px;">
-      Want a different word for the descriptor? <em>"India's Metal Exchange"</em> · <em>"Bharat Metal Exchange"</em> · <em>"Metal Trading Exchange"</em> · <em>"Real-Time Metal Bourse"</em> · suggest your own.
+      Want a different tagline? <em>"India's Metal Exchange"</em> · <em>"Bharat's Metal Exchange"</em> · <em>"The Real-Time Metal Exchange"</em> · <em>"Live Metal Markets · India"</em> · <em>your own</em>.
+    </p>
+    <p style="margin-top: 12px; font-size: 12px;">
+      Or want to adjust: frame thickness · X size relative to Bhav · tagline letter-spacing · separator weight. Just say.
     </p>
   </div>
 </div>
