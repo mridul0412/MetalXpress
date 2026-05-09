@@ -3,10 +3,10 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>BhavX — Wordmark + Logo Iterations</title>
+<title>BhavX — L2 Variations + Matching Wordmarks</title>
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700;900&family=Cormorant+Garamond:wght@600;700;800&family=Marcellus&family=Marcellus+SC&family=Archivo+Black&family=Big+Shoulders+Display:wght@700;800;900&family=Playfair+Display:wght@700;800;900&family=Inter:wght@700;800;900&display=swap" rel="stylesheet" />
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700;900&family=Cormorant+Garamond:wght@600;700;800&family=Cormorant+SC:wght@600;700&family=Marcellus&family=Marcellus+SC&family=Cardo:wght@700&family=Playfair+Display:wght@700;800;900&family=Inter:wght@800&display=swap" rel="stylesheet" />
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body { background: #050912; color: #fff; font-family: Inter, -apple-system, sans-serif; padding: 40px 24px; min-height: 100vh; }
@@ -16,287 +16,120 @@
       radial-gradient(ellipse at 80% 100%, rgba(207,80,30,0.04), transparent 55%);
     pointer-events: none; }
   .container { max-width: 1100px; margin: 0 auto; position: relative; z-index: 1; }
-  h1 { font-family: 'Cinzel', serif; font-size: 32px; font-weight: 700; margin-bottom: 8px; letter-spacing: 0.04em; }
-  h1 .accent { background: linear-gradient(180deg, #FFE9A8, #CFB53B 50%, #8C6818); -webkit-background-clip: text; background-clip: text; color: transparent; }
+  h1 { font-family: 'Cinzel', serif; font-size: 30px; font-weight: 700; margin-bottom: 8px; letter-spacing: 0.04em; }
+  h1 .accent {
+    background: linear-gradient(180deg, #FFE9A8, #FFC942 30%, #CFB53B 60%, #8C6818);
+    -webkit-background-clip: text; background-clip: text; color: transparent; }
   .subtitle { color: rgba(255,255,255,0.55); font-size: 14px; margin-bottom: 28px; line-height: 1.65; max-width: 760px; }
   .subtitle em { color: rgba(207,181,59,0.85); font-style: normal; font-weight: 600; }
   .section-divider { display: flex; align-items: center; gap: 12px; margin: 56px 0 20px; }
   .section-divider::before, .section-divider::after { content: ''; flex: 1; height: 1px; background: linear-gradient(90deg, transparent, rgba(207,181,59,0.4), transparent); }
   .section-divider span { font-family: 'Cinzel', serif; font-size: 13px; font-weight: 700; color: #CFB53B; letter-spacing: 0.25em; text-transform: uppercase; white-space: nowrap; }
 
-  .grid { display: grid; gap: 18px; grid-template-columns: 1fr; }
-  .item { background: rgba(13,20,32,0.6); border: 1px solid rgba(207,181,59,0.18); border-radius: 14px; padding: 24px 26px 22px; backdrop-filter: blur(10px); transition: all 0.2s; }
+  .item { background: rgba(13,20,32,0.6); border: 1px solid rgba(207,181,59,0.18); border-radius: 14px; padding: 24px 26px 22px; margin-bottom: 18px; backdrop-filter: blur(10px); transition: all 0.2s; }
   .item:hover { border-color: rgba(207,181,59,0.4); }
   .item-name { font-family: 'Cinzel', serif; font-size: 13px; font-weight: 700; color: #CFB53B; letter-spacing: 0.12em; text-transform: uppercase; margin-bottom: 4px; }
   .item-desc { font-size: 12px; color: rgba(255,255,255,0.55); line-height: 1.6; margin-bottom: 18px; }
   .item-desc strong { color: #fff; }
-  .display-row { display: flex; align-items: center; gap: 24px; padding: 24px; background: radial-gradient(ellipse at 50% 50%, rgba(207,181,59,0.04), rgba(8,14,26,0.7)); border: 1px solid rgba(255,255,255,0.04); border-radius: 10px; flex-wrap: wrap; min-height: 120px; }
+  .item-desc em { color: #CFB53B; font-style: normal; }
+  .display-row { display: flex; align-items: center; gap: 26px; padding: 24px; background: radial-gradient(ellipse at 50% 50%, rgba(207,181,59,0.04), rgba(8,14,26,0.7)); border: 1px solid rgba(255,255,255,0.04); border-radius: 10px; flex-wrap: wrap; min-height: 120px; }
 
-  /* ─── Shared gold gradients ─── */
   .gold-text {
     background: linear-gradient(180deg, #FFE9A8 0%, #FFC942 28%, #CFB53B 60%, #8C6818 100%);
     -webkit-background-clip: text; background-clip: text; color: transparent;
     filter: drop-shadow(0 1px 2px rgba(0,0,0,0.5));
   }
-  .gold-deep {
-    background: linear-gradient(180deg, #E8C547 0%, #CFB53B 40%, #8C6818 80%, #5A4214 100%);
+
+  /* Sun-warm gradient — borrows bindu's warmth into wordmarks */
+  .gold-warm {
+    background: linear-gradient(180deg, #FFE9A8 0%, #FFC942 22%, #FFB347 50%, #CFB53B 75%, #8C6818 100%);
     -webkit-background-clip: text; background-clip: text; color: transparent;
-  }
-  .gold-stroke {
-    fill: url(#goldRadialGrad);
-    stroke: url(#goldRadialGrad);
+    filter: drop-shadow(0 1px 2px rgba(0,0,0,0.5));
   }
 
-  /* ════════════════════════════════════════════════════════
-     WORDMARK ITERATIONS (all "BhavX" InitCaps, all gold)
-     ════════════════════════════════════════════════════════ */
-
-  /* W1 — Marcellus Roman temple */
-  .w1 { font-family: 'Marcellus', serif; font-size: 64px; line-height: 1; letter-spacing: 0.06em; }
-
-  /* W2 — Inter Black industrial */
-  .w2 { font-family: 'Inter', sans-serif; font-weight: 900; font-size: 60px; letter-spacing: -0.04em; line-height: 1; }
-  .w2 .x { font-size: 1.18em; filter: drop-shadow(0 0 14px rgba(255,180,40,0.4)); }
-
-  /* W3 — Playfair Display Black with X serif emphasis */
-  .w3 { font-family: 'Playfair Display', serif; font-weight: 900; font-size: 64px; line-height: 1; letter-spacing: -0.01em; font-style: italic; }
-  .w3 .x { font-size: 1.25em; font-style: normal; margin-left: 0.04em;
-    filter: drop-shadow(0 2px 6px rgba(255,180,40,0.45)); }
-
-  /* W4 — Big Shoulders Display tall industrial */
-  .w4 { font-family: 'Big Shoulders Display', sans-serif; font-weight: 900; font-size: 86px; line-height: 0.9; letter-spacing: 0.02em; }
-  .w4 .x { font-size: 1.15em; }
-
-  /* W5 — Cormorant Garamond elegant */
-  .w5 { font-family: 'Cormorant Garamond', serif; font-weight: 800; font-size: 68px; line-height: 1; letter-spacing: 0.01em; font-style: italic; }
-  .w5 .x { font-size: 1.2em; font-style: normal; margin-left: 0.02em; }
-
-  /* W6 — InitCaps with Surya halo behind X (sun replacing dot/punctuation) */
-  .w6 { font-family: 'Marcellus', serif; font-size: 60px; line-height: 1; letter-spacing: 0.04em; display: inline-flex; align-items: center; gap: 4px; position: relative; }
-  .w6 .x-wrap { position: relative; display: inline-block; padding: 0 0.12em; }
-  .w6 .x-halo { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); width: 1.5em; height: 1.5em; pointer-events: none; opacity: 0.6; }
-  .w6 .x { position: relative; z-index: 1; font-size: 1.18em; }
-
-  /* ════════════════════════════════════════════════════════
-     LOGO ITERATIONS (evolve camera-iris)
-     ════════════════════════════════════════════════════════ */
   .logo { width: 96px; height: 96px; }
   .logo-sm { width: 44px; height: 44px; }
   .logo-xs { width: 28px; height: 28px; }
 
-  /* Animation for spinning Surya version */
-  @keyframes slow-spin { to { transform: rotate(360deg); } }
-  .spin-slow { animation: slow-spin 60s linear infinite; transform-origin: center; }
+  /* Pulsing animation for L2.4 */
+  @keyframes bindu-pulse {
+    0%, 100% { transform: scale(1); opacity: 1; }
+    50% { transform: scale(1.15); opacity: 0.85; }
+  }
+  .bindu-pulse { transform-origin: 32px 32px; animation: bindu-pulse 2.4s ease-in-out infinite; }
+  @keyframes bindu-glow {
+    0%, 100% { filter: drop-shadow(0 0 3px rgba(255,107,26,0.7)) drop-shadow(0 0 8px rgba(255,107,26,0.4)); }
+    50% { filter: drop-shadow(0 0 6px rgba(255,140,40,0.95)) drop-shadow(0 0 16px rgba(255,140,40,0.6)); }
+  }
+  .bindu-glow { animation: bindu-glow 2.4s ease-in-out infinite; }
 
-  /* ════════════════════════════════════════════════════════
-     LOCKUP — Logo + Wordmark together
-     ════════════════════════════════════════════════════════ */
-  .lockup { display: inline-flex; align-items: center; gap: 14px; }
-  .lockup .word { font-family: 'Marcellus', serif; font-size: 42px; line-height: 1; letter-spacing: 0.04em; }
+  /* WORDMARK STYLES — designed for L2 intensity */
+  .wm1 { font-family: 'Cinzel', serif; font-weight: 900; font-size: 64px; line-height: 1; letter-spacing: 0.04em; }
+  .wm2 { font-family: 'Marcellus', serif; font-size: 64px; line-height: 1; letter-spacing: 0.05em; display: inline-flex; align-items: baseline; }
+  .wm2 .x-wrap { position: relative; display: inline-block; }
+  .wm2 .x { display: inline-block; }
+  .wm2 .bindu-mark { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 8px; height: 8px; border-radius: 50%; background: radial-gradient(circle at 30% 30%, #FFC942, #FF6B1A 60%, #C73E0A); box-shadow: 0 0 6px rgba(255,107,26,0.6); pointer-events: none; }
+  .wm3 { font-family: 'Cormorant SC', serif; font-weight: 700; font-size: 64px; line-height: 1; letter-spacing: 0.06em; }
+  .wm4 { font-family: 'Cardo', serif; font-weight: 700; font-size: 64px; line-height: 1; letter-spacing: 0.06em; }
+  .wm5 { font-family: 'Cinzel', serif; font-weight: 700; font-size: 56px; line-height: 1; letter-spacing: 0.18em; text-transform: uppercase; }
 
+  .lockup { display: inline-flex; align-items: center; gap: 16px; }
   .footer { margin-top: 60px; padding: 28px; background: radial-gradient(ellipse at 50% 0%, rgba(207,181,59,0.08), rgba(13,20,32,0.5)); border: 1px solid rgba(207,181,59,0.25); border-radius: 14px; text-align: center; font-size: 13px; color: rgba(255,255,255,0.6); line-height: 1.7; }
   .footer strong { color: #CFB53B; }
-  .footer p { margin-bottom: 6px; }
 
-  /* SVG defs for gold gradients shared across logos */
   .svg-defs { position: absolute; width: 0; height: 0; pointer-events: none; }
 </style>
 </head>
 <body>
 
-<!-- Shared SVG defs — referenced by all logos via url(#id) -->
 <svg class="svg-defs" aria-hidden="true">
   <defs>
     <linearGradient id="goldGrad" x1="0%" y1="0%" x2="0%" y2="100%">
-      <stop offset="0%" stop-color="#FFE9A8" />
-      <stop offset="40%" stop-color="#CFB53B" />
-      <stop offset="100%" stop-color="#7A5A18" />
+      <stop offset="0%" stop-color="#FFE9A8" /><stop offset="40%" stop-color="#CFB53B" /><stop offset="100%" stop-color="#7A5A18" />
     </linearGradient>
-    <radialGradient id="goldRadialGrad" cx="50%" cy="40%" r="60%">
-      <stop offset="0%" stop-color="#FFE9A8" />
+    <radialGradient id="binduSun" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#FFFEF0" />
+      <stop offset="20%" stop-color="#FFE9A8" />
       <stop offset="50%" stop-color="#FFC942" />
-      <stop offset="100%" stop-color="#8C6818" />
+      <stop offset="80%" stop-color="#FF6B1A" />
+      <stop offset="100%" stop-color="#C73E0A" />
     </radialGradient>
-    <radialGradient id="suryaCenter" cx="50%" cy="50%" r="50%">
-      <stop offset="0%" stop-color="#FFE9A8" />
-      <stop offset="60%" stop-color="#FFC942" />
+    <radialGradient id="binduDeepRed" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#FF8C4A" />
+      <stop offset="40%" stop-color="#FF3A1A" />
+      <stop offset="100%" stop-color="#8B0000" />
+    </radialGradient>
+    <radialGradient id="binduPureGold" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#FFFEF0" />
+      <stop offset="50%" stop-color="#FFD700" />
       <stop offset="100%" stop-color="#CFB53B" />
     </radialGradient>
+    <!-- Drop-shadow filter for the rays in 2.3 -->
+    <filter id="rayGlow" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="0.4" />
+    </filter>
   </defs>
 </svg>
 
 <div class="container">
-  <h1>BhavX <span class="accent">— Wordmarks + Logo Iterations</span></h1>
+  <h1>L2 <span class="accent">— The Sun &amp; The Chakra</span></h1>
   <p class="subtitle">
-    Anchored to your <em>"N feel"</em>: all-gold gradient + sun-blessed + InitCaps "BhavX".
-    Six wordmark explorations in different typefaces, plus five iterations of the existing camera-iris logo.
-    Pick a wordmark + a logo separately. Lockup section at the bottom shows how they pair.
+    You felt it: the iris's blades + a glowing bindu at the center reads as <em>both Surya and Chakra</em> — light radiating from the point of origin. Below: 5 variations on that essence + 5 wordmarks designed to match its intensity.
   </p>
 
-  <div class="section-divider"><span>✦ Wordmarks (BhavX, InitCaps, all gold)</span></div>
-
-  <!-- W1 Marcellus -->
-  <div class="item">
-    <p class="item-name">W1 · Marcellus — Roman Temple Inscription</p>
-    <p class="item-desc"><strong>Marcellus</strong> serif. Inspired by Roman temple stone carving — confident, balanced, weighty. Works at every size. The most "timeless leader" feel. Used by financial publications, premium brands.</p>
-    <div class="display-row">
-      <span class="w1 gold-text">BhavX</span>
-    </div>
-  </div>
-
-  <!-- W2 Inter Black -->
-  <div class="item">
-    <p class="item-name">W2 · Inter Black — Industrial Authority</p>
-    <p class="item-desc"><strong>Inter Black</strong> with tight kerning. The X has a soft glow. Modern fintech weight, pulled into gold tonality. Says: "we built the standard."</p>
-    <div class="display-row">
-      <span class="w2 gold-text">Bhav<span class="x">X</span></span>
-    </div>
-  </div>
-
-  <!-- W3 Playfair Italic -->
-  <div class="item">
-    <p class="item-name">W3 · Playfair Italic — Confident Editorial</p>
-    <p class="item-desc"><strong>Playfair Display Black</strong> in italic for "Bhav" + upright extra-large X. The italics suggest forward motion, the upright X is the anchor. Editorial, confident, distinctive. The X has a subtle gold halo.</p>
-    <div class="display-row">
-      <span class="w3 gold-text">Bhav<span class="x">X</span></span>
-    </div>
-  </div>
-
-  <!-- W4 Big Shoulders -->
-  <div class="item">
-    <p class="item-name">W4 · Big Shoulders Display — Towering Industrial</p>
-    <p class="item-desc"><strong>Big Shoulders Display Black</strong>. Tall, condensed, vertical. Think: industrial signage, refinery markings, foundry plates. The wordmark literally LOOKS like it's been forged.</p>
-    <div class="display-row">
-      <span class="w4 gold-text">BhavX</span>
-    </div>
-  </div>
-
-  <!-- W5 Cormorant -->
-  <div class="item">
-    <p class="item-name">W5 · Cormorant Garamond — Premium Heritage</p>
-    <p class="item-desc"><strong>Cormorant Garamond</strong> italic for "Bhav" + upright X. Elegant, premium, almost couture. Classical serifs evoke heritage + craftsmanship. Best for luxury positioning.</p>
-    <div class="display-row">
-      <span class="w5 gold-text">Bhav<span class="x">X</span></span>
-    </div>
-  </div>
-
-  <!-- W6 Marcellus + Surya halo -->
-  <div class="item">
-    <p class="item-name">W6 · Marcellus + Surya Halo on X</p>
-    <p class="item-desc">Same Marcellus typeface as W1, but with a <strong>subtle 12-rayed Surya halo</strong> embedded behind the X — a quiet sun-blessing. Less obvious than a separate logo, more integrated. The X becomes the divine anchor.</p>
-    <div class="display-row">
-      <span class="w6 gold-text">Bhav<span class="x-wrap">
-        <svg class="x-halo" viewBox="0 0 100 100" fill="none">
-          <g fill="url(#suryaCenter)">
-            <path d="M 50 4 L 53 26 L 47 26 Z" /><path d="M 73 8 L 67 30 L 61 24 Z" /><path d="M 92 27 L 71 34 L 73 26 Z" /><path d="M 96 50 L 74 53 L 74 47 Z" /><path d="M 92 73 L 73 74 L 71 66 Z" /><path d="M 73 92 L 67 70 L 73 70 Z" /><path d="M 50 96 L 47 74 L 53 74 Z" /><path d="M 27 92 L 33 70 L 27 70 Z" /><path d="M 8 73 L 27 66 L 29 74 Z" /><path d="M 4 50 L 26 47 L 26 53 Z" /><path d="M 8 27 L 27 26 L 29 34 Z" /><path d="M 27 8 L 33 26 L 27 30 Z" />
-          </g>
-        </svg>
-        <span class="x">X</span>
-      </span></span>
-    </div>
-  </div>
-
   <!-- ════════════════════════════════════════════════════════
-       LOGO ITERATIONS
+       L2 VARIATIONS (keeping the sun + chakra essence)
        ════════════════════════════════════════════════════════ -->
-  <div class="section-divider"><span>✦ Logo Iterations (camera-iris evolved)</span></div>
+  <div class="section-divider"><span>✦ L2 Variations</span></div>
 
-  <!-- L0 Current (reference) -->
+  <!-- L2.1 — Original -->
   <div class="item">
-    <p class="item-name">L0 · Current Logo — Reference</p>
-    <p class="item-desc">The existing 8-parallelogram-blade camera iris. Solid, geometric, recognizable. Iterations below evolve from this baseline.</p>
-    <div class="display-row">
-      <svg class="logo" viewBox="0 0 64 64" fill="url(#goldGrad)">
-        <g>
-          <path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(0 32 32)" />
-          <path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(45 32 32)" />
-          <path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(90 32 32)" />
-          <path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(135 32 32)" />
-          <path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(180 32 32)" />
-          <path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(225 32 32)" />
-          <path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(270 32 32)" />
-          <path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(315 32 32)" />
-        </g>
-      </svg>
-      <svg class="logo-sm" viewBox="0 0 64 64" fill="url(#goldGrad)">
-        <g>
-          <path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(0 32 32)" />
-          <path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(45 32 32)" />
-          <path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(90 32 32)" />
-          <path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(135 32 32)" />
-          <path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(180 32 32)" />
-          <path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(225 32 32)" />
-          <path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(270 32 32)" />
-          <path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(315 32 32)" />
-        </g>
-      </svg>
-      <svg class="logo-xs" viewBox="0 0 64 64" fill="url(#goldGrad)">
-        <g>
-          <path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(0 32 32)" />
-          <path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(45 32 32)" />
-          <path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(90 32 32)" />
-          <path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(135 32 32)" />
-          <path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(180 32 32)" />
-          <path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(225 32 32)" />
-          <path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(270 32 32)" />
-          <path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(315 32 32)" />
-        </g>
-      </svg>
-    </div>
-  </div>
-
-  <!-- L1 Sun-Burst Iris -->
-  <div class="item">
-    <p class="item-name">L1 · Sun-Burst Iris (Surya Halo)</p>
-    <p class="item-desc">Existing iris + <strong>12 thin radiating rays</strong> extending past the blades into a Surya halo. Pairs the camera-iris (precision) with the sun god (radiance). Says: "we capture and we radiate."</p>
-    <div class="display-row">
-      <svg class="logo" viewBox="0 0 100 100" fill="none">
-        <!-- Outer 12 rays -->
-        <g fill="url(#goldGrad)" opacity="0.55">
-          <path d="M 50 3 L 52 14 L 48 14 Z" /><path d="M 73.5 6.5 L 70.5 17 L 67 14.5 Z" /><path d="M 93.5 26.5 L 83 29.5 L 85.5 33 Z" /><path d="M 97 50 L 86 52 L 86 48 Z" /><path d="M 93.5 73.5 L 85.5 67 L 83 70.5 Z" /><path d="M 73.5 93.5 L 67 85.5 L 70.5 83 Z" /><path d="M 50 97 L 48 86 L 52 86 Z" /><path d="M 26.5 93.5 L 29.5 83 L 33 85.5 Z" /><path d="M 6.5 73.5 L 17 70.5 L 14.5 67 Z" /><path d="M 3 50 L 14 48 L 14 52 Z" /><path d="M 6.5 26.5 L 14.5 33 L 17 29.5 Z" /><path d="M 26.5 6.5 L 33 14.5 L 29.5 17 Z" />
-        </g>
-        <!-- Iris blades scaled into 100x100 viewbox -->
-        <g fill="url(#goldGrad)" transform="translate(18 18) scale(1.0)">
-          <path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(0 32 32)" />
-          <path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(45 32 32)" />
-          <path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(90 32 32)" />
-          <path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(135 32 32)" />
-          <path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(180 32 32)" />
-          <path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(225 32 32)" />
-          <path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(270 32 32)" />
-          <path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(315 32 32)" />
-        </g>
-      </svg>
-      <svg class="logo-sm" viewBox="0 0 100 100" fill="none">
-        <g fill="url(#goldGrad)" opacity="0.55"><path d="M 50 3 L 52 14 L 48 14 Z" /><path d="M 73.5 6.5 L 70.5 17 L 67 14.5 Z" /><path d="M 93.5 26.5 L 83 29.5 L 85.5 33 Z" /><path d="M 97 50 L 86 52 L 86 48 Z" /><path d="M 93.5 73.5 L 85.5 67 L 83 70.5 Z" /><path d="M 73.5 93.5 L 67 85.5 L 70.5 83 Z" /><path d="M 50 97 L 48 86 L 52 86 Z" /><path d="M 26.5 93.5 L 29.5 83 L 33 85.5 Z" /><path d="M 6.5 73.5 L 17 70.5 L 14.5 67 Z" /><path d="M 3 50 L 14 48 L 14 52 Z" /><path d="M 6.5 26.5 L 14.5 33 L 17 29.5 Z" /><path d="M 26.5 6.5 L 33 14.5 L 29.5 17 Z" /></g>
-        <g fill="url(#goldGrad)" transform="translate(18 18)"><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(0 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(45 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(90 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(135 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(180 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(225 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(270 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(315 32 32)" /></g>
-      </svg>
-      <svg class="logo-xs" viewBox="0 0 100 100" fill="none">
-        <g fill="url(#goldGrad)" opacity="0.55"><path d="M 50 3 L 52 14 L 48 14 Z" /><path d="M 73.5 6.5 L 70.5 17 L 67 14.5 Z" /><path d="M 93.5 26.5 L 83 29.5 L 85.5 33 Z" /><path d="M 97 50 L 86 52 L 86 48 Z" /><path d="M 93.5 73.5 L 85.5 67 L 83 70.5 Z" /><path d="M 73.5 93.5 L 67 85.5 L 70.5 83 Z" /><path d="M 50 97 L 48 86 L 52 86 Z" /><path d="M 26.5 93.5 L 29.5 83 L 33 85.5 Z" /><path d="M 6.5 73.5 L 17 70.5 L 14.5 67 Z" /><path d="M 3 50 L 14 48 L 14 52 Z" /><path d="M 6.5 26.5 L 14.5 33 L 17 29.5 Z" /><path d="M 26.5 6.5 L 33 14.5 L 29.5 17 Z" /></g>
-        <g fill="url(#goldGrad)" transform="translate(18 18)"><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(0 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(45 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(90 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(135 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(180 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(225 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(270 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(315 32 32)" /></g>
-      </svg>
-    </div>
-  </div>
-
-  <!-- L2 Bindu Center -->
-  <div class="item">
-    <p class="item-name">L2 · Bindu Center (Sacred Mark)</p>
-    <p class="item-desc">Existing iris + a <strong>tiny sacred bindu</strong> at the very center where the blades almost touch. The bindu in Hindu/Tantric tradition is the <em>point of pure consciousness</em> — the still center of the spinning cosmos. Subtle, but loaded. The eye of the iris becomes alive.</p>
+    <p class="item-name">L2 · Original (current)</p>
+    <p class="item-desc">Small bindu, two-layer (gold halo + red-orange core). Subtle, refined.</p>
     <div class="display-row">
       <svg class="logo" viewBox="0 0 64 64" fill="none">
-        <g fill="url(#goldGrad)">
-          <path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(0 32 32)" />
-          <path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(45 32 32)" />
-          <path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(90 32 32)" />
-          <path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(135 32 32)" />
-          <path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(180 32 32)" />
-          <path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(225 32 32)" />
-          <path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(270 32 32)" />
-          <path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(315 32 32)" />
-        </g>
-        <!-- Bindu in deep red, glowing -->
-        <circle cx="32" cy="32" r="2.5" fill="#FFC942" />
-        <circle cx="32" cy="32" r="1.5" fill="#FF6B1A" />
+        <g fill="url(#goldGrad)"><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(0 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(45 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(90 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(135 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(180 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(225 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(270 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(315 32 32)" /></g>
+        <circle cx="32" cy="32" r="2.5" fill="#FFC942" /><circle cx="32" cy="32" r="1.5" fill="#FF6B1A" />
       </svg>
       <svg class="logo-sm" viewBox="0 0 64 64" fill="none">
         <g fill="url(#goldGrad)"><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(0 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(45 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(90 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(135 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(180 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(225 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(270 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(315 32 32)" /></g>
@@ -304,160 +137,241 @@
       </svg>
       <svg class="logo-xs" viewBox="0 0 64 64" fill="none">
         <g fill="url(#goldGrad)"><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(0 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(45 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(90 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(135 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(180 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(225 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(270 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(315 32 32)" /></g>
-        <circle cx="32" cy="32" r="2" fill="#FF6B1A" />
+        <circle cx="32" cy="32" r="2.2" fill="#FF6B1A" />
       </svg>
     </div>
   </div>
 
-  <!-- L3 Yantra Outer Ring -->
+  <!-- L2.1b — BIGGER GLOWING SUN CORE -->
   <div class="item">
-    <p class="item-name">L3 · Yantra Outer Ring (Temple Geometry)</p>
-    <p class="item-desc">Existing iris + a <strong>thin outer ring</strong> with 8 gentle dots at compass points — yantra/mandala geometry. Adds containment + sacred geometry without crowding. The iris becomes the heart of a ritual diagram.</p>
+    <p class="item-name">L2.1 · Sun Core (bigger, glowing radial)</p>
+    <p class="item-desc">Bindu becomes a <strong>full radial sun core</strong> — pale center → gold mid → orange outer → deep red rim. Dramatic glow. <em>Pure Surya energy</em>. The light at the center is brighter and more present.</p>
     <div class="display-row">
-      <svg class="logo" viewBox="0 0 80 80" fill="none">
-        <!-- Outer ring -->
-        <circle cx="40" cy="40" r="38" stroke="url(#goldGrad)" stroke-width="1" opacity="0.6" />
-        <!-- 8 dots at compass points -->
-        <g fill="url(#goldGrad)">
-          <circle cx="40" cy="2" r="1.5" /><circle cx="40" cy="78" r="1.5" /><circle cx="2" cy="40" r="1.5" /><circle cx="78" cy="40" r="1.5" />
-          <circle cx="13" cy="13" r="1.2" /><circle cx="67" cy="13" r="1.2" /><circle cx="13" cy="67" r="1.2" /><circle cx="67" cy="67" r="1.2" />
-        </g>
-        <!-- Iris -->
-        <g fill="url(#goldGrad)" transform="translate(8 8)">
-          <path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(0 32 32)" />
-          <path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(45 32 32)" />
-          <path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(90 32 32)" />
-          <path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(135 32 32)" />
-          <path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(180 32 32)" />
-          <path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(225 32 32)" />
-          <path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(270 32 32)" />
-          <path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(315 32 32)" />
-        </g>
+      <svg class="logo" viewBox="0 0 64 64" fill="none" style="filter: drop-shadow(0 0 12px rgba(255,140,40,0.35));">
+        <g fill="url(#goldGrad)"><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(0 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(45 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(90 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(135 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(180 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(225 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(270 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(315 32 32)" /></g>
+        <circle cx="32" cy="32" r="4.5" fill="url(#binduSun)" style="filter: drop-shadow(0 0 4px rgba(255,140,40,0.8));" />
       </svg>
-      <svg class="logo-sm" viewBox="0 0 80 80" fill="none">
-        <circle cx="40" cy="40" r="38" stroke="url(#goldGrad)" stroke-width="1" opacity="0.6" />
-        <g fill="url(#goldGrad)"><circle cx="40" cy="2" r="1.5" /><circle cx="40" cy="78" r="1.5" /><circle cx="2" cy="40" r="1.5" /><circle cx="78" cy="40" r="1.5" /><circle cx="13" cy="13" r="1.2" /><circle cx="67" cy="13" r="1.2" /><circle cx="13" cy="67" r="1.2" /><circle cx="67" cy="67" r="1.2" /></g>
-        <g fill="url(#goldGrad)" transform="translate(8 8)"><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(0 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(45 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(90 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(135 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(180 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(225 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(270 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(315 32 32)" /></g>
-      </svg>
-      <svg class="logo-xs" viewBox="0 0 80 80" fill="none">
-        <circle cx="40" cy="40" r="38" stroke="url(#goldGrad)" stroke-width="1.5" opacity="0.7" />
-        <g fill="url(#goldGrad)" transform="translate(8 8)"><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(0 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(45 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(90 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(135 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(180 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(225 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(270 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(315 32 32)" /></g>
-      </svg>
-    </div>
-  </div>
-
-  <!-- L4 Sharper Blades (more aggressive) -->
-  <div class="item">
-    <p class="item-name">L4 · Sharper Blades (Aggressive Edge)</p>
-    <p class="item-desc">Existing iris but with <strong>elongated, sharper blades</strong>. Less rounded, more dagger-like. The blades feel like they're slicing forward. Same gold gradient. Says: "we cut through chaos."</p>
-    <div class="display-row">
-      <svg class="logo" viewBox="0 0 64 64" fill="url(#goldGrad)">
-        <g>
-          <path d="M 17,4 L 47,4 L 30,22 L 24,23 Z" transform="rotate(0 32 32)" />
-          <path d="M 17,4 L 47,4 L 30,22 L 24,23 Z" transform="rotate(45 32 32)" />
-          <path d="M 17,4 L 47,4 L 30,22 L 24,23 Z" transform="rotate(90 32 32)" />
-          <path d="M 17,4 L 47,4 L 30,22 L 24,23 Z" transform="rotate(135 32 32)" />
-          <path d="M 17,4 L 47,4 L 30,22 L 24,23 Z" transform="rotate(180 32 32)" />
-          <path d="M 17,4 L 47,4 L 30,22 L 24,23 Z" transform="rotate(225 32 32)" />
-          <path d="M 17,4 L 47,4 L 30,22 L 24,23 Z" transform="rotate(270 32 32)" />
-          <path d="M 17,4 L 47,4 L 30,22 L 24,23 Z" transform="rotate(315 32 32)" />
-        </g>
-      </svg>
-      <svg class="logo-sm" viewBox="0 0 64 64" fill="url(#goldGrad)">
-        <g><path d="M 17,4 L 47,4 L 30,22 L 24,23 Z" transform="rotate(0 32 32)" /><path d="M 17,4 L 47,4 L 30,22 L 24,23 Z" transform="rotate(45 32 32)" /><path d="M 17,4 L 47,4 L 30,22 L 24,23 Z" transform="rotate(90 32 32)" /><path d="M 17,4 L 47,4 L 30,22 L 24,23 Z" transform="rotate(135 32 32)" /><path d="M 17,4 L 47,4 L 30,22 L 24,23 Z" transform="rotate(180 32 32)" /><path d="M 17,4 L 47,4 L 30,22 L 24,23 Z" transform="rotate(225 32 32)" /><path d="M 17,4 L 47,4 L 30,22 L 24,23 Z" transform="rotate(270 32 32)" /><path d="M 17,4 L 47,4 L 30,22 L 24,23 Z" transform="rotate(315 32 32)" /></g>
-      </svg>
-      <svg class="logo-xs" viewBox="0 0 64 64" fill="url(#goldGrad)">
-        <g><path d="M 17,4 L 47,4 L 30,22 L 24,23 Z" transform="rotate(0 32 32)" /><path d="M 17,4 L 47,4 L 30,22 L 24,23 Z" transform="rotate(45 32 32)" /><path d="M 17,4 L 47,4 L 30,22 L 24,23 Z" transform="rotate(90 32 32)" /><path d="M 17,4 L 47,4 L 30,22 L 24,23 Z" transform="rotate(135 32 32)" /><path d="M 17,4 L 47,4 L 30,22 L 24,23 Z" transform="rotate(180 32 32)" /><path d="M 17,4 L 47,4 L 30,22 L 24,23 Z" transform="rotate(225 32 32)" /><path d="M 17,4 L 47,4 L 30,22 L 24,23 Z" transform="rotate(270 32 32)" /><path d="M 17,4 L 47,4 L 30,22 L 24,23 Z" transform="rotate(315 32 32)" /></g>
-      </svg>
-    </div>
-  </div>
-
-  <!-- L5 Coin Depth (3D bevel) -->
-  <div class="item">
-    <p class="item-name">L5 · Coin Depth (Struck Bullion)</p>
-    <p class="item-desc">Existing iris + <strong>3D bevel and drop shadow</strong>. Looks struck into a gold coin. Each blade has highlight + shadow giving dimension. Says: "this is a piece of currency, not a logo."</p>
-    <div class="display-row">
-      <svg class="logo" viewBox="0 0 64 64" fill="none" style="filter: drop-shadow(0 4px 8px rgba(0,0,0,0.6)) drop-shadow(0 0 14px rgba(255,180,40,0.3));">
-        <defs>
-          <linearGradient id="coinHilite" x1="0%" y1="0%" x2="0%" y2="100%">
-            <stop offset="0%" stop-color="#FFE9A8" />
-            <stop offset="40%" stop-color="#FFC942" />
-            <stop offset="60%" stop-color="#CFB53B" />
-            <stop offset="100%" stop-color="#5A4214" />
-          </linearGradient>
-        </defs>
-        <g fill="url(#coinHilite)" stroke="rgba(0,0,0,0.4)" stroke-width="0.3">
-          <path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(0 32 32)" />
-          <path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(45 32 32)" />
-          <path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(90 32 32)" />
-          <path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(135 32 32)" />
-          <path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(180 32 32)" />
-          <path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(225 32 32)" />
-          <path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(270 32 32)" />
-          <path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(315 32 32)" />
-        </g>
-      </svg>
-      <svg class="logo-sm" viewBox="0 0 64 64" fill="none" style="filter: drop-shadow(0 2px 4px rgba(0,0,0,0.5));">
-        <g fill="url(#coinHilite)" stroke="rgba(0,0,0,0.4)" stroke-width="0.3"><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(0 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(45 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(90 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(135 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(180 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(225 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(270 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(315 32 32)" /></g>
+      <svg class="logo-sm" viewBox="0 0 64 64" fill="none">
+        <g fill="url(#goldGrad)"><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(0 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(45 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(90 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(135 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(180 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(225 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(270 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(315 32 32)" /></g>
+        <circle cx="32" cy="32" r="4.5" fill="url(#binduSun)" />
       </svg>
       <svg class="logo-xs" viewBox="0 0 64 64" fill="none">
-        <g fill="url(#coinHilite)"><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(0 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(45 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(90 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(135 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(180 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(225 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(270 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(315 32 32)" /></g>
+        <g fill="url(#goldGrad)"><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(0 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(45 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(90 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(135 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(180 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(225 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(270 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(315 32 32)" /></g>
+        <circle cx="32" cy="32" r="4" fill="url(#binduSun)" />
+      </svg>
+    </div>
+  </div>
+
+  <!-- L2.2 — INNER RAYS BURSTING -->
+  <div class="item">
+    <p class="item-name">L2.2 · Sun Core + Inner Rays (light escaping between blades)</p>
+    <p class="item-desc">Same sun core, but with <strong>8 thin gold rays bursting from center toward the gaps between blades</strong>. The light isn't contained — it leaks through the spaces. Says: "the divine cannot be held back." More dynamic, more radiant.</p>
+    <div class="display-row">
+      <svg class="logo" viewBox="0 0 64 64" fill="none" style="filter: drop-shadow(0 0 14px rgba(255,140,40,0.4));">
+        <!-- Inner rays at 22.5° offsets (between blade gaps) -->
+        <g stroke="url(#binduSun)" stroke-width="1.5" stroke-linecap="round" opacity="0.85">
+          <line x1="32" y1="32" x2="32" y2="14" transform="rotate(22.5 32 32)" />
+          <line x1="32" y1="32" x2="32" y2="14" transform="rotate(67.5 32 32)" />
+          <line x1="32" y1="32" x2="32" y2="14" transform="rotate(112.5 32 32)" />
+          <line x1="32" y1="32" x2="32" y2="14" transform="rotate(157.5 32 32)" />
+          <line x1="32" y1="32" x2="32" y2="14" transform="rotate(202.5 32 32)" />
+          <line x1="32" y1="32" x2="32" y2="14" transform="rotate(247.5 32 32)" />
+          <line x1="32" y1="32" x2="32" y2="14" transform="rotate(292.5 32 32)" />
+          <line x1="32" y1="32" x2="32" y2="14" transform="rotate(337.5 32 32)" />
+        </g>
+        <g fill="url(#goldGrad)"><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(0 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(45 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(90 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(135 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(180 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(225 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(270 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(315 32 32)" /></g>
+        <circle cx="32" cy="32" r="3.5" fill="url(#binduSun)" />
+      </svg>
+      <svg class="logo-sm" viewBox="0 0 64 64" fill="none">
+        <g stroke="url(#binduSun)" stroke-width="1.5" stroke-linecap="round" opacity="0.85">
+          <line x1="32" y1="32" x2="32" y2="14" transform="rotate(22.5 32 32)" /><line x1="32" y1="32" x2="32" y2="14" transform="rotate(67.5 32 32)" /><line x1="32" y1="32" x2="32" y2="14" transform="rotate(112.5 32 32)" /><line x1="32" y1="32" x2="32" y2="14" transform="rotate(157.5 32 32)" /><line x1="32" y1="32" x2="32" y2="14" transform="rotate(202.5 32 32)" /><line x1="32" y1="32" x2="32" y2="14" transform="rotate(247.5 32 32)" /><line x1="32" y1="32" x2="32" y2="14" transform="rotate(292.5 32 32)" /><line x1="32" y1="32" x2="32" y2="14" transform="rotate(337.5 32 32)" />
+        </g>
+        <g fill="url(#goldGrad)"><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(0 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(45 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(90 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(135 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(180 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(225 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(270 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(315 32 32)" /></g>
+        <circle cx="32" cy="32" r="3.5" fill="url(#binduSun)" />
+      </svg>
+      <svg class="logo-xs" viewBox="0 0 64 64" fill="none">
+        <g fill="url(#goldGrad)"><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(0 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(45 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(90 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(135 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(180 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(225 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(270 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(315 32 32)" /></g>
+        <circle cx="32" cy="32" r="3" fill="url(#binduSun)" />
+      </svg>
+    </div>
+  </div>
+
+  <!-- L2.3 — MULTI-LAYER CHAKRA BINDU -->
+  <div class="item">
+    <p class="item-name">L2.3 · Multi-Layer Chakra Bindu</p>
+    <p class="item-desc"><strong>Three concentric layers</strong>: outer gold ring + middle dark void + bright sun core. Pure chakra-yantra geometry. Most "sacred geometry" feel — like a Sri Yantra eye.</p>
+    <div class="display-row">
+      <svg class="logo" viewBox="0 0 64 64" fill="none">
+        <g fill="url(#goldGrad)"><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(0 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(45 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(90 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(135 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(180 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(225 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(270 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(315 32 32)" /></g>
+        <!-- Multi-layer bindu -->
+        <circle cx="32" cy="32" r="4" fill="url(#goldGrad)" />
+        <circle cx="32" cy="32" r="3" fill="#0a0f1a" />
+        <circle cx="32" cy="32" r="1.6" fill="url(#binduSun)" />
+      </svg>
+      <svg class="logo-sm" viewBox="0 0 64 64" fill="none">
+        <g fill="url(#goldGrad)"><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(0 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(45 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(90 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(135 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(180 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(225 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(270 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(315 32 32)" /></g>
+        <circle cx="32" cy="32" r="4" fill="url(#goldGrad)" /><circle cx="32" cy="32" r="3" fill="#0a0f1a" /><circle cx="32" cy="32" r="1.6" fill="url(#binduSun)" />
+      </svg>
+      <svg class="logo-xs" viewBox="0 0 64 64" fill="none">
+        <g fill="url(#goldGrad)"><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(0 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(45 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(90 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(135 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(180 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(225 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(270 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(315 32 32)" /></g>
+        <circle cx="32" cy="32" r="3" fill="url(#goldGrad)" /><circle cx="32" cy="32" r="2" fill="#0a0f1a" /><circle cx="32" cy="32" r="1" fill="url(#binduSun)" />
+      </svg>
+    </div>
+  </div>
+
+  <!-- L2.4 — ANIMATED PULSING (LIVE MARKETS) -->
+  <div class="item">
+    <p class="item-name">L2.4 · Living Pulse (animated bindu — markets are alive)</p>
+    <p class="item-desc"><strong>The bindu pulses gently</strong> — 2.4-second rhythm, glow expanding and contracting. Says: "the market is alive, BhavX is breathing with it." Functional brand cue. <em>Bloomberg-grade live indicator embedded in the logo</em>.</p>
+    <div class="display-row">
+      <svg class="logo" viewBox="0 0 64 64" fill="none">
+        <g fill="url(#goldGrad)"><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(0 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(45 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(90 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(135 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(180 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(225 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(270 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(315 32 32)" /></g>
+        <g class="bindu-pulse"><circle cx="32" cy="32" r="3.5" fill="url(#binduSun)" class="bindu-glow" /></g>
+      </svg>
+      <svg class="logo-sm" viewBox="0 0 64 64" fill="none">
+        <g fill="url(#goldGrad)"><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(0 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(45 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(90 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(135 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(180 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(225 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(270 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(315 32 32)" /></g>
+        <g class="bindu-pulse"><circle cx="32" cy="32" r="3.5" fill="url(#binduSun)" class="bindu-glow" /></g>
+      </svg>
+      <svg class="logo-xs" viewBox="0 0 64 64" fill="none">
+        <g fill="url(#goldGrad)"><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(0 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(45 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(90 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(135 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(180 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(225 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(270 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(315 32 32)" /></g>
+        <g class="bindu-pulse"><circle cx="32" cy="32" r="3" fill="url(#binduSun)" /></g>
+      </svg>
+    </div>
+  </div>
+
+  <!-- L2.5 — DEEP RED TILAK -->
+  <div class="item">
+    <p class="item-name">L2.5 · Sindoor Bindu (pure deep red, sacred mark)</p>
+    <p class="item-desc"><strong>Deeper red, less golden</strong>. Pure sindoor/tilak energy — the auspicious mark of devotion. More restrained than L2.1, more sacred than animated. Most refined option for a luxury/Bloomberg positioning.</p>
+    <div class="display-row">
+      <svg class="logo" viewBox="0 0 64 64" fill="none">
+        <g fill="url(#goldGrad)"><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(0 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(45 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(90 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(135 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(180 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(225 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(270 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(315 32 32)" /></g>
+        <circle cx="32" cy="32" r="3" fill="url(#binduDeepRed)" style="filter: drop-shadow(0 0 6px rgba(255,30,10,0.4));" />
+      </svg>
+      <svg class="logo-sm" viewBox="0 0 64 64" fill="none">
+        <g fill="url(#goldGrad)"><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(0 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(45 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(90 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(135 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(180 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(225 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(270 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(315 32 32)" /></g>
+        <circle cx="32" cy="32" r="3" fill="url(#binduDeepRed)" />
+      </svg>
+      <svg class="logo-xs" viewBox="0 0 64 64" fill="none">
+        <g fill="url(#goldGrad)"><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(0 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(45 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(90 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(135 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(180 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(225 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(270 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(315 32 32)" /></g>
+        <circle cx="32" cy="32" r="2.4" fill="url(#binduDeepRed)" />
       </svg>
     </div>
   </div>
 
   <!-- ════════════════════════════════════════════════════════
-       LOCKUP — Best wordmark + best logo
+       WORDMARKS DESIGNED FOR L2 INTENSITY
        ════════════════════════════════════════════════════════ -->
-  <div class="section-divider"><span>✦ Lockup Examples (Logo + Wordmark Together)</span></div>
+  <div class="section-divider"><span>✦ Wordmarks That Match L2's Intensity</span></div>
 
+  <!-- WM1 — Cinzel Black -->
   <div class="item">
-    <p class="item-name">Lockup A · L1 (Sun-Burst Iris) + W1 (Marcellus)</p>
-    <p class="item-desc">Most balanced. Sun-radiance + Roman temple gravitas + InitCaps. The "leader-of-segment" feeling.</p>
+    <p class="item-name">WM1 · Cinzel Black — Carved Stone</p>
+    <p class="item-desc"><strong>Cinzel</strong> is the typography of <em>Roman temple inscriptions</em> — same family of stone-carved monuments that the chakra/yantra geometry comes from. Heavy weight, generous letter-spacing, all-gold gradient. <em>Best match for the sacred geometry of L2</em>.</p>
+    <div class="display-row">
+      <span class="wm1 gold-text">BhavX</span>
+    </div>
+  </div>
+
+  <!-- WM2 — Marcellus + tiny bindu echo -->
+  <div class="item">
+    <p class="item-name">WM2 · Marcellus + Bindu Echo on X</p>
+    <p class="item-desc">Marcellus serif + a <strong>tiny matching red-orange bindu inside the X</strong>. The wordmark visually echoes the logo's center bindu. Subtle but powerful — your eye connects them automatically. <em>Wordmark and logo become one identity</em>.</p>
+    <div class="display-row">
+      <span class="wm2 gold-text">Bhav<span class="x-wrap"><span class="x">X</span><span class="bindu-mark"></span></span></span>
+    </div>
+  </div>
+
+  <!-- WM3 — Cormorant SC -->
+  <div class="item">
+    <p class="item-name">WM3 · Cormorant Small-Caps — Manuscript Authority</p>
+    <p class="item-desc"><strong>Cormorant SC</strong> small-caps serif. The typography of premium publishing + heritage. Slightly less weight than Cinzel but more refined detail. Best for "old money meets new platform" positioning.</p>
+    <div class="display-row">
+      <span class="wm3 gold-text">BhavX</span>
+    </div>
+  </div>
+
+  <!-- WM4 — Cardo (heavy serif, scholarly) -->
+  <div class="item">
+    <p class="item-name">WM4 · Cardo Bold — Scholarly Weight</p>
+    <p class="item-desc"><strong>Cardo</strong> is the typeface of academic/Sanskrit scholarship. Heavy bold variant. Has the gravitas of treatises and shastras — <em>"this is the scripture on Indian metal trading."</em></p>
+    <div class="display-row">
+      <span class="wm4 gold-text">BhavX</span>
+    </div>
+  </div>
+
+  <!-- WM5 — Cinzel Wide-Spaced Proclamation -->
+  <div class="item">
+    <p class="item-name">WM5 · Cinzel Wide-Spaced — Royal Proclamation</p>
+    <p class="item-desc"><strong>BhavX uppercase, generously letter-spaced</strong>. Reads like a stone-carved royal edict, a temple lintel inscription. Maximum gravitas. The wordmark earns its real estate on the page.</p>
+    <div class="display-row">
+      <span class="wm5 gold-text">BHAVX</span>
+    </div>
+  </div>
+
+  <!-- ════════════════════════════════════════════════════════
+       LOCKUPS — best L2 + best wordmark combinations
+       ════════════════════════════════════════════════════════ -->
+  <div class="section-divider"><span>✦ Best Lockup Combinations</span></div>
+
+  <!-- Lockup A: L2.2 (sun + inner rays) + WM1 (Cinzel) -->
+  <div class="item">
+    <p class="item-name">Lockup ⓐ · L2.2 (Sun + Inner Rays) + WM1 (Cinzel Black)</p>
+    <p class="item-desc"><strong>My pick.</strong> Most "earth-shattering" — the inner rays + Cinzel stone-carved letters together feel like the wordmark was struck from the same divine source as the logo. Sun + Temple inscription.</p>
     <div class="display-row">
       <span class="lockup">
-        <svg class="logo-sm" viewBox="0 0 100 100" fill="none">
-          <g fill="url(#goldGrad)" opacity="0.55"><path d="M 50 3 L 52 14 L 48 14 Z" /><path d="M 73.5 6.5 L 70.5 17 L 67 14.5 Z" /><path d="M 93.5 26.5 L 83 29.5 L 85.5 33 Z" /><path d="M 97 50 L 86 52 L 86 48 Z" /><path d="M 93.5 73.5 L 85.5 67 L 83 70.5 Z" /><path d="M 73.5 93.5 L 67 85.5 L 70.5 83 Z" /><path d="M 50 97 L 48 86 L 52 86 Z" /><path d="M 26.5 93.5 L 29.5 83 L 33 85.5 Z" /><path d="M 6.5 73.5 L 17 70.5 L 14.5 67 Z" /><path d="M 3 50 L 14 48 L 14 52 Z" /><path d="M 6.5 26.5 L 14.5 33 L 17 29.5 Z" /><path d="M 26.5 6.5 L 33 14.5 L 29.5 17 Z" /></g>
-          <g fill="url(#goldGrad)" transform="translate(18 18)"><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(0 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(45 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(90 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(135 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(180 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(225 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(270 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(315 32 32)" /></g>
+        <svg class="logo-sm" viewBox="0 0 64 64" fill="none">
+          <g stroke="url(#binduSun)" stroke-width="1.5" stroke-linecap="round" opacity="0.85">
+            <line x1="32" y1="32" x2="32" y2="14" transform="rotate(22.5 32 32)" /><line x1="32" y1="32" x2="32" y2="14" transform="rotate(67.5 32 32)" /><line x1="32" y1="32" x2="32" y2="14" transform="rotate(112.5 32 32)" /><line x1="32" y1="32" x2="32" y2="14" transform="rotate(157.5 32 32)" /><line x1="32" y1="32" x2="32" y2="14" transform="rotate(202.5 32 32)" /><line x1="32" y1="32" x2="32" y2="14" transform="rotate(247.5 32 32)" /><line x1="32" y1="32" x2="32" y2="14" transform="rotate(292.5 32 32)" /><line x1="32" y1="32" x2="32" y2="14" transform="rotate(337.5 32 32)" />
+          </g>
+          <g fill="url(#goldGrad)"><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(0 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(45 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(90 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(135 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(180 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(225 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(270 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(315 32 32)" /></g>
+          <circle cx="32" cy="32" r="3.5" fill="url(#binduSun)" />
         </svg>
-        <span class="word gold-text">BhavX</span>
+        <span style="font-family: 'Cinzel', serif; font-weight: 900; font-size: 36px; letter-spacing: 0.04em;" class="gold-text">BhavX</span>
       </span>
     </div>
   </div>
 
+  <!-- Lockup B: L2.4 (live pulse) + WM1 (Cinzel) — Bloomberg -->
   <div class="item">
-    <p class="item-name">Lockup B · L2 (Bindu Center) + W3 (Playfair Italic)</p>
-    <p class="item-desc">Editorial confidence + sacred dot. Lithest, most "live" — the bindu feels like a beating heart in the iris's still center.</p>
+    <p class="item-name">Lockup ⓑ · L2.4 (Living Pulse) + WM1 (Cinzel Black)</p>
+    <p class="item-desc">Same Cinzel, but with the <strong>live pulsing core</strong>. Says: "this is a Bloomberg-grade live financial product, and it has divine roots." Functional + sacred.</p>
     <div class="display-row">
       <span class="lockup">
         <svg class="logo-sm" viewBox="0 0 64 64" fill="none">
           <g fill="url(#goldGrad)"><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(0 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(45 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(90 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(135 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(180 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(225 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(270 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(315 32 32)" /></g>
-          <circle cx="32" cy="32" r="2.5" fill="#FFC942" /><circle cx="32" cy="32" r="1.5" fill="#FF6B1A" />
+          <g class="bindu-pulse"><circle cx="32" cy="32" r="3.5" fill="url(#binduSun)" /></g>
         </svg>
-        <span class="word gold-text" style="font-family: 'Playfair Display', serif; font-weight: 900; font-style: italic;">Bhav<span style="font-size: 1.2em; font-style: normal; margin-left: 0.04em;">X</span></span>
+        <span style="font-family: 'Cinzel', serif; font-weight: 900; font-size: 36px; letter-spacing: 0.04em;" class="gold-text">BhavX</span>
       </span>
     </div>
   </div>
 
+  <!-- Lockup C: L2.1 (sun core) + WM2 (Marcellus + bindu echo) -->
   <div class="item">
-    <p class="item-name">Lockup C · L4 (Sharp Blades) + W4 (Big Shoulders)</p>
-    <p class="item-desc">Maximum aggression. Cutting blades + foundry-stamped wordmark. The "ruthless leader" feeling — pure dominance.</p>
+    <p class="item-name">Lockup ⓒ · L2.1 (Sun Core) + WM2 (Marcellus + Bindu Echo on X)</p>
+    <p class="item-desc">Bigger sun core in the logo + the bindu echoes inside the X letter itself. <strong>Logo and wordmark mirror each other</strong> — same sacred dot at both centers. Most integrated identity.</p>
     <div class="display-row">
       <span class="lockup">
-        <svg class="logo-sm" viewBox="0 0 64 64" fill="url(#goldGrad)">
-          <g><path d="M 17,4 L 47,4 L 30,22 L 24,23 Z" transform="rotate(0 32 32)" /><path d="M 17,4 L 47,4 L 30,22 L 24,23 Z" transform="rotate(45 32 32)" /><path d="M 17,4 L 47,4 L 30,22 L 24,23 Z" transform="rotate(90 32 32)" /><path d="M 17,4 L 47,4 L 30,22 L 24,23 Z" transform="rotate(135 32 32)" /><path d="M 17,4 L 47,4 L 30,22 L 24,23 Z" transform="rotate(180 32 32)" /><path d="M 17,4 L 47,4 L 30,22 L 24,23 Z" transform="rotate(225 32 32)" /><path d="M 17,4 L 47,4 L 30,22 L 24,23 Z" transform="rotate(270 32 32)" /><path d="M 17,4 L 47,4 L 30,22 L 24,23 Z" transform="rotate(315 32 32)" /></g>
+        <svg class="logo-sm" viewBox="0 0 64 64" fill="none">
+          <g fill="url(#goldGrad)"><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(0 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(45 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(90 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(135 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(180 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(225 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(270 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(315 32 32)" /></g>
+          <circle cx="32" cy="32" r="4.5" fill="url(#binduSun)" />
         </svg>
-        <span class="word gold-text" style="font-family: 'Big Shoulders Display', sans-serif; font-weight: 900; font-size: 56px; line-height: 0.9;">BhavX</span>
+        <span style="font-family: 'Marcellus', serif; font-size: 38px; letter-spacing: 0.05em; display: inline-flex; align-items: baseline;" class="gold-text">Bhav<span style="position: relative; display: inline-block;">X<span style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 6px; height: 6px; border-radius: 50%; background: radial-gradient(circle at 30% 30%, #FFC942, #FF6B1A 60%, #C73E0A); box-shadow: 0 0 4px rgba(255,107,26,0.6);"></span></span></span>
       </span>
     </div>
   </div>
 
   <div class="footer">
-    <p><strong>How to pick:</strong> One wordmark (W1-W6) + one logo (L0-L5). Mix freely.</p>
-    <p style="margin-top: 12px;">
-      Reply with: <strong>"W1 + L1"</strong> or <strong>"W3 + L2"</strong> etc.<br/>
-      Or describe a feeling I haven't captured: <em>more weight, more sun, sharper, softer, more sacred, more industrial</em>.<br/>
-      Or pick a hybrid lockup (A / B / C above).
+    <p><strong>Pick your L2 variant + wordmark:</strong></p>
+    <p style="margin-top: 8px;">
+      Logo: <strong>L2 (orig)</strong> · <strong>L2.1 (sun core)</strong> · <strong>L2.2 (sun + rays)</strong> · <strong>L2.3 (multi-layer chakra)</strong> · <strong>L2.4 (pulsing live)</strong> · <strong>L2.5 (sindoor red)</strong>
+    </p>
+    <p>
+      Wordmark: <strong>WM1 (Cinzel)</strong> · <strong>WM2 (Marcellus + bindu echo)</strong> · <strong>WM3 (Cormorant SC)</strong> · <strong>WM4 (Cardo)</strong> · <strong>WM5 (Cinzel wide-spaced)</strong>
+    </p>
+    <p style="margin-top: 14px;">
+      Reply: <strong>"L2.X + WMY"</strong> — or pick lockup <strong>ⓐ / ⓑ / ⓒ</strong>. Or describe what's still off.
     </p>
   </div>
 </div>
