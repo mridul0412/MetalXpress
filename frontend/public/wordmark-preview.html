@@ -3,375 +3,461 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>BhavX Wordmark — 5 Fresh Directions</title>
+<title>BhavX — Wordmark + Logo Iterations</title>
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700;900&family=Cormorant+Garamond:wght@600;700;800&family=Cormorant+SC:wght@600;700&family=Archivo+Black&family=Playfair+Display:wght@700;800;900&family=Tiro+Devanagari+Hindi&family=Noto+Serif+Devanagari:wght@700;900&family=Inter:wght@800&display=swap" rel="stylesheet" />
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700;900&family=Cormorant+Garamond:wght@600;700;800&family=Marcellus&family=Marcellus+SC&family=Archivo+Black&family=Big+Shoulders+Display:wght@700;800;900&family=Playfair+Display:wght@700;800;900&family=Inter:wght@700;800;900&display=swap" rel="stylesheet" />
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body { background: #050912; color: #fff; font-family: Inter, -apple-system, sans-serif; padding: 40px 24px; min-height: 100vh; }
   body::before { content: ''; position: fixed; inset: 0;
     background:
-      radial-gradient(ellipse at 50% -10%, rgba(207,181,59,0.08), transparent 65%),
-      radial-gradient(ellipse at 80% 100%, rgba(207,80,30,0.04), transparent 50%);
+      radial-gradient(ellipse at 50% -10%, rgba(207,181,59,0.10), transparent 65%),
+      radial-gradient(ellipse at 80% 100%, rgba(207,80,30,0.04), transparent 55%);
     pointer-events: none; }
   .container { max-width: 1100px; margin: 0 auto; position: relative; z-index: 1; }
   h1 { font-family: 'Cinzel', serif; font-size: 32px; font-weight: 700; margin-bottom: 8px; letter-spacing: 0.04em; }
   h1 .accent { background: linear-gradient(180deg, #FFE9A8, #CFB53B 50%, #8C6818); -webkit-background-clip: text; background-clip: text; color: transparent; }
   .subtitle { color: rgba(255,255,255,0.55); font-size: 14px; margin-bottom: 28px; line-height: 1.65; max-width: 760px; }
   .subtitle em { color: rgba(207,181,59,0.85); font-style: normal; font-weight: 600; }
-  .section-divider { display: flex; align-items: center; gap: 12px; margin: 48px 0 20px; }
+  .section-divider { display: flex; align-items: center; gap: 12px; margin: 56px 0 20px; }
   .section-divider::before, .section-divider::after { content: ''; flex: 1; height: 1px; background: linear-gradient(90deg, transparent, rgba(207,181,59,0.4), transparent); }
   .section-divider span { font-family: 'Cinzel', serif; font-size: 13px; font-weight: 700; color: #CFB53B; letter-spacing: 0.25em; text-transform: uppercase; white-space: nowrap; }
 
-  .proposal { background: rgba(13,20,32,0.6); border: 1px solid rgba(207,181,59,0.18); border-radius: 16px; padding: 28px 28px 24px; margin-bottom: 24px; backdrop-filter: blur(10px); transition: all 0.2s; }
-  .proposal:hover { border-color: rgba(207,181,59,0.4); box-shadow: 0 8px 32px rgba(207,181,59,0.06); }
-  .proposal-header { display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 8px; flex-wrap: wrap; gap: 8px; }
-  .proposal-name { font-family: 'Cinzel', serif; font-size: 16px; font-weight: 700; color: #CFB53B; letter-spacing: 0.1em; text-transform: uppercase; }
-  .proposal-vibe { font-size: 11px; color: rgba(255,255,255,0.4); font-style: italic; }
-  .proposal-pitch { font-size: 13px; color: rgba(255,255,255,0.62); line-height: 1.65; padding: 12px 16px; background: rgba(8,14,26,0.6); border-left: 2px solid #CFB53B; border-radius: 0 8px 8px 0; margin-bottom: 22px; }
-  .proposal-pitch strong { color: #fff; }
-  .proposal-pitch em { color: #CFB53B; font-style: normal; }
+  .grid { display: grid; gap: 18px; grid-template-columns: 1fr; }
+  .item { background: rgba(13,20,32,0.6); border: 1px solid rgba(207,181,59,0.18); border-radius: 14px; padding: 24px 26px 22px; backdrop-filter: blur(10px); transition: all 0.2s; }
+  .item:hover { border-color: rgba(207,181,59,0.4); }
+  .item-name { font-family: 'Cinzel', serif; font-size: 13px; font-weight: 700; color: #CFB53B; letter-spacing: 0.12em; text-transform: uppercase; margin-bottom: 4px; }
+  .item-desc { font-size: 12px; color: rgba(255,255,255,0.55); line-height: 1.6; margin-bottom: 18px; }
+  .item-desc strong { color: #fff; }
+  .display-row { display: flex; align-items: center; gap: 24px; padding: 24px; background: radial-gradient(ellipse at 50% 50%, rgba(207,181,59,0.04), rgba(8,14,26,0.7)); border: 1px solid rgba(255,255,255,0.04); border-radius: 10px; flex-wrap: wrap; min-height: 120px; }
 
-  .sizes { display: grid; gap: 14px; grid-template-columns: 1fr; }
-  .size-row { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 22px 24px; background: radial-gradient(ellipse at 50% 50%, rgba(207,181,59,0.04), rgba(8,14,26,0.7)); border: 1px solid rgba(255,255,255,0.04); border-radius: 10px; flex-wrap: wrap; min-height: 80px; }
-  .size-label { font-size: 10px; color: rgba(255,255,255,0.4); text-transform: uppercase; letter-spacing: 0.12em; min-width: 110px; }
-
-  /* Reusable gold gradient defs */
-  .gold-grad {
-    background: linear-gradient(180deg, #FFE9A8 0%, #FFC942 25%, #CFB53B 55%, #8C6818 100%);
+  /* ─── Shared gold gradients ─── */
+  .gold-text {
+    background: linear-gradient(180deg, #FFE9A8 0%, #FFC942 28%, #CFB53B 60%, #8C6818 100%);
+    -webkit-background-clip: text; background-clip: text; color: transparent;
+    filter: drop-shadow(0 1px 2px rgba(0,0,0,0.5));
+  }
+  .gold-deep {
+    background: linear-gradient(180deg, #E8C547 0%, #CFB53B 40%, #8C6818 80%, #5A4214 100%);
     -webkit-background-clip: text; background-clip: text; color: transparent;
   }
+  .gold-stroke {
+    fill: url(#goldRadialGrad);
+    stroke: url(#goldRadialGrad);
+  }
 
-  /* ╔══════════════════════════════════════════════════════════════════════
-     ║   N — SURYA CROWN (sun emblem above industrial wordmark)
-     ╚══════════════════════════════════════════════════════════════════════ */
-  .n-hero { display: inline-flex; flex-direction: column; align-items: center; gap: 10px; }
-  .n-hero .surya { width: 80px; height: 80px; }
-  .n-hero .word { font-family: 'Archivo Black', sans-serif; font-size: 70px; letter-spacing: 0.04em; line-height: 1;
-    background: linear-gradient(180deg, #FFE9A8, #CFB53B 50%, #8C6818); -webkit-background-clip: text; background-clip: text; color: transparent;
-    text-shadow: 0 1px 0 rgba(0,0,0,0.6); }
-  .n-nav { display: inline-flex; align-items: center; gap: 8px; }
-  .n-nav .surya { width: 32px; height: 32px; flex-shrink: 0; }
-  .n-nav .word { font-family: 'Archivo Black', sans-serif; font-size: 24px; letter-spacing: 0.04em; line-height: 1;
-    background: linear-gradient(180deg, #FFE9A8, #CFB53B 60%, #8C6818); -webkit-background-clip: text; background-clip: text; color: transparent; }
-  .n-foot { display: inline-flex; align-items: center; gap: 5px; }
-  .n-foot .surya { width: 18px; height: 18px; }
-  .n-foot .word { font-family: 'Archivo Black', sans-serif; font-size: 16px; letter-spacing: 0.04em;
-    background: linear-gradient(180deg, #FFE9A8, #8C6818); -webkit-background-clip: text; background-clip: text; color: transparent; }
+  /* ════════════════════════════════════════════════════════
+     WORDMARK ITERATIONS (all "BhavX" InitCaps, all gold)
+     ════════════════════════════════════════════════════════ */
 
-  /* ╔══════════════════════════════════════════════════════════════════════
-     ║   O — VAJRA X (X = thunderbolt of indestructibility)
-     ╚══════════════════════════════════════════════════════════════════════ */
-  .o-hero { font-family: 'Cinzel', serif; font-weight: 900; font-size: 64px; letter-spacing: 0.04em; line-height: 1; display: inline-flex; align-items: center; gap: 8px;
-    background: linear-gradient(180deg, #FFE9A8, #CFB53B 50%, #8C6818); -webkit-background-clip: text; background-clip: text; color: transparent; }
-  .o-hero .vajra { width: 90px; height: 50px; flex-shrink: 0; }
-  .o-nav { font-family: 'Cinzel', serif; font-weight: 900; font-size: 24px; letter-spacing: 0.05em; display: inline-flex; align-items: center; gap: 4px;
-    background: linear-gradient(180deg, #FFE9A8, #CFB53B, #8C6818); -webkit-background-clip: text; background-clip: text; color: transparent; }
-  .o-nav .vajra { width: 36px; height: 20px; }
-  .o-foot { font-family: 'Cinzel', serif; font-weight: 900; font-size: 16px; letter-spacing: 0.05em; display: inline-flex; align-items: center; gap: 3px;
-    background: linear-gradient(180deg, #FFE9A8, #8C6818); -webkit-background-clip: text; background-clip: text; color: transparent; }
-  .o-foot .vajra { width: 24px; height: 14px; }
+  /* W1 — Marcellus Roman temple */
+  .w1 { font-family: 'Marcellus', serif; font-size: 64px; line-height: 1; letter-spacing: 0.06em; }
 
-  /* ╔══════════════════════════════════════════════════════════════════════
-     ║   P — BLACK ON GOLD STRIP (luxury watch nameplate)
-     ╚══════════════════════════════════════════════════════════════════════ */
-  .p-strip { display: inline-flex; align-items: center; padding: 10px 28px;
-    background: linear-gradient(180deg, #FFE9A8 0%, #E8C547 30%, #CFB53B 60%, #A87830 100%);
-    border: 1px solid rgba(140,104,24,0.5);
-    box-shadow:
-      0 1px 0 rgba(255,233,168,0.6) inset,
-      0 -2px 0 rgba(140,104,24,0.6) inset,
-      0 8px 24px rgba(207,181,59,0.25),
-      0 2px 4px rgba(0,0,0,0.3);
-    border-radius: 4px; }
-  .p-hero { font-family: 'Cinzel', serif; font-weight: 900; font-size: 56px; letter-spacing: 0.06em; color: #1A0F00; line-height: 1; }
-  .p-nav { font-family: 'Cinzel', serif; font-weight: 900; font-size: 20px; letter-spacing: 0.06em; color: #1A0F00; }
-  .p-strip-nav { padding: 6px 14px; }
-  .p-foot { font-family: 'Cinzel', serif; font-weight: 900; font-size: 14px; letter-spacing: 0.06em; color: #1A0F00; }
-  .p-strip-foot { padding: 4px 10px; }
+  /* W2 — Inter Black industrial */
+  .w2 { font-family: 'Inter', sans-serif; font-weight: 900; font-size: 60px; letter-spacing: -0.04em; line-height: 1; }
+  .w2 .x { font-size: 1.18em; filter: drop-shadow(0 0 14px rgba(255,180,40,0.4)); }
 
-  /* ╔══════════════════════════════════════════════════════════════════════
-     ║   Q — TRISHUL X (Shiva's trident — destroyer of fraud)
-     ╚══════════════════════════════════════════════════════════════════════ */
-  .q-hero { font-family: 'Playfair Display', serif; font-weight: 900; font-size: 70px; line-height: 1; display: inline-flex; align-items: center; gap: 6px;
-    background: linear-gradient(180deg, #FFE9A8, #CFB53B 50%, #8C6818); -webkit-background-clip: text; background-clip: text; color: transparent; }
-  .q-hero .trishul { width: 56px; height: 86px; flex-shrink: 0; }
-  .q-nav { font-family: 'Playfair Display', serif; font-weight: 900; font-size: 24px; display: inline-flex; align-items: center; gap: 3px;
-    background: linear-gradient(180deg, #FFE9A8, #CFB53B 60%, #8C6818); -webkit-background-clip: text; background-clip: text; color: transparent; }
-  .q-nav .trishul { width: 22px; height: 32px; }
-  .q-foot { font-family: 'Playfair Display', serif; font-weight: 900; font-size: 16px; display: inline-flex; align-items: center; gap: 3px;
-    background: linear-gradient(180deg, #FFE9A8, #8C6818); -webkit-background-clip: text; background-clip: text; color: transparent; }
-  .q-foot .trishul { width: 14px; height: 22px; }
+  /* W3 — Playfair Display Black with X serif emphasis */
+  .w3 { font-family: 'Playfair Display', serif; font-weight: 900; font-size: 64px; line-height: 1; letter-spacing: -0.01em; font-style: italic; }
+  .w3 .x { font-size: 1.25em; font-style: normal; margin-left: 0.04em;
+    filter: drop-shadow(0 2px 6px rgba(255,180,40,0.45)); }
 
-  /* ╔══════════════════════════════════════════════════════════════════════
-     ║   T — HAMMERED GOLD RELIEF (deep emboss into gold sheet)
-     ╚══════════════════════════════════════════════════════════════════════ */
-  .t-hero { font-family: 'Cormorant SC', serif; font-weight: 700; font-size: 76px; line-height: 1; letter-spacing: 0.05em;
-    color: #6B4F1A;
-    text-shadow:
-      -1px -1px 0 rgba(255,233,168,0.7),
-      1px 1px 1px rgba(20,12,4,0.95),
-      0 0 22px rgba(207,181,59,0.18),
-      0 6px 14px rgba(0,0,0,0.6); }
-  .t-hero .x { font-size: 1.18em;
-    color: #5A3F18;
-    text-shadow:
-      -1px -1px 0 rgba(255,233,168,0.85),
-      2px 2px 1px rgba(0,0,0,1),
-      0 0 30px rgba(255,180,40,0.35),
-      0 8px 18px rgba(0,0,0,0.6); }
-  .t-nav { font-family: 'Cormorant SC', serif; font-weight: 700; font-size: 28px; letter-spacing: 0.05em;
-    color: #6B4F1A;
-    text-shadow:
-      -1px -1px 0 rgba(255,233,168,0.7),
-      1px 1px 1px rgba(20,12,4,0.95); }
-  .t-nav .x { font-size: 1.18em; color: #5A3F18;
-    text-shadow: -1px -1px 0 rgba(255,233,168,0.85), 1px 1px 1px rgba(0,0,0,1); }
-  .t-foot { font-family: 'Cormorant SC', serif; font-weight: 700; font-size: 18px; letter-spacing: 0.05em;
-    color: #6B4F1A;
-    text-shadow: -0.5px -0.5px 0 rgba(255,233,168,0.6), 0.5px 0.5px 0 rgba(0,0,0,0.9); }
-  .t-foot .x { font-size: 1.18em; color: #5A3F18;
-    text-shadow: -0.5px -0.5px 0 rgba(255,233,168,0.7), 0.5px 0.5px 0 rgba(0,0,0,1); }
+  /* W4 — Big Shoulders Display tall industrial */
+  .w4 { font-family: 'Big Shoulders Display', sans-serif; font-weight: 900; font-size: 86px; line-height: 0.9; letter-spacing: 0.02em; }
+  .w4 .x { font-size: 1.15em; }
+
+  /* W5 — Cormorant Garamond elegant */
+  .w5 { font-family: 'Cormorant Garamond', serif; font-weight: 800; font-size: 68px; line-height: 1; letter-spacing: 0.01em; font-style: italic; }
+  .w5 .x { font-size: 1.2em; font-style: normal; margin-left: 0.02em; }
+
+  /* W6 — InitCaps with Surya halo behind X (sun replacing dot/punctuation) */
+  .w6 { font-family: 'Marcellus', serif; font-size: 60px; line-height: 1; letter-spacing: 0.04em; display: inline-flex; align-items: center; gap: 4px; position: relative; }
+  .w6 .x-wrap { position: relative; display: inline-block; padding: 0 0.12em; }
+  .w6 .x-halo { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); width: 1.5em; height: 1.5em; pointer-events: none; opacity: 0.6; }
+  .w6 .x { position: relative; z-index: 1; font-size: 1.18em; }
+
+  /* ════════════════════════════════════════════════════════
+     LOGO ITERATIONS (evolve camera-iris)
+     ════════════════════════════════════════════════════════ */
+  .logo { width: 96px; height: 96px; }
+  .logo-sm { width: 44px; height: 44px; }
+  .logo-xs { width: 28px; height: 28px; }
+
+  /* Animation for spinning Surya version */
+  @keyframes slow-spin { to { transform: rotate(360deg); } }
+  .spin-slow { animation: slow-spin 60s linear infinite; transform-origin: center; }
+
+  /* ════════════════════════════════════════════════════════
+     LOCKUP — Logo + Wordmark together
+     ════════════════════════════════════════════════════════ */
+  .lockup { display: inline-flex; align-items: center; gap: 14px; }
+  .lockup .word { font-family: 'Marcellus', serif; font-size: 42px; line-height: 1; letter-spacing: 0.04em; }
 
   .footer { margin-top: 60px; padding: 28px; background: radial-gradient(ellipse at 50% 0%, rgba(207,181,59,0.08), rgba(13,20,32,0.5)); border: 1px solid rgba(207,181,59,0.25); border-radius: 14px; text-align: center; font-size: 13px; color: rgba(255,255,255,0.6); line-height: 1.7; }
   .footer strong { color: #CFB53B; }
   .footer p { margin-bottom: 6px; }
+
+  /* SVG defs for gold gradients shared across logos */
+  .svg-defs { position: absolute; width: 0; height: 0; pointer-events: none; }
 </style>
 </head>
 <body>
+
+<!-- Shared SVG defs — referenced by all logos via url(#id) -->
+<svg class="svg-defs" aria-hidden="true">
+  <defs>
+    <linearGradient id="goldGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#FFE9A8" />
+      <stop offset="40%" stop-color="#CFB53B" />
+      <stop offset="100%" stop-color="#7A5A18" />
+    </linearGradient>
+    <radialGradient id="goldRadialGrad" cx="50%" cy="40%" r="60%">
+      <stop offset="0%" stop-color="#FFE9A8" />
+      <stop offset="50%" stop-color="#FFC942" />
+      <stop offset="100%" stop-color="#8C6818" />
+    </radialGradient>
+    <radialGradient id="suryaCenter" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#FFE9A8" />
+      <stop offset="60%" stop-color="#FFC942" />
+      <stop offset="100%" stop-color="#CFB53B" />
+    </radialGradient>
+  </defs>
+</svg>
+
 <div class="container">
-  <h1>BhavX <span class="accent">— 5 Fresh Directions</span></h1>
+  <h1>BhavX <span class="accent">— Wordmarks + Logo Iterations</span></h1>
   <p class="subtitle">
-    Forget Western fintech. These lean into <em>Indian sacred iconography + heavy industrial typography</em> — sun gods, thunderbolts, royal nameplates, Shiva's weapons, hammered temple gold. <em>Each one is a different intensity</em>: pick whichever feeling matches BhavX.
+    Anchored to your <em>"N feel"</em>: all-gold gradient + sun-blessed + InitCaps "BhavX".
+    Six wordmark explorations in different typefaces, plus five iterations of the existing camera-iris logo.
+    Pick a wordmark + a logo separately. Lockup section at the bottom shows how they pair.
   </p>
 
-  <div class="section-divider"><span>⚡ Fresh Bold Directions</span></div>
+  <div class="section-divider"><span>✦ Wordmarks (BhavX, InitCaps, all gold)</span></div>
 
-  <!-- ═══════════════════════════════════ N · SURYA CROWN ═══════════════════════════════════ -->
-  <div class="proposal">
-    <div class="proposal-header">
-      <span class="proposal-name">N · ☼ BHAVX — Surya Crown</span>
-      <span class="proposal-vibe">12-rayed sun emblem above + Archivo Black industrial wordmark</span>
-    </div>
-    <div class="proposal-pitch">
-      <strong>Thesis:</strong> A stylized 12-rayed Surya disc <em>crowns the wordmark</em> like a temple deity's halo. Surya = the sun god, source of all wealth & vitality in Indian tradition. Pair with <em>Archivo Black</em> — the heaviest industrial sans there is. Gold gradient text feels cast, not printed. Says: <em>"blessed by the sun, weighted like industrial metal."</em> No white anywhere — just gradient gold from dawn to dusk. The crown emblem doubles as a standalone favicon — instantly recognizable.
-    </div>
-    <div class="sizes">
-      <div class="size-row"><span class="size-label">Hero</span>
-        <span class="n-hero">
-          <svg class="surya" viewBox="0 0 100 100" fill="none">
-            <defs><radialGradient id="suryaG" cx="50%" cy="50%" r="50%"><stop offset="0%" stop-color="#FFE9A8" /><stop offset="50%" stop-color="#FFC942" /><stop offset="100%" stop-color="#8C6818" /></radialGradient></defs>
-            <circle cx="50" cy="50" r="22" fill="url(#suryaG)" />
-            <g fill="url(#suryaG)" stroke="url(#suryaG)" stroke-width="2">
-              <!-- 12 sun rays -->
-              <path d="M 50 4 L 53 26 L 47 26 Z" />
-              <path d="M 73 8 L 67 30 L 61 24 Z" />
-              <path d="M 92 27 L 71 34 L 73 26 Z" />
-              <path d="M 96 50 L 74 53 L 74 47 Z" />
-              <path d="M 92 73 L 73 74 L 71 66 Z" />
-              <path d="M 73 92 L 67 70 L 73 70 Z" />
-              <path d="M 50 96 L 47 74 L 53 74 Z" />
-              <path d="M 27 92 L 33 70 L 27 70 Z" />
-              <path d="M 8 73 L 27 66 L 29 74 Z" />
-              <path d="M 4 50 L 26 47 L 26 53 Z" />
-              <path d="M 8 27 L 27 26 L 29 34 Z" />
-              <path d="M 27 8 L 33 26 L 27 30 Z" />
-            </g>
-          </svg>
-          <span class="word">BHAVX</span>
-        </span>
-      </div>
-      <div class="size-row"><span class="size-label">Navbar</span>
-        <span class="n-nav">
-          <svg class="surya" viewBox="0 0 100 100" fill="none">
-            <circle cx="50" cy="50" r="22" fill="url(#suryaG)" />
-            <g fill="url(#suryaG)">
-              <path d="M 50 4 L 53 26 L 47 26 Z" /><path d="M 73 8 L 67 30 L 61 24 Z" /><path d="M 92 27 L 71 34 L 73 26 Z" /><path d="M 96 50 L 74 53 L 74 47 Z" /><path d="M 92 73 L 73 74 L 71 66 Z" /><path d="M 73 92 L 67 70 L 73 70 Z" /><path d="M 50 96 L 47 74 L 53 74 Z" /><path d="M 27 92 L 33 70 L 27 70 Z" /><path d="M 8 73 L 27 66 L 29 74 Z" /><path d="M 4 50 L 26 47 L 26 53 Z" /><path d="M 8 27 L 27 26 L 29 34 Z" /><path d="M 27 8 L 33 26 L 27 30 Z" />
-            </g>
-          </svg>
-          <span class="word">BHAVX</span>
-        </span>
-      </div>
-      <div class="size-row"><span class="size-label">Footer / Email</span>
-        <span class="n-foot">
-          <svg class="surya" viewBox="0 0 100 100" fill="none">
-            <circle cx="50" cy="50" r="22" fill="url(#suryaG)" />
-            <g fill="url(#suryaG)">
-              <path d="M 50 4 L 53 26 L 47 26 Z" /><path d="M 73 8 L 67 30 L 61 24 Z" /><path d="M 92 27 L 71 34 L 73 26 Z" /><path d="M 96 50 L 74 53 L 74 47 Z" /><path d="M 92 73 L 73 74 L 71 66 Z" /><path d="M 73 92 L 67 70 L 73 70 Z" /><path d="M 50 96 L 47 74 L 53 74 Z" /><path d="M 27 92 L 33 70 L 27 70 Z" /><path d="M 8 73 L 27 66 L 29 74 Z" /><path d="M 4 50 L 26 47 L 26 53 Z" /><path d="M 8 27 L 27 26 L 29 34 Z" /><path d="M 27 8 L 33 26 L 27 30 Z" />
-            </g>
-          </svg>
-          <span class="word">BHAVX</span>
-        </span>
-      </div>
+  <!-- W1 Marcellus -->
+  <div class="item">
+    <p class="item-name">W1 · Marcellus — Roman Temple Inscription</p>
+    <p class="item-desc"><strong>Marcellus</strong> serif. Inspired by Roman temple stone carving — confident, balanced, weighty. Works at every size. The most "timeless leader" feel. Used by financial publications, premium brands.</p>
+    <div class="display-row">
+      <span class="w1 gold-text">BhavX</span>
     </div>
   </div>
 
-  <!-- ═══════════════════════════════════ O · VAJRA X ═══════════════════════════════════ -->
-  <div class="proposal">
-    <div class="proposal-header">
-      <span class="proposal-name">O · BHAV ⚡ X — Vajra Thunderbolt</span>
-      <span class="proposal-vibe">Cinzel Black + double-ended vajra glyph between BHAV and X</span>
-    </div>
-    <div class="proposal-pitch">
-      <strong>Thesis:</strong> The <em>vajra</em> (वज्र) — Indra's thunderbolt — is the symbol of <strong>indestructibility</strong> in Hindu, Buddhist, and Jain traditions. Lightning-fast, unbreakable, divine power. Place it between BHAV and X like a stamp of authority. <em>Cinzel</em> is the typeface of Roman temple inscriptions — gives the wordmark stone-carved gravitas. Says: <em>"this brand cannot be broken. Decisions are lightning. Authority is divine."</em>
-    </div>
-    <div class="sizes">
-      <div class="size-row"><span class="size-label">Hero</span>
-        <span class="o-hero">BHAV
-          <svg class="vajra" viewBox="0 0 90 50" fill="none">
-            <defs><linearGradient id="vajraG" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stop-color="#FFE9A8" /><stop offset="50%" stop-color="#CFB53B" /><stop offset="100%" stop-color="#8C6818" /></linearGradient></defs>
-            <!-- Center bar -->
-            <rect x="35" y="22" width="20" height="6" fill="url(#vajraG)" />
-            <!-- Left diamond cluster (lotus petals) -->
-            <g fill="url(#vajraG)">
-              <path d="M 35 25 L 25 10 L 22 18 L 12 8 L 18 22 L 6 25 L 18 28 L 12 42 L 22 32 L 25 40 L 35 25 Z" />
-            </g>
-            <!-- Right diamond cluster -->
-            <g fill="url(#vajraG)">
-              <path d="M 55 25 L 65 10 L 68 18 L 78 8 L 72 22 L 84 25 L 72 28 L 78 42 L 68 32 L 65 40 L 55 25 Z" />
-            </g>
-          </svg>
-          X
-        </span>
-      </div>
-      <div class="size-row"><span class="size-label">Navbar</span>
-        <span class="o-nav">BHAV
-          <svg class="vajra" viewBox="0 0 90 50" fill="none">
-            <rect x="35" y="22" width="20" height="6" fill="url(#vajraG)" />
-            <path d="M 35 25 L 25 10 L 22 18 L 12 8 L 18 22 L 6 25 L 18 28 L 12 42 L 22 32 L 25 40 L 35 25 Z" fill="url(#vajraG)" />
-            <path d="M 55 25 L 65 10 L 68 18 L 78 8 L 72 22 L 84 25 L 72 28 L 78 42 L 68 32 L 65 40 L 55 25 Z" fill="url(#vajraG)" />
-          </svg>
-          X
-        </span>
-      </div>
-      <div class="size-row"><span class="size-label">Footer / Email</span>
-        <span class="o-foot">BHAV
-          <svg class="vajra" viewBox="0 0 90 50" fill="none">
-            <rect x="35" y="22" width="20" height="6" fill="url(#vajraG)" />
-            <path d="M 35 25 L 25 10 L 22 18 L 12 8 L 18 22 L 6 25 L 18 28 L 12 42 L 22 32 L 25 40 L 35 25 Z" fill="url(#vajraG)" />
-            <path d="M 55 25 L 65 10 L 68 18 L 78 8 L 72 22 L 84 25 L 72 28 L 78 42 L 68 32 L 65 40 L 55 25 Z" fill="url(#vajraG)" />
-          </svg>
-          X
-        </span>
-      </div>
+  <!-- W2 Inter Black -->
+  <div class="item">
+    <p class="item-name">W2 · Inter Black — Industrial Authority</p>
+    <p class="item-desc"><strong>Inter Black</strong> with tight kerning. The X has a soft glow. Modern fintech weight, pulled into gold tonality. Says: "we built the standard."</p>
+    <div class="display-row">
+      <span class="w2 gold-text">Bhav<span class="x">X</span></span>
     </div>
   </div>
 
-  <!-- ═══════════════════════════════════ P · BLACK ON GOLD STRIP ═══════════════════════════════════ -->
-  <div class="proposal">
-    <div class="proposal-header">
-      <span class="proposal-name">P · ▰ BHAVX ▰ — Royal Nameplate</span>
-      <span class="proposal-vibe">Reverse polarity: black Cinzel on solid gold strip</span>
-    </div>
-    <div class="proposal-pitch">
-      <strong>Thesis:</strong> Flip the polarity. Dark text on a <em>solid gold strip</em> with embossed edges and a subtle drop shadow. This is the aesthetic of luxury watch nameplates (Patek, Rolex), Mughal-era gold mohur coins, royal letterheads. Says: <em>"this is the gold standard. Solid, weighted, cannot be ignored."</em> The wordmark itself becomes a tactile object, not just letters. Cinzel typeface = Roman temple inscription gravitas. Maximum perceived value, maximum authority.
-    </div>
-    <div class="sizes">
-      <div class="size-row"><span class="size-label">Hero</span>
-        <span class="p-strip"><span class="p-hero">BHAVX</span></span>
-      </div>
-      <div class="size-row"><span class="size-label">Navbar</span>
-        <span class="p-strip p-strip-nav"><span class="p-nav">BHAVX</span></span>
-      </div>
-      <div class="size-row"><span class="size-label">Footer / Email</span>
-        <span class="p-strip p-strip-foot"><span class="p-foot">BHAVX</span></span>
-      </div>
+  <!-- W3 Playfair Italic -->
+  <div class="item">
+    <p class="item-name">W3 · Playfair Italic — Confident Editorial</p>
+    <p class="item-desc"><strong>Playfair Display Black</strong> in italic for "Bhav" + upright extra-large X. The italics suggest forward motion, the upright X is the anchor. Editorial, confident, distinctive. The X has a subtle gold halo.</p>
+    <div class="display-row">
+      <span class="w3 gold-text">Bhav<span class="x">X</span></span>
     </div>
   </div>
 
-  <!-- ═══════════════════════════════════ Q · TRISHUL X ═══════════════════════════════════ -->
-  <div class="proposal">
-    <div class="proposal-header">
-      <span class="proposal-name">Q · BHAV ψ — Shiva's Trishul</span>
-      <span class="proposal-vibe">X replaced with Shiva's trident — destroyer of evil, protector of dharma</span>
-    </div>
-    <div class="proposal-pitch">
-      <strong>Thesis:</strong> X → <em>trishul</em> (त्रिशूल) — Shiva's three-pronged trident. Shiva = Mahadev, the destroyer. The trishul cuts through asuras, frauds, market chaos. It also represents the three gunas — sattva, rajas, tamas (creation, preservation, destruction). Says: <em>"we destroy fraud. We protect honest traders. We hold all three forces in balance."</em> This is the most ferociously Indian + dharmic combo. Used by every Hindu temple — universal recognition. Pairs the divine weapon with weighty Playfair serif.
-    </div>
-    <div class="sizes">
-      <div class="size-row"><span class="size-label">Hero</span>
-        <span class="q-hero">BHAV
-          <svg class="trishul" viewBox="0 0 56 86" fill="none">
-            <defs><linearGradient id="trishulG" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stop-color="#FFE9A8" /><stop offset="50%" stop-color="#CFB53B" /><stop offset="100%" stop-color="#8C6818" /></linearGradient></defs>
-            <!-- Three prongs at top -->
-            <path d="M 28 4 L 32 22 L 28 18 L 24 22 Z" fill="url(#trishulG)" />
-            <path d="M 8 12 L 16 26 L 12 30 L 4 22 Z" fill="url(#trishulG)" />
-            <path d="M 48 12 L 40 26 L 44 30 L 52 22 Z" fill="url(#trishulG)" />
-            <!-- Horizontal bar joining prongs -->
-            <rect x="6" y="28" width="44" height="5" fill="url(#trishulG)" />
-            <!-- Vertical shaft -->
-            <rect x="25" y="33" width="6" height="40" fill="url(#trishulG)" />
-            <!-- Bottom decorative knob -->
-            <ellipse cx="28" cy="76" rx="7" ry="5" fill="url(#trishulG)" />
-            <rect x="26" y="78" width="4" height="8" fill="url(#trishulG)" />
-          </svg>
-        </span>
-      </div>
-      <div class="size-row"><span class="size-label">Navbar</span>
-        <span class="q-nav">BHAV
-          <svg class="trishul" viewBox="0 0 56 86" fill="none">
-            <path d="M 28 4 L 32 22 L 28 18 L 24 22 Z" fill="url(#trishulG)" />
-            <path d="M 8 12 L 16 26 L 12 30 L 4 22 Z" fill="url(#trishulG)" />
-            <path d="M 48 12 L 40 26 L 44 30 L 52 22 Z" fill="url(#trishulG)" />
-            <rect x="6" y="28" width="44" height="5" fill="url(#trishulG)" />
-            <rect x="25" y="33" width="6" height="40" fill="url(#trishulG)" />
-            <ellipse cx="28" cy="76" rx="7" ry="5" fill="url(#trishulG)" />
-            <rect x="26" y="78" width="4" height="8" fill="url(#trishulG)" />
-          </svg>
-        </span>
-      </div>
-      <div class="size-row"><span class="size-label">Footer / Email</span>
-        <span class="q-foot">BHAV
-          <svg class="trishul" viewBox="0 0 56 86" fill="none">
-            <path d="M 28 4 L 32 22 L 28 18 L 24 22 Z" fill="url(#trishulG)" />
-            <path d="M 8 12 L 16 26 L 12 30 L 4 22 Z" fill="url(#trishulG)" />
-            <path d="M 48 12 L 40 26 L 44 30 L 52 22 Z" fill="url(#trishulG)" />
-            <rect x="6" y="28" width="44" height="5" fill="url(#trishulG)" />
-            <rect x="25" y="33" width="6" height="40" fill="url(#trishulG)" />
-            <ellipse cx="28" cy="76" rx="7" ry="5" fill="url(#trishulG)" />
-            <rect x="26" y="78" width="4" height="8" fill="url(#trishulG)" />
-          </svg>
-        </span>
-      </div>
+  <!-- W4 Big Shoulders -->
+  <div class="item">
+    <p class="item-name">W4 · Big Shoulders Display — Towering Industrial</p>
+    <p class="item-desc"><strong>Big Shoulders Display Black</strong>. Tall, condensed, vertical. Think: industrial signage, refinery markings, foundry plates. The wordmark literally LOOKS like it's been forged.</p>
+    <div class="display-row">
+      <span class="w4 gold-text">BhavX</span>
     </div>
   </div>
 
-  <!-- ═══════════════════════════════════ T · HAMMERED GOLD RELIEF ═══════════════════════════════════ -->
-  <div class="proposal">
-    <div class="proposal-header">
-      <span class="proposal-name">T · BHAV<span style="font-size: 1.18em">X</span> — Hammered Gold Relief</span>
-      <span class="proposal-vibe">Cormorant SC + deep emboss CSS — looks struck into gold sheet</span>
+  <!-- W5 Cormorant -->
+  <div class="item">
+    <p class="item-name">W5 · Cormorant Garamond — Premium Heritage</p>
+    <p class="item-desc"><strong>Cormorant Garamond</strong> italic for "Bhav" + upright X. Elegant, premium, almost couture. Classical serifs evoke heritage + craftsmanship. Best for luxury positioning.</p>
+    <div class="display-row">
+      <span class="w5 gold-text">Bhav<span class="x">X</span></span>
     </div>
-    <div class="proposal-pitch">
-      <strong>Thesis:</strong> Wordmark looks <em>physically pressed into gold sheet metal</em>. Deep emboss with bright top-edge highlight + dark bottom shadow + soft outer glow. Cormorant SC (Roman small caps serif) gives stone-tablet weight. The X has even deeper relief. This isn't text — it's a <em>physical object</em>. Says: <em>"BhavX is permanent. Pressed into gold. Cannot be erased."</em> The 3D depth makes it feel ancient and unshakeable.
+  </div>
+
+  <!-- W6 Marcellus + Surya halo -->
+  <div class="item">
+    <p class="item-name">W6 · Marcellus + Surya Halo on X</p>
+    <p class="item-desc">Same Marcellus typeface as W1, but with a <strong>subtle 12-rayed Surya halo</strong> embedded behind the X — a quiet sun-blessing. Less obvious than a separate logo, more integrated. The X becomes the divine anchor.</p>
+    <div class="display-row">
+      <span class="w6 gold-text">Bhav<span class="x-wrap">
+        <svg class="x-halo" viewBox="0 0 100 100" fill="none">
+          <g fill="url(#suryaCenter)">
+            <path d="M 50 4 L 53 26 L 47 26 Z" /><path d="M 73 8 L 67 30 L 61 24 Z" /><path d="M 92 27 L 71 34 L 73 26 Z" /><path d="M 96 50 L 74 53 L 74 47 Z" /><path d="M 92 73 L 73 74 L 71 66 Z" /><path d="M 73 92 L 67 70 L 73 70 Z" /><path d="M 50 96 L 47 74 L 53 74 Z" /><path d="M 27 92 L 33 70 L 27 70 Z" /><path d="M 8 73 L 27 66 L 29 74 Z" /><path d="M 4 50 L 26 47 L 26 53 Z" /><path d="M 8 27 L 27 26 L 29 34 Z" /><path d="M 27 8 L 33 26 L 27 30 Z" />
+          </g>
+        </svg>
+        <span class="x">X</span>
+      </span></span>
     </div>
-    <div class="sizes">
-      <div class="size-row"><span class="size-label">Hero</span>
-        <span class="t-hero">BHAV<span class="x">X</span></span>
-      </div>
-      <div class="size-row"><span class="size-label">Navbar</span>
-        <span class="t-nav">BHAV<span class="x">X</span></span>
-      </div>
-      <div class="size-row"><span class="size-label">Footer / Email</span>
-        <span class="t-foot">BHAV<span class="x">X</span></span>
-      </div>
+  </div>
+
+  <!-- ════════════════════════════════════════════════════════
+       LOGO ITERATIONS
+       ════════════════════════════════════════════════════════ -->
+  <div class="section-divider"><span>✦ Logo Iterations (camera-iris evolved)</span></div>
+
+  <!-- L0 Current (reference) -->
+  <div class="item">
+    <p class="item-name">L0 · Current Logo — Reference</p>
+    <p class="item-desc">The existing 8-parallelogram-blade camera iris. Solid, geometric, recognizable. Iterations below evolve from this baseline.</p>
+    <div class="display-row">
+      <svg class="logo" viewBox="0 0 64 64" fill="url(#goldGrad)">
+        <g>
+          <path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(0 32 32)" />
+          <path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(45 32 32)" />
+          <path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(90 32 32)" />
+          <path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(135 32 32)" />
+          <path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(180 32 32)" />
+          <path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(225 32 32)" />
+          <path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(270 32 32)" />
+          <path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(315 32 32)" />
+        </g>
+      </svg>
+      <svg class="logo-sm" viewBox="0 0 64 64" fill="url(#goldGrad)">
+        <g>
+          <path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(0 32 32)" />
+          <path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(45 32 32)" />
+          <path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(90 32 32)" />
+          <path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(135 32 32)" />
+          <path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(180 32 32)" />
+          <path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(225 32 32)" />
+          <path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(270 32 32)" />
+          <path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(315 32 32)" />
+        </g>
+      </svg>
+      <svg class="logo-xs" viewBox="0 0 64 64" fill="url(#goldGrad)">
+        <g>
+          <path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(0 32 32)" />
+          <path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(45 32 32)" />
+          <path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(90 32 32)" />
+          <path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(135 32 32)" />
+          <path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(180 32 32)" />
+          <path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(225 32 32)" />
+          <path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(270 32 32)" />
+          <path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(315 32 32)" />
+        </g>
+      </svg>
+    </div>
+  </div>
+
+  <!-- L1 Sun-Burst Iris -->
+  <div class="item">
+    <p class="item-name">L1 · Sun-Burst Iris (Surya Halo)</p>
+    <p class="item-desc">Existing iris + <strong>12 thin radiating rays</strong> extending past the blades into a Surya halo. Pairs the camera-iris (precision) with the sun god (radiance). Says: "we capture and we radiate."</p>
+    <div class="display-row">
+      <svg class="logo" viewBox="0 0 100 100" fill="none">
+        <!-- Outer 12 rays -->
+        <g fill="url(#goldGrad)" opacity="0.55">
+          <path d="M 50 3 L 52 14 L 48 14 Z" /><path d="M 73.5 6.5 L 70.5 17 L 67 14.5 Z" /><path d="M 93.5 26.5 L 83 29.5 L 85.5 33 Z" /><path d="M 97 50 L 86 52 L 86 48 Z" /><path d="M 93.5 73.5 L 85.5 67 L 83 70.5 Z" /><path d="M 73.5 93.5 L 67 85.5 L 70.5 83 Z" /><path d="M 50 97 L 48 86 L 52 86 Z" /><path d="M 26.5 93.5 L 29.5 83 L 33 85.5 Z" /><path d="M 6.5 73.5 L 17 70.5 L 14.5 67 Z" /><path d="M 3 50 L 14 48 L 14 52 Z" /><path d="M 6.5 26.5 L 14.5 33 L 17 29.5 Z" /><path d="M 26.5 6.5 L 33 14.5 L 29.5 17 Z" />
+        </g>
+        <!-- Iris blades scaled into 100x100 viewbox -->
+        <g fill="url(#goldGrad)" transform="translate(18 18) scale(1.0)">
+          <path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(0 32 32)" />
+          <path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(45 32 32)" />
+          <path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(90 32 32)" />
+          <path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(135 32 32)" />
+          <path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(180 32 32)" />
+          <path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(225 32 32)" />
+          <path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(270 32 32)" />
+          <path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(315 32 32)" />
+        </g>
+      </svg>
+      <svg class="logo-sm" viewBox="0 0 100 100" fill="none">
+        <g fill="url(#goldGrad)" opacity="0.55"><path d="M 50 3 L 52 14 L 48 14 Z" /><path d="M 73.5 6.5 L 70.5 17 L 67 14.5 Z" /><path d="M 93.5 26.5 L 83 29.5 L 85.5 33 Z" /><path d="M 97 50 L 86 52 L 86 48 Z" /><path d="M 93.5 73.5 L 85.5 67 L 83 70.5 Z" /><path d="M 73.5 93.5 L 67 85.5 L 70.5 83 Z" /><path d="M 50 97 L 48 86 L 52 86 Z" /><path d="M 26.5 93.5 L 29.5 83 L 33 85.5 Z" /><path d="M 6.5 73.5 L 17 70.5 L 14.5 67 Z" /><path d="M 3 50 L 14 48 L 14 52 Z" /><path d="M 6.5 26.5 L 14.5 33 L 17 29.5 Z" /><path d="M 26.5 6.5 L 33 14.5 L 29.5 17 Z" /></g>
+        <g fill="url(#goldGrad)" transform="translate(18 18)"><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(0 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(45 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(90 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(135 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(180 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(225 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(270 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(315 32 32)" /></g>
+      </svg>
+      <svg class="logo-xs" viewBox="0 0 100 100" fill="none">
+        <g fill="url(#goldGrad)" opacity="0.55"><path d="M 50 3 L 52 14 L 48 14 Z" /><path d="M 73.5 6.5 L 70.5 17 L 67 14.5 Z" /><path d="M 93.5 26.5 L 83 29.5 L 85.5 33 Z" /><path d="M 97 50 L 86 52 L 86 48 Z" /><path d="M 93.5 73.5 L 85.5 67 L 83 70.5 Z" /><path d="M 73.5 93.5 L 67 85.5 L 70.5 83 Z" /><path d="M 50 97 L 48 86 L 52 86 Z" /><path d="M 26.5 93.5 L 29.5 83 L 33 85.5 Z" /><path d="M 6.5 73.5 L 17 70.5 L 14.5 67 Z" /><path d="M 3 50 L 14 48 L 14 52 Z" /><path d="M 6.5 26.5 L 14.5 33 L 17 29.5 Z" /><path d="M 26.5 6.5 L 33 14.5 L 29.5 17 Z" /></g>
+        <g fill="url(#goldGrad)" transform="translate(18 18)"><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(0 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(45 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(90 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(135 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(180 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(225 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(270 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(315 32 32)" /></g>
+      </svg>
+    </div>
+  </div>
+
+  <!-- L2 Bindu Center -->
+  <div class="item">
+    <p class="item-name">L2 · Bindu Center (Sacred Mark)</p>
+    <p class="item-desc">Existing iris + a <strong>tiny sacred bindu</strong> at the very center where the blades almost touch. The bindu in Hindu/Tantric tradition is the <em>point of pure consciousness</em> — the still center of the spinning cosmos. Subtle, but loaded. The eye of the iris becomes alive.</p>
+    <div class="display-row">
+      <svg class="logo" viewBox="0 0 64 64" fill="none">
+        <g fill="url(#goldGrad)">
+          <path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(0 32 32)" />
+          <path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(45 32 32)" />
+          <path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(90 32 32)" />
+          <path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(135 32 32)" />
+          <path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(180 32 32)" />
+          <path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(225 32 32)" />
+          <path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(270 32 32)" />
+          <path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(315 32 32)" />
+        </g>
+        <!-- Bindu in deep red, glowing -->
+        <circle cx="32" cy="32" r="2.5" fill="#FFC942" />
+        <circle cx="32" cy="32" r="1.5" fill="#FF6B1A" />
+      </svg>
+      <svg class="logo-sm" viewBox="0 0 64 64" fill="none">
+        <g fill="url(#goldGrad)"><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(0 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(45 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(90 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(135 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(180 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(225 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(270 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(315 32 32)" /></g>
+        <circle cx="32" cy="32" r="2.5" fill="#FFC942" /><circle cx="32" cy="32" r="1.5" fill="#FF6B1A" />
+      </svg>
+      <svg class="logo-xs" viewBox="0 0 64 64" fill="none">
+        <g fill="url(#goldGrad)"><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(0 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(45 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(90 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(135 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(180 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(225 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(270 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(315 32 32)" /></g>
+        <circle cx="32" cy="32" r="2" fill="#FF6B1A" />
+      </svg>
+    </div>
+  </div>
+
+  <!-- L3 Yantra Outer Ring -->
+  <div class="item">
+    <p class="item-name">L3 · Yantra Outer Ring (Temple Geometry)</p>
+    <p class="item-desc">Existing iris + a <strong>thin outer ring</strong> with 8 gentle dots at compass points — yantra/mandala geometry. Adds containment + sacred geometry without crowding. The iris becomes the heart of a ritual diagram.</p>
+    <div class="display-row">
+      <svg class="logo" viewBox="0 0 80 80" fill="none">
+        <!-- Outer ring -->
+        <circle cx="40" cy="40" r="38" stroke="url(#goldGrad)" stroke-width="1" opacity="0.6" />
+        <!-- 8 dots at compass points -->
+        <g fill="url(#goldGrad)">
+          <circle cx="40" cy="2" r="1.5" /><circle cx="40" cy="78" r="1.5" /><circle cx="2" cy="40" r="1.5" /><circle cx="78" cy="40" r="1.5" />
+          <circle cx="13" cy="13" r="1.2" /><circle cx="67" cy="13" r="1.2" /><circle cx="13" cy="67" r="1.2" /><circle cx="67" cy="67" r="1.2" />
+        </g>
+        <!-- Iris -->
+        <g fill="url(#goldGrad)" transform="translate(8 8)">
+          <path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(0 32 32)" />
+          <path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(45 32 32)" />
+          <path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(90 32 32)" />
+          <path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(135 32 32)" />
+          <path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(180 32 32)" />
+          <path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(225 32 32)" />
+          <path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(270 32 32)" />
+          <path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(315 32 32)" />
+        </g>
+      </svg>
+      <svg class="logo-sm" viewBox="0 0 80 80" fill="none">
+        <circle cx="40" cy="40" r="38" stroke="url(#goldGrad)" stroke-width="1" opacity="0.6" />
+        <g fill="url(#goldGrad)"><circle cx="40" cy="2" r="1.5" /><circle cx="40" cy="78" r="1.5" /><circle cx="2" cy="40" r="1.5" /><circle cx="78" cy="40" r="1.5" /><circle cx="13" cy="13" r="1.2" /><circle cx="67" cy="13" r="1.2" /><circle cx="13" cy="67" r="1.2" /><circle cx="67" cy="67" r="1.2" /></g>
+        <g fill="url(#goldGrad)" transform="translate(8 8)"><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(0 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(45 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(90 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(135 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(180 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(225 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(270 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(315 32 32)" /></g>
+      </svg>
+      <svg class="logo-xs" viewBox="0 0 80 80" fill="none">
+        <circle cx="40" cy="40" r="38" stroke="url(#goldGrad)" stroke-width="1.5" opacity="0.7" />
+        <g fill="url(#goldGrad)" transform="translate(8 8)"><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(0 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(45 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(90 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(135 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(180 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(225 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(270 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(315 32 32)" /></g>
+      </svg>
+    </div>
+  </div>
+
+  <!-- L4 Sharper Blades (more aggressive) -->
+  <div class="item">
+    <p class="item-name">L4 · Sharper Blades (Aggressive Edge)</p>
+    <p class="item-desc">Existing iris but with <strong>elongated, sharper blades</strong>. Less rounded, more dagger-like. The blades feel like they're slicing forward. Same gold gradient. Says: "we cut through chaos."</p>
+    <div class="display-row">
+      <svg class="logo" viewBox="0 0 64 64" fill="url(#goldGrad)">
+        <g>
+          <path d="M 17,4 L 47,4 L 30,22 L 24,23 Z" transform="rotate(0 32 32)" />
+          <path d="M 17,4 L 47,4 L 30,22 L 24,23 Z" transform="rotate(45 32 32)" />
+          <path d="M 17,4 L 47,4 L 30,22 L 24,23 Z" transform="rotate(90 32 32)" />
+          <path d="M 17,4 L 47,4 L 30,22 L 24,23 Z" transform="rotate(135 32 32)" />
+          <path d="M 17,4 L 47,4 L 30,22 L 24,23 Z" transform="rotate(180 32 32)" />
+          <path d="M 17,4 L 47,4 L 30,22 L 24,23 Z" transform="rotate(225 32 32)" />
+          <path d="M 17,4 L 47,4 L 30,22 L 24,23 Z" transform="rotate(270 32 32)" />
+          <path d="M 17,4 L 47,4 L 30,22 L 24,23 Z" transform="rotate(315 32 32)" />
+        </g>
+      </svg>
+      <svg class="logo-sm" viewBox="0 0 64 64" fill="url(#goldGrad)">
+        <g><path d="M 17,4 L 47,4 L 30,22 L 24,23 Z" transform="rotate(0 32 32)" /><path d="M 17,4 L 47,4 L 30,22 L 24,23 Z" transform="rotate(45 32 32)" /><path d="M 17,4 L 47,4 L 30,22 L 24,23 Z" transform="rotate(90 32 32)" /><path d="M 17,4 L 47,4 L 30,22 L 24,23 Z" transform="rotate(135 32 32)" /><path d="M 17,4 L 47,4 L 30,22 L 24,23 Z" transform="rotate(180 32 32)" /><path d="M 17,4 L 47,4 L 30,22 L 24,23 Z" transform="rotate(225 32 32)" /><path d="M 17,4 L 47,4 L 30,22 L 24,23 Z" transform="rotate(270 32 32)" /><path d="M 17,4 L 47,4 L 30,22 L 24,23 Z" transform="rotate(315 32 32)" /></g>
+      </svg>
+      <svg class="logo-xs" viewBox="0 0 64 64" fill="url(#goldGrad)">
+        <g><path d="M 17,4 L 47,4 L 30,22 L 24,23 Z" transform="rotate(0 32 32)" /><path d="M 17,4 L 47,4 L 30,22 L 24,23 Z" transform="rotate(45 32 32)" /><path d="M 17,4 L 47,4 L 30,22 L 24,23 Z" transform="rotate(90 32 32)" /><path d="M 17,4 L 47,4 L 30,22 L 24,23 Z" transform="rotate(135 32 32)" /><path d="M 17,4 L 47,4 L 30,22 L 24,23 Z" transform="rotate(180 32 32)" /><path d="M 17,4 L 47,4 L 30,22 L 24,23 Z" transform="rotate(225 32 32)" /><path d="M 17,4 L 47,4 L 30,22 L 24,23 Z" transform="rotate(270 32 32)" /><path d="M 17,4 L 47,4 L 30,22 L 24,23 Z" transform="rotate(315 32 32)" /></g>
+      </svg>
+    </div>
+  </div>
+
+  <!-- L5 Coin Depth (3D bevel) -->
+  <div class="item">
+    <p class="item-name">L5 · Coin Depth (Struck Bullion)</p>
+    <p class="item-desc">Existing iris + <strong>3D bevel and drop shadow</strong>. Looks struck into a gold coin. Each blade has highlight + shadow giving dimension. Says: "this is a piece of currency, not a logo."</p>
+    <div class="display-row">
+      <svg class="logo" viewBox="0 0 64 64" fill="none" style="filter: drop-shadow(0 4px 8px rgba(0,0,0,0.6)) drop-shadow(0 0 14px rgba(255,180,40,0.3));">
+        <defs>
+          <linearGradient id="coinHilite" x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" stop-color="#FFE9A8" />
+            <stop offset="40%" stop-color="#FFC942" />
+            <stop offset="60%" stop-color="#CFB53B" />
+            <stop offset="100%" stop-color="#5A4214" />
+          </linearGradient>
+        </defs>
+        <g fill="url(#coinHilite)" stroke="rgba(0,0,0,0.4)" stroke-width="0.3">
+          <path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(0 32 32)" />
+          <path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(45 32 32)" />
+          <path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(90 32 32)" />
+          <path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(135 32 32)" />
+          <path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(180 32 32)" />
+          <path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(225 32 32)" />
+          <path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(270 32 32)" />
+          <path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(315 32 32)" />
+        </g>
+      </svg>
+      <svg class="logo-sm" viewBox="0 0 64 64" fill="none" style="filter: drop-shadow(0 2px 4px rgba(0,0,0,0.5));">
+        <g fill="url(#coinHilite)" stroke="rgba(0,0,0,0.4)" stroke-width="0.3"><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(0 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(45 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(90 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(135 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(180 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(225 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(270 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(315 32 32)" /></g>
+      </svg>
+      <svg class="logo-xs" viewBox="0 0 64 64" fill="none">
+        <g fill="url(#coinHilite)"><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(0 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(45 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(90 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(135 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(180 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(225 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(270 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(315 32 32)" /></g>
+      </svg>
+    </div>
+  </div>
+
+  <!-- ════════════════════════════════════════════════════════
+       LOCKUP — Best wordmark + best logo
+       ════════════════════════════════════════════════════════ -->
+  <div class="section-divider"><span>✦ Lockup Examples (Logo + Wordmark Together)</span></div>
+
+  <div class="item">
+    <p class="item-name">Lockup A · L1 (Sun-Burst Iris) + W1 (Marcellus)</p>
+    <p class="item-desc">Most balanced. Sun-radiance + Roman temple gravitas + InitCaps. The "leader-of-segment" feeling.</p>
+    <div class="display-row">
+      <span class="lockup">
+        <svg class="logo-sm" viewBox="0 0 100 100" fill="none">
+          <g fill="url(#goldGrad)" opacity="0.55"><path d="M 50 3 L 52 14 L 48 14 Z" /><path d="M 73.5 6.5 L 70.5 17 L 67 14.5 Z" /><path d="M 93.5 26.5 L 83 29.5 L 85.5 33 Z" /><path d="M 97 50 L 86 52 L 86 48 Z" /><path d="M 93.5 73.5 L 85.5 67 L 83 70.5 Z" /><path d="M 73.5 93.5 L 67 85.5 L 70.5 83 Z" /><path d="M 50 97 L 48 86 L 52 86 Z" /><path d="M 26.5 93.5 L 29.5 83 L 33 85.5 Z" /><path d="M 6.5 73.5 L 17 70.5 L 14.5 67 Z" /><path d="M 3 50 L 14 48 L 14 52 Z" /><path d="M 6.5 26.5 L 14.5 33 L 17 29.5 Z" /><path d="M 26.5 6.5 L 33 14.5 L 29.5 17 Z" /></g>
+          <g fill="url(#goldGrad)" transform="translate(18 18)"><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(0 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(45 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(90 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(135 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(180 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(225 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(270 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(315 32 32)" /></g>
+        </svg>
+        <span class="word gold-text">BhavX</span>
+      </span>
+    </div>
+  </div>
+
+  <div class="item">
+    <p class="item-name">Lockup B · L2 (Bindu Center) + W3 (Playfair Italic)</p>
+    <p class="item-desc">Editorial confidence + sacred dot. Lithest, most "live" — the bindu feels like a beating heart in the iris's still center.</p>
+    <div class="display-row">
+      <span class="lockup">
+        <svg class="logo-sm" viewBox="0 0 64 64" fill="none">
+          <g fill="url(#goldGrad)"><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(0 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(45 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(90 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(135 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(180 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(225 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(270 32 32)" /><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(315 32 32)" /></g>
+          <circle cx="32" cy="32" r="2.5" fill="#FFC942" /><circle cx="32" cy="32" r="1.5" fill="#FF6B1A" />
+        </svg>
+        <span class="word gold-text" style="font-family: 'Playfair Display', serif; font-weight: 900; font-style: italic;">Bhav<span style="font-size: 1.2em; font-style: normal; margin-left: 0.04em;">X</span></span>
+      </span>
+    </div>
+  </div>
+
+  <div class="item">
+    <p class="item-name">Lockup C · L4 (Sharp Blades) + W4 (Big Shoulders)</p>
+    <p class="item-desc">Maximum aggression. Cutting blades + foundry-stamped wordmark. The "ruthless leader" feeling — pure dominance.</p>
+    <div class="display-row">
+      <span class="lockup">
+        <svg class="logo-sm" viewBox="0 0 64 64" fill="url(#goldGrad)">
+          <g><path d="M 17,4 L 47,4 L 30,22 L 24,23 Z" transform="rotate(0 32 32)" /><path d="M 17,4 L 47,4 L 30,22 L 24,23 Z" transform="rotate(45 32 32)" /><path d="M 17,4 L 47,4 L 30,22 L 24,23 Z" transform="rotate(90 32 32)" /><path d="M 17,4 L 47,4 L 30,22 L 24,23 Z" transform="rotate(135 32 32)" /><path d="M 17,4 L 47,4 L 30,22 L 24,23 Z" transform="rotate(180 32 32)" /><path d="M 17,4 L 47,4 L 30,22 L 24,23 Z" transform="rotate(225 32 32)" /><path d="M 17,4 L 47,4 L 30,22 L 24,23 Z" transform="rotate(270 32 32)" /><path d="M 17,4 L 47,4 L 30,22 L 24,23 Z" transform="rotate(315 32 32)" /></g>
+        </svg>
+        <span class="word gold-text" style="font-family: 'Big Shoulders Display', sans-serif; font-weight: 900; font-size: 56px; line-height: 0.9;">BhavX</span>
+      </span>
     </div>
   </div>
 
   <div class="footer">
-    <p><strong>5 different ferocities:</strong></p>
-    <p style="margin-top: 6px;">
-      <strong>N · Surya Crown</strong> — sun-blessed, industrial · &nbsp;
-      <strong>O · Vajra</strong> — divine thunderbolt, indestructible · &nbsp;
-      <strong>P · Royal Nameplate</strong> — luxury reverse polarity
-    </p>
-    <p>
-      <strong>Q · Trishul</strong> — Shiva, destroyer of fraud · &nbsp;
-      <strong>T · Hammered Relief</strong> — pressed-in-gold, permanent
-    </p>
-    <p style="margin-top: 14px;">
-      Reply with <strong>N / O / P / Q / T</strong> — or hybrid (e.g. "<strong>N's Surya crown + P's gold strip</strong>" or "<strong>Q's trishul + T's hammered relief</strong>"). Want a wilder direction? Tell me which sacred motif feels right (lotus, swan, peacock, conch, chakra, naga, lion).
+    <p><strong>How to pick:</strong> One wordmark (W1-W6) + one logo (L0-L5). Mix freely.</p>
+    <p style="margin-top: 12px;">
+      Reply with: <strong>"W1 + L1"</strong> or <strong>"W3 + L2"</strong> etc.<br/>
+      Or describe a feeling I haven't captured: <em>more weight, more sun, sharper, softer, more sacred, more industrial</em>.<br/>
+      Or pick a hybrid lockup (A / B / C above).
     </p>
   </div>
 </div>
