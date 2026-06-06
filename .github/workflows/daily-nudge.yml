@@ -1,0 +1,23 @@
+name: BhavX Daily Nudge
+
+# Runs in the cloud on GitHub's servers — fires whether or not Mridul's
+# laptop is on. Pings his phone every morning via ntfy.sh.
+
+on:
+  schedule:
+    # 09:00 IST = 03:30 UTC, daily
+    - cron: '30 3 * * *'
+  workflow_dispatch: {}   # lets you trigger it manually from the Actions tab
+
+jobs:
+  nudge:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Send daily nudge
+        run: node .github/scripts/daily-nudge.js
