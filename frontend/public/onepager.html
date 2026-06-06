@@ -1,0 +1,122 @@
+<!doctype html>
+<html lang="en"><head>
+<meta charset="utf-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>BhavX — One Pager (print → hand out)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700;900&family=Marcellus&family=Cormorant+SC:wght@700&family=Inter:wght@400;500;600;700;800&family=Noto+Sans+Devanagari:wght@500;700&display=swap" rel="stylesheet"/>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{background:#3a3a3a;font-family:Inter,sans-serif;padding:24px;display:flex;flex-direction:column;align-items:center;gap:16px}
+  .toolbar{max-width:794px;width:100%;display:flex;justify-content:space-between;align-items:center;color:#fff;font-size:13px}
+  .toolbar button{background:#CFB53B;color:#0a0f1a;border:none;padding:10px 22px;border-radius:8px;font-weight:700;cursor:pointer;font-size:14px}
+  /* A4 page, white for cheap-printer ink economy + clean handout look */
+  .page{width:794px;min-height:1123px;background:#fff;color:#1a1a1a;position:relative;overflow:hidden;box-shadow:0 8px 40px rgba(0,0,0,.4)}
+  .goldbar{height:10px;background:linear-gradient(90deg,#FFE9A8,#FFC942 30%,#CFB53B 60%,#8C6818)}
+  .inner{padding:48px 56px 40px}
+  /* Header */
+  .hd{display:flex;align-items:center;gap:18px;border-bottom:2px solid #f0e6c8;padding-bottom:24px;margin-bottom:32px}
+  .logo{width:72px;height:72px;flex-shrink:0}
+  .brandblock{flex:1}
+  .brand{font-family:Marcellus,serif;font-size:42px;line-height:1;display:inline-flex;align-items:center;gap:13px;color:#0D1420}
+  .brand .bar{width:2px;height:.45em;background:linear-gradient(180deg,#CFB53B,#8C6818);border-radius:1px}
+  .brand .xf{border:2px solid #CFB53B;border-radius:5px;padding:4px 14px;font-size:.92em;background:#fdf9ec}
+  .tag{font-family:'Cormorant SC',serif;font-weight:700;font-size:12px;letter-spacing:.34em;color:#A8842A;text-transform:uppercase;margin-top:8px}
+  /* Hero */
+  .hero{margin-bottom:34px}
+  .kicker{display:inline-block;background:#fdf3d6;color:#8C6818;font-size:12px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;padding:6px 14px;border-radius:99px;margin-bottom:16px}
+  .h1{font-family:Cinzel,serif;font-size:34px;font-weight:900;line-height:1.18;color:#0D1420;margin-bottom:12px}
+  .h1 .gold{color:#A8842A}
+  .sub{font-size:16px;color:#444;line-height:1.6;max-width:560px}
+  .deva{font-family:'Noto Sans Devanagari',sans-serif;font-size:15px;color:#666;margin-top:10px;line-height:1.7}
+  /* Value props */
+  .props{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:34px}
+  .prop{border:1.5px solid #f0e6c8;border-radius:12px;padding:18px 20px;background:#fffdf7}
+  .prop .pi{font-size:22px;margin-bottom:6px}
+  .prop .pt{font-size:15px;font-weight:800;color:#0D1420;margin-bottom:4px}
+  .prop .pd{font-size:13px;color:#555;line-height:1.5}
+  /* Free banner */
+  .free{display:flex;align-items:center;justify-content:center;gap:14px;background:linear-gradient(135deg,#fdf3d6,#fff);border:2px dashed #CFB53B;border-radius:14px;padding:20px;margin-bottom:34px}
+  .free .big{font-family:Cinzel,serif;font-size:30px;font-weight:900;color:#A8842A}
+  .free .small{font-size:13px;color:#555;line-height:1.5}
+  .free .strike{text-decoration:line-through;color:#aaa;font-size:14px}
+  /* QR + contact */
+  .footer{display:flex;align-items:center;gap:28px;border-top:2px solid #f0e6c8;padding-top:28px}
+  .qr{width:150px;height:150px;border:6px solid #fff;outline:2px solid #f0e6c8;border-radius:8px;flex-shrink:0}
+  .contact{flex:1}
+  .contact .cta{font-family:Cinzel,serif;font-size:22px;font-weight:900;color:#0D1420;margin-bottom:6px}
+  .contact .url{font-size:24px;font-weight:800;color:#A8842A;letter-spacing:.01em;margin-bottom:14px}
+  .contact .row{font-size:14px;color:#333;margin-bottom:6px;display:flex;align-items:center;gap:8px}
+  .contact .row b{color:#0D1420}
+  /* page bottom strip */
+  .strip{position:absolute;bottom:0;left:0;right:0;height:8px;background:linear-gradient(90deg,#8C6818,#CFB53B 40%,#FFC942 70%,#FFE9A8)}
+  @media print {
+    body{background:#fff;padding:0;gap:0}
+    .toolbar{display:none}
+    .page{box-shadow:none;width:100%;min-height:100vh}
+    @page{margin:0;size:A4}
+  }
+</style></head><body>
+
+<div class="toolbar">
+  <span>🖨️ Press the button → "Save as PDF" or print. Hand these out at the market.</span>
+  <button onclick="window.print()">Print / Save PDF</button>
+</div>
+
+<div class="page">
+  <div class="goldbar"></div>
+  <div class="inner">
+
+    <!-- Header -->
+    <div class="hd">
+      <svg class="logo" viewBox="0 0 64 64" fill="none">
+        <defs>
+          <linearGradient id="g" x1="0" y1="0" x2="0" y2="64" gradientUnits="userSpaceOnUse"><stop stop-color="#FFC942"/><stop offset=".5" stop-color="#CFB53B"/><stop offset="1" stop-color="#7A5A18"/></linearGradient>
+          <radialGradient id="b" cx="32" cy="32" r="6" gradientUnits="userSpaceOnUse"><stop stop-color="#FF8C2A"/><stop offset=".6" stop-color="#FFC942"/><stop offset="1" stop-color="#C73E0A"/></radialGradient>
+        </defs>
+        <g fill="url(#g)"><path d="M21 7 43 7 29 22 26 23Z"/><path d="M21 7 43 7 29 22 26 23Z" transform="rotate(45 32 32)"/><path d="M21 7 43 7 29 22 26 23Z" transform="rotate(90 32 32)"/><path d="M21 7 43 7 29 22 26 23Z" transform="rotate(135 32 32)"/><path d="M21 7 43 7 29 22 26 23Z" transform="rotate(180 32 32)"/><path d="M21 7 43 7 29 22 26 23Z" transform="rotate(225 32 32)"/><path d="M21 7 43 7 29 22 26 23Z" transform="rotate(270 32 32)"/><path d="M21 7 43 7 29 22 26 23Z" transform="rotate(315 32 32)"/></g>
+        <circle cx="32" cy="32" r="4" fill="url(#b)"/>
+      </svg>
+      <div class="brandblock">
+        <div class="brand"><span>Bhav</span><span class="bar"></span><span class="xf">X</span></div>
+        <div class="tag">India's Metal Exchange</div>
+      </div>
+    </div>
+
+    <!-- Hero — LEADS WITH RATES (zero trust barrier) -->
+    <div class="hero">
+      <span class="kicker">Live Metal Rates · On Your Phone</span>
+      <div class="h1">Today's rates, <span class="gold">faster than WhatsApp.</span><br>Always accurate. Always free.</div>
+      <div class="sub">Stop waiting for someone to forward today's rate. BhavX gives you live LME, MCX, and local spot rates — Delhi, Mumbai, Ahmedabad, Ludhiana, Chennai &amp; more — updated through the day. Open the app, see the rate. That simple.</div>
+      <div class="deva">रोज़ाना के live मेटल रेट — WhatsApp से तेज़, हमेशा सही। बिल्कुल मुफ़्त। सिर्फ़ bhavx.com खोलिए।</div>
+    </div>
+
+    <!-- Value props -->
+    <div class="props">
+      <div class="prop"><div class="pi">📈</div><div class="pt">Live LME &amp; MCX</div><div class="pd">Real-time international + Indian rates, refreshed through the day.</div></div>
+      <div class="prop"><div class="pi">📍</div><div class="pt">Local Spot Rates</div><div class="pd">City-wise local rates for every major metal market in India.</div></div>
+      <div class="prop"><div class="pi">⚡</div><div class="pt">No Forwarding, No Wait</div><div class="pd">Clean, organised, on your phone — not buried in 12 WhatsApp groups.</div></div>
+      <div class="prop"><div class="pi">🛡️</div><div class="pt">Verified Marketplace</div><div class="pd">When you're ready to trade — PAN-verified parties, ratings, deal support.</div></div>
+    </div>
+
+    <!-- Free banner -->
+    <div class="free">
+      <div class="big">FREE</div>
+      <div class="small"><b style="color:#0D1420">Founding Trader access</b> — full Pro features free for the first traders.<br><span class="strike">₹299/month</span> → <b style="color:#A8842A">₹0, locked for life.</b></div>
+    </div>
+
+    <!-- QR + contact -->
+    <div class="footer">
+      <img class="qr" src="https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=https%3A%2F%2Fbhavx.com&color=0D1420&bgcolor=ffffff&margin=0" alt="Scan for bhavx.com"/>
+      <div class="contact">
+        <div class="cta">Scan or visit:</div>
+        <div class="url">bhavx.com</div>
+        <div class="row">📱 <b>WhatsApp:</b> +91 94736 36333</div>
+        <div class="row">📞 <b>Call:</b> +91 87077 18146</div>
+        <div class="row">✉️ <b>Email:</b> support@bhavx.com</div>
+      </div>
+    </div>
+
+  </div>
+  <div class="strip"></div>
+</div>
+</body></html>
