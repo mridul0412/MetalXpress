@@ -1,0 +1,237 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>BhavX — The Journey</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700;900&family=Marcellus&family=Cormorant+SC:wght@600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: #050912; color: #fff; font-family: Inter, sans-serif; padding: 32px 20px 80px; min-height: 100vh; }
+  body::before { content: ''; position: fixed; inset: 0; pointer-events: none;
+    background: radial-gradient(ellipse at 50% -10%, rgba(207,181,59,0.10), transparent 60%),
+                radial-gradient(ellipse at 80% 110%, rgba(255,140,40,0.04), transparent 55%); }
+  .container { max-width: 1200px; margin: 0 auto; position: relative; z-index: 1; }
+
+  /* Header */
+  .header { text-align: center; margin-bottom: 12px; }
+  .chakra { width: 64px; height: 64px; margin: 0 auto 14px; display: block; animation: spin 3s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .brand { font-family: 'Marcellus', serif; font-size: 40px; line-height: 1; display: inline-flex; align-items: center; gap: 14px;
+    background: linear-gradient(180deg,#FFE9A8,#FFC942 28%,#CFB53B 60%,#8C6818); -webkit-background-clip: text; background-clip: text; color: transparent; }
+  .brand .bar { width: 2px; height: 0.45em; background: linear-gradient(180deg,#FFE9A8,#CFB53B 50%,#8C6818); border-radius: 1px; }
+  .brand .xframe { border: 1.5px solid #CFB53B; background: rgba(207,181,59,0.06); border-radius: 4px; padding: 4px 14px; font-size: 0.92em; }
+  .tagline { font-family: 'Cormorant SC', serif; font-weight: 700; font-size: 12px; letter-spacing: 0.36em; color: rgba(207,181,59,0.7); text-transform: uppercase; margin-top: 12px; }
+  .subtitle { font-size: 14px; color: rgba(255,255,255,0.5); margin-top: 16px; line-height: 1.6; }
+  .date { font-size: 12px; color: rgba(207,181,59,0.6); margin-top: 6px; letter-spacing: 0.05em; }
+
+  /* Journey block */
+  .journey { margin-top: 48px; }
+  .journey-head { display: flex; align-items: baseline; justify-content: space-between; flex-wrap: wrap; gap: 10px; margin-bottom: 8px; padding: 0 6px; }
+  .journey-title { font-family: 'Cinzel', serif; font-size: 18px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; }
+  .journey-title.product { color: #5B8DEF; }
+  .journey-title.business { color: #34d399; }
+  .journey-pct { font-family: 'Inter', sans-serif; font-size: 13px; font-weight: 700; }
+  .progress-track { height: 8px; border-radius: 99px; background: rgba(255,255,255,0.06); overflow: hidden; margin: 0 6px 28px; border: 1px solid rgba(255,255,255,0.04); }
+  .progress-fill { height: 100%; border-radius: 99px; }
+  .progress-fill.product { background: linear-gradient(90deg,#5B8DEF,#8FB3F5); }
+  .progress-fill.business { background: linear-gradient(90deg,#34d399,#6EE7B7); }
+
+  /* The road — horizontal scroll of zigzag stops */
+  .road { position: relative; overflow-x: auto; overflow-y: hidden; padding: 60px 0 40px; -webkit-overflow-scrolling: touch; }
+  .road-inner { display: flex; align-items: center; gap: 0; min-width: max-content; padding: 0 30px; position: relative; }
+
+  /* Dashed center road line behind stops */
+  .road-line { position: absolute; top: 50%; left: 0; right: 0; height: 4px; transform: translateY(-50%);
+    background: repeating-linear-gradient(90deg, rgba(207,181,59,0.35) 0 16px, transparent 16px 30px); z-index: 0; }
+
+  .stop { position: relative; z-index: 1; display: flex; flex-direction: column; align-items: center; width: 150px; flex-shrink: 0; }
+  .stop.up { margin-bottom: 64px; }
+  .stop.down { margin-top: 64px; }
+
+  /* connector from dot to card */
+  .stop .stem { position: absolute; width: 2px; background: rgba(207,181,59,0.25); left: 50%; transform: translateX(-50%); }
+  .stop.up .stem { bottom: 50%; height: 42px; }
+  .stop.down .stem { top: 50%; height: 42px; }
+
+  .dot { width: 26px; height: 26px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 800; flex-shrink: 0; z-index: 2; }
+  .dot.done { background: linear-gradient(180deg,#FFE9A8,#CFB53B 60%,#8C6818); color: #0a0f1a; box-shadow: 0 0 12px rgba(207,181,59,0.4); }
+  .dot.current { background: radial-gradient(circle,#FFFEF0,#FFC942 50%,#FF6B1A 100%); box-shadow: 0 0 0 4px rgba(255,140,40,0.2), 0 0 18px rgba(255,140,40,0.6); animation: pulse 2s ease-in-out infinite; }
+  .dot.todo { background: rgba(255,255,255,0.08); border: 1.5px solid rgba(255,255,255,0.15); color: rgba(255,255,255,0.4); }
+  .dot.finish { background: rgba(207,181,59,0.12); border: 2px solid #CFB53B; color: #CFB53B; }
+  @keyframes pulse { 0%,100% { transform: scale(1); } 50% { transform: scale(1.12); } }
+
+  .card { position: absolute; width: 138px; background: rgba(13,20,32,0.85); border-radius: 10px; padding: 10px 12px; text-align: center; backdrop-filter: blur(8px); }
+  .stop.up .card { bottom: calc(50% + 50px); }
+  .stop.down .card { top: calc(50% + 50px); }
+  .card.done { border: 1px solid rgba(207,181,59,0.3); }
+  .card.current { border: 1.5px solid rgba(255,140,40,0.5); background: rgba(255,140,40,0.08); }
+  .card.todo { border: 1px solid rgba(255,255,255,0.07); opacity: 0.78; }
+  .card.finish { border: 1px solid rgba(207,181,59,0.4); }
+  .card-num { font-size: 9px; font-weight: 700; letter-spacing: 0.1em; color: rgba(255,255,255,0.35); text-transform: uppercase; margin-bottom: 3px; }
+  .card-title { font-size: 12px; font-weight: 700; color: #fff; line-height: 1.3; margin-bottom: 3px; }
+  .card-sub { font-size: 10px; color: rgba(255,255,255,0.45); line-height: 1.35; }
+  .card.current .card-title { color: #FFC942; }
+
+  /* Car at current position */
+  .car { position: absolute; left: 50%; transform: translateX(-50%); font-size: 30px; z-index: 3; animation: bob 1.6s ease-in-out infinite; }
+  .stop.up .car { top: calc(50% + 18px); }
+  .stop.down .car { bottom: calc(50% + 18px); }
+  @keyframes bob { 0%,100% { transform: translateX(-50%) translateY(0); } 50% { transform: translateX(-50%) translateY(-4px); } }
+  .you-are-here { position: absolute; left: 50%; transform: translateX(-50%); white-space: nowrap; font-size: 9px; font-weight: 800; letter-spacing: 0.12em; text-transform: uppercase; color: #FF6B1A; background: rgba(255,107,26,0.12); border: 1px solid rgba(255,107,26,0.3); border-radius: 99px; padding: 3px 9px; }
+  .stop.up .you-are-here { top: calc(50% + 54px); }
+  .stop.down .you-are-here { bottom: calc(50% + 54px); }
+
+  .scroll-hint { text-align: center; font-size: 11px; color: rgba(255,255,255,0.3); margin-top: 4px; }
+
+  /* Stats strip */
+  .stats { display: grid; grid-template-columns: repeat(auto-fit,minmax(140px,1fr)); gap: 14px; margin: 56px 0 0; }
+  .stat { background: rgba(13,20,32,0.7); border: 1px solid rgba(207,181,59,0.18); border-radius: 12px; padding: 18px; text-align: center; }
+  .stat-num { font-family: 'Cinzel', serif; font-size: 28px; font-weight: 700; background: linear-gradient(180deg,#FFE9A8,#CFB53B 60%,#8C6818); -webkit-background-clip: text; background-clip: text; color: transparent; }
+  .stat-label { font-size: 11px; color: rgba(255,255,255,0.5); margin-top: 4px; letter-spacing: 0.04em; }
+
+  /* Footer motivator */
+  .footer { margin-top: 48px; padding: 28px; text-align: center; background: linear-gradient(135deg, rgba(207,181,59,0.08), rgba(13,20,32,0.5)); border: 1px solid rgba(207,181,59,0.3); border-radius: 16px; }
+  .footer h3 { font-family: 'Cinzel', serif; font-size: 18px; color: #CFB53B; letter-spacing: 0.06em; margin-bottom: 10px; }
+  .footer p { font-size: 14px; color: rgba(255,255,255,0.7); line-height: 1.7; max-width: 640px; margin: 0 auto; }
+  .footer .next { margin-top: 16px; font-size: 13px; color: rgba(255,140,40,0.9); font-weight: 600; }
+  .divider { height: 1px; background: linear-gradient(90deg,transparent,rgba(207,181,59,0.3),transparent); margin: 56px 0; }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <!-- Header -->
+  <div class="header">
+    <svg class="chakra" viewBox="0 0 64 64" fill="none">
+      <defs>
+        <linearGradient id="g" x1="0" y1="0" x2="0" y2="64" gradientUnits="userSpaceOnUse"><stop stop-color="#FFE9A8"/><stop offset="0.4" stop-color="#CFB53B"/><stop offset="1" stop-color="#7A5A18"/></linearGradient>
+        <radialGradient id="b" cx="32" cy="32" r="6" gradientUnits="userSpaceOnUse"><stop stop-color="#FFFEF0"/><stop offset="0.5" stop-color="#FFC942"/><stop offset="1" stop-color="#C73E0A"/></radialGradient>
+      </defs>
+      <g fill="url(#g)">
+        <path d="M 21,7 L 43,7 L 29,22 L 26,23 Z"/><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(45 32 32)"/><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(90 32 32)"/><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(135 32 32)"/><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(180 32 32)"/><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(225 32 32)"/><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(270 32 32)"/><path d="M 21,7 L 43,7 L 29,22 L 26,23 Z" transform="rotate(315 32 32)"/>
+      </g>
+      <circle cx="32" cy="32" r="4" fill="url(#b)"/>
+    </svg>
+    <div class="brand"><span>Bhav</span><span class="bar"></span><span class="xframe">X</span></div>
+    <div class="tagline">The Journey to India's Metal Exchange</div>
+    <p class="subtitle">Two roads run in parallel — building the product, and building the company.<br/>Here's exactly how far you've come, and what's next.</p>
+    <div class="date" id="today"></div>
+  </div>
+
+  <!-- ════════════ PRODUCT JOURNEY ════════════ -->
+  <div class="journey">
+    <div class="journey-head">
+      <span class="journey-title product">⚙ Product Road</span>
+      <span class="journey-pct" style="color:#5B8DEF;">6 / 12 milestones · 50%</span>
+    </div>
+    <div class="progress-track"><div class="progress-fill product" style="width:50%;"></div></div>
+    <div class="road">
+      <div class="road-inner" id="product-road"></div>
+    </div>
+    <div class="scroll-hint">← scroll the road →</div>
+  </div>
+
+  <div class="divider"></div>
+
+  <!-- ════════════ BUSINESS JOURNEY ════════════ -->
+  <div class="journey">
+    <div class="journey-head">
+      <span class="journey-title business">🏛 Business Road</span>
+      <span class="journey-pct" style="color:#34d399;">3 / 10 milestones · 30%</span>
+    </div>
+    <div class="progress-track"><div class="progress-fill business" style="width:30%;"></div></div>
+    <div class="road">
+      <div class="road-inner" id="business-road"></div>
+    </div>
+    <div class="scroll-hint">← scroll the road →</div>
+  </div>
+
+  <!-- Stats -->
+  <div class="stats">
+    <div class="stat"><div class="stat-num">LIVE</div><div class="stat-label">bhavx.com in production</div></div>
+    <div class="stat"><div class="stat-num">9</div><div class="stat-label">milestones cleared</div></div>
+    <div class="stat"><div class="stat-num">0→20</div><div class="stat-label">traders: the next mountain</div></div>
+    <div class="stat"><div class="stat-num">M2</div><div class="stat-label">Month 2 of 6 · fundraise plan</div></div>
+  </div>
+
+  <!-- Footer -->
+  <div class="footer">
+    <h3>You are further than you feel.</h3>
+    <p>A live product, a real brand, a working marketplace, KYC, deal flow — most people never get past the idea. A broker told you it won't work; every incumbent says that. The difficulty <em style="color:#CFB53B;font-style:normal;">is</em> the moat. Lead with free rates (zero trust needed), layer the marketplace later, raise capital for legitimacy.</p>
+    <div class="next">⛳ Next checkpoint: your first 20 traders. Everything else waits behind that.</div>
+  </div>
+
+</div>
+
+<script>
+  document.getElementById('today').textContent = new Date().toLocaleDateString('en-IN', { weekday:'long', day:'numeric', month:'long', year:'numeric' });
+
+  // ── Product milestones ──
+  const product = [
+    { t:'Production Deploy', s:'Railway + Vercel + DNS', st:'done' },
+    { t:'Custom API Domain', s:'api.bhavx.com (DNS-proof)', st:'done' },
+    { t:'Brand Identity', s:'Logo · wordmark · chakra', st:'done' },
+    { t:'Smoke Test', s:'Full flow validated', st:'done' },
+    { t:'Free Pro + 0%', s:'No paywall friction', st:'done' },
+    { t:'KYC + Badges', s:'Verified traders', st:'done' },
+    { t:'PWA App', s:'Installable on phones', st:'current' },
+    { t:'WhatsApp Scraper', s:'Auto-feed rates', st:'todo' },
+    { t:'FCM Push Alerts', s:'Real-time notifications', st:'todo' },
+    { t:'Real PAN Verify', s:'Surepass / NSDL', st:'todo' },
+    { t:'Razorpay', s:'Payments live', st:'todo' },
+    { t:'Scale & Automate', s:'The horizon', st:'finish' },
+  ];
+
+  // ── Business milestones ──
+  const business = [
+    { t:'Idea + Build', s:'Months of work', st:'done' },
+    { t:'Live in Prod', s:'bhavx.com shipped', st:'done' },
+    { t:'Brand Launch', s:'India’s Metal Exchange', st:'done' },
+    { t:'First 20 Traders', s:'The trust cold-start', st:'current' },
+    { t:'Co-Founder', s:'#1 fundability unlock', st:'todo' },
+    { t:'Pitch Deck v1', s:'10 slides + demo', st:'todo' },
+    { t:'Angel Round', s:'Legitimacy + runway', st:'todo' },
+    { t:'Public Launch', s:'100-200 active users', st:'todo' },
+    { t:'Seed Round', s:'Scale capital', st:'todo' },
+    { t:'Series A', s:'The summit', st:'finish' },
+  ];
+
+  function render(items, mountId) {
+    const road = document.getElementById(mountId);
+    items.forEach((m, i) => {
+      const up = i % 2 === 0;
+      const stop = document.createElement('div');
+      stop.className = 'stop ' + (up ? 'up' : 'down');
+
+      const dotClass = m.st;
+      const sym = m.st === 'done' ? '✓' : m.st === 'finish' ? '⚑' : (i+1);
+      const youHere = m.st === 'current'
+        ? `<div class="car">🚗</div><div class="you-are-here">You are here</div>`
+        : '';
+
+      stop.innerHTML = `
+        <div class="stem"></div>
+        <div class="card ${m.st}">
+          <div class="card-num">${up ? 'Stop' : 'Stop'} ${i+1}</div>
+          <div class="card-title">${m.t}</div>
+          <div class="card-sub">${m.s}</div>
+        </div>
+        ${youHere}
+        <div class="dot ${dotClass}">${sym}</div>
+      `;
+      road.appendChild(stop);
+    });
+    // road line spanning the full width
+    const line = document.createElement('div');
+    line.className = 'road-line';
+    road.appendChild(line);
+  }
+
+  render(product, 'product-road');
+  render(business, 'business-road');
+</script>
+</body>
+</html>
