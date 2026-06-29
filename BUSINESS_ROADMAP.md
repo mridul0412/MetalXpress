@@ -386,6 +386,21 @@
 
 ---
 
+## 🌍 International Playbooks to Study & Adapt
+
+> Proof the model wins at scale — and the exact playbook to localize for India.
+> Indian competitors (Scrap Market, Thunder X/Market Hub) validate the *wedge*;
+> these global giants validate the *outcome*. BhavX = the India-localized version.
+> Doubles as the "why this works / comparables" slide in the pitch deck.
+
+- [ ] **SMM · Shanghai Metals Market (metal.com) 🇨🇳 — THE blueprint.** Started as metals *price data* → became an integrated ecosystem: IOSCO-certified pricing (the "SMM Price" is used in real contracts) + database/analytics + research/publishing + an **e-commerce marketplace with ~¥1.1 TRILLION (~$150B) cumulative GMV at 100% delivery** + paid industry events. 400,000+ enterprise users, 20+ yrs of data. *Steal: the exact rates-first → marketplace → data/research/events sequence. This is literally BhavX at full scale — the model is proven.*
+- [ ] **Reibus 🇺🇸 — the VC-fundable marketplace.** Independent B2B metals marketplace (steel/aluminium), founded 2018; raised **$101M total — SoftBank Vision Fund 2 led a $75M Series B, ~$750M valuation.** Marketplace + logistics + **trade-credit/financing**. *Steal: marketplace + embedded financing is what unlocks serious VC — confirms the OfBusiness/embedded-finance thesis for the ₹50 Cr path.*
+- [ ] **MetalsHub 🇪🇺 — procurement digitization.** Europe-based metals/ferro-alloy procurement marketplace; digitizes the RFQ → award → settlement flow for buyers + verified suppliers. *Steal: the RFQ/auction workflow + supplier-verification mechanics for B2B trust (your marketplace's hard part).*
+- [ ] **Felux 🇺🇸 — focused later-entrant.** B2B metal marketplace, raised ~$19M, competing directly against incumbent Reibus. *Steal: how a late entrant carves a niche against an entrenched leader — exactly your Scrap Market situation.*
+- [ ] **Synthesize into the pitch deck** — one slide: "Proven globally — $150B GMV in China (SMM), $750M valuation in the US (Reibus). BhavX localizes this for India's underserved non-ferrous + scrap segment."
+
+---
+
 ## 📊 Progress Metrics (Update Weekly)
 
 ### Product Metrics
